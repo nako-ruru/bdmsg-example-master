@@ -1,0 +1,23 @@
+{
+	"pidfile": "run/connector.pid",
+	"logfile": "log/connector.log",
+
+	"service": {
+		"debug": {
+			"listenaddr": "0.0.0.0:{{.connector.service.debug.port}}"
+		},
+
+		"connect": {
+			"listenaddr": "0.0.0.0:{{.centre.service.monitor.port}}",
+			"inqueuesize": 1000,
+			"outqueuesize": 100,
+			"handshaketimeout": "1s"
+		}
+	},
+
+	"manager": {
+		"maint": {
+			"period": "1h"
+		}
+	}
+}
