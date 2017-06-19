@@ -4,7 +4,7 @@ package debugsvc
 
 import (
 	"github.com/someonegg/golog"
-	"github.com/someonegg/goutility/netutil"
+	"github.com/someonegg/gox/netx"
 	"net"
 	"net/http"
 	_ "net/http/pprof"
@@ -16,16 +16,16 @@ import (
 var log = golog.SubLoggerWithFields(golog.RootLogger, "module", "debugsvc")
 
 type service struct {
-	*netutil.HttpService
+	*netx.HTTPService
 }
 
 func newService(l *net.TCPListener) *service {
 	s := &service{}
-	s.HttpService = netutil.NewHttpService(l, http.DefaultServeMux, 0)
+	s.HTTPService = netx.NewHTTPService(l, http.DefaultServeMux, 0)
 	return s
 }
 
-func Start(conf *ServiceConfT) (*netutil.HttpService, error) {
+func Start(conf *ServiceConfT) (*netx.HTTPService, error) {
 	l, err := net.ListenTCP("tcp", (*net.TCPAddr)(&conf.ListenAddr))
 	if err != nil {
 		log.Error("Start$net.ListenTCP", "error", err)
@@ -35,5 +35,5 @@ func Start(conf *ServiceConfT) (*netutil.HttpService, error) {
 	s := newService(l)
 	s.Start()
 
-	return s.HttpService, nil
+	return s.HTTPService, nil
 }

@@ -1,8 +1,10 @@
-// Copyright 2015 someonegg. All rights reserved.
+// Copyright 2016 someonegg. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package poolutil
+// Package bufpool is a wrapper over the sync.Pool for buffer
+// objects, it simplifies the use.
+package bufpool
 
 import (
 	"sync"
@@ -29,7 +31,7 @@ func init() {
 	}
 }
 
-func BufGet(size int) []byte {
+func Get(size int) []byte {
 	if size == 0 {
 		return nil
 	}
@@ -48,7 +50,7 @@ func BufGet(size int) []byte {
 	return make([]byte, size, size)
 }
 
-func BufPut(b []byte) {
+func Put(b []byte) {
 	size := cap(b)
 
 	if size == 0 {

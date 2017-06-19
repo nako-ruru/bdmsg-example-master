@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package dbutil
+package dbx
 
 import (
 	. "github.com/garyburd/redigo/redis"
-	"github.com/someonegg/goutility/chanutil"
+	"github.com/someonegg/gox/syncx"
 	"golang.org/x/net/context"
 	"time"
 )
@@ -14,7 +14,7 @@ import (
 // RedisPool is a contexted redis pool.
 type RedisPool struct {
 	p      *Pool
-	concur chanutil.Semaphore
+	concur syncx.Semaphore
 }
 
 func NewRedisPool(
@@ -40,7 +40,7 @@ func NewRedisPool(
 	p := &RedisPool{}
 	p.p = rp
 	if maxConcurrent > 0 {
-		p.concur = chanutil.NewSemaphore(maxConcurrent)
+		p.concur = syncx.NewSemaphore(maxConcurrent)
 	}
 	return p
 }

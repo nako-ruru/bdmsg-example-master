@@ -6,13 +6,13 @@ package idgener
 
 import (
 	"github.com/garyburd/redigo/redis"
-	"github.com/someonegg/goutility/dbutil"
+	"github.com/someonegg/gox/dbx"
 	"golang.org/x/net/context"
 	"time"
 )
 
 type redisGener struct {
-	p *dbutil.RedisPool
+	p *dbx.RedisPool
 	k string
 }
 
@@ -39,7 +39,7 @@ func NewRedisGener(server, password, idkey string,
 		return err
 	}
 
-	p := dbutil.NewRedisPool(
+	p := dbx.NewRedisPool(
 		dial,
 		testOnBorrow,
 		60*time.Second,

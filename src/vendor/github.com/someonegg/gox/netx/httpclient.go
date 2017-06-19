@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package netutil
+package netx
 
 import (
-	"github.com/someonegg/goutility/chanutil"
+	"github.com/someonegg/gox/syncx"
 	"golang.org/x/net/context"
 	"io"
 	"net"
@@ -14,15 +14,15 @@ import (
 	"time"
 )
 
-// HttpClient is a contexted http client.
-type HttpClient struct {
+// HTTPClient is a contexted http client.
+type HTTPClient struct {
 	ts     *Transport
 	hc     *Client
-	concur chanutil.Semaphore
+	concur syncx.Semaphore
 }
 
 // if maxConcurrent == 0, no limit on concurrency.
-func NewHttpClient(maxConcurrent int, timeout time.Duration) *HttpClient {
+func NewHTTPClient(maxConcurrent int, timeout time.Duration) *HTTPClient {
 	mi := maxConcurrent / 5
 	if mi <= 0 {
 		mi = DefaultMaxIdleConnsPerHost
@@ -41,16 +41,16 @@ func NewHttpClient(maxConcurrent int, timeout time.Duration) *HttpClient {
 		Timeout:   timeout,
 	}
 
-	c := &HttpClient{}
+	c := &HTTPClient{}
 	c.ts = ts
 	c.hc = hc
 	if maxConcurrent > 0 {
-		c.concur = chanutil.NewSemaphore(maxConcurrent)
+		c.concur = syncx.NewSemaphore(maxConcurrent)
 	}
 	return c
 }
 
-func (c *HttpClient) acquireConn(ctx context.Context) error {
+func (c *HTTPClient) acquireConn(ctx context.Context) error {
 	if c.concur == nil {
 		return nil
 	}
@@ -64,7 +64,7 @@ func (c *HttpClient) acquireConn(ctx context.Context) error {
 	}
 }
 
-func (c *HttpClient) releaseConn() {
+func (c *HTTPClient) releaseConn() {
 	if c.concur == nil {
 		return
 	}
@@ -72,7 +72,7 @@ func (c *HttpClient) releaseConn() {
 	<-c.concur
 }
 
-func (c *HttpClient) Do(ctx context.Context,
+func (c *HTTPClient) Do(ctx context.Context,
 	req *Request) (resp *Response, err error) {
 
 	err = c.acquireConn(ctx)
@@ -84,7 +84,7 @@ func (c *HttpClient) Do(ctx context.Context,
 	return c.hc.Do(req)
 }
 
-func (c *HttpClient) Get(ctx context.Context,
+func (c *HTTPClient) Get(ctx context.Context,
 	url string) (resp *Response, err error) {
 
 	err = c.acquireConn(ctx)
@@ -96,7 +96,7 @@ func (c *HttpClient) Get(ctx context.Context,
 	return c.hc.Get(url)
 }
 
-func (c *HttpClient) Head(ctx context.Context,
+func (c *HTTPClient) Head(ctx context.Context,
 	url string) (resp *Response, err error) {
 
 	err = c.acquireConn(ctx)
@@ -108,7 +108,7 @@ func (c *HttpClient) Head(ctx context.Context,
 	return c.hc.Head(url)
 }
 
-func (c *HttpClient) Post(ctx context.Context,
+func (c *HTTPClient) Post(ctx context.Context,
 	url string, bodyType string, body io.Reader) (resp *Response, err error) {
 
 	err = c.acquireConn(ctx)
@@ -120,7 +120,7 @@ func (c *HttpClient) Post(ctx context.Context,
 	return c.hc.Post(url, bodyType, body)
 }
 
-func (c *HttpClient) PostForm(ctx context.Context,
+func (c *HTTPClient) PostForm(ctx context.Context,
 	url string, data url.Values) (resp *Response, err error) {
 
 	err = c.acquireConn(ctx)
@@ -132,7 +132,7 @@ func (c *HttpClient) PostForm(ctx context.Context,
 	return c.hc.PostForm(url, data)
 }
 
-func (c *HttpClient) Close() error {
+func (c *HTTPClient) Close() error {
 	c.ts.CloseIdleConnections()
 	return nil
 }

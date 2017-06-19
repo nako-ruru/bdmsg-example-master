@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/someonegg/golog"
-	"github.com/someonegg/goutility/netutil"
+	"github.com/someonegg/goutil/netutil"
 	"golang.org/x/net/context"
 	"net/http"
 	"time"

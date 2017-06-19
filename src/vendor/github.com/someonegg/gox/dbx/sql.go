@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package dbutil
+package dbx
 
 import (
 	. "database/sql"
-	"github.com/someonegg/goutility/chanutil"
+	"github.com/someonegg/gox/syncx"
 	"golang.org/x/net/context"
 )
 
@@ -85,7 +85,7 @@ func (tx *SQLTx) Rollback() error {
 // SQLDB is a contexted sql DB.
 type SQLDB struct {
 	db     *DB
-	concur chanutil.Semaphore
+	concur syncx.Semaphore
 }
 
 func NewSQLDB(db *DB, maxConcurrent int) *SQLDB {
@@ -99,7 +99,7 @@ func NewSQLDB(db *DB, maxConcurrent int) *SQLDB {
 	d := &SQLDB{}
 	d.db = db
 	if maxConcurrent > 0 {
-		d.concur = chanutil.NewSemaphore(maxConcurrent)
+		d.concur = syncx.NewSemaphore(maxConcurrent)
 	}
 	return d
 }

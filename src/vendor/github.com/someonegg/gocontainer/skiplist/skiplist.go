@@ -196,12 +196,12 @@ func (l *List) Rank(e Element) int {
 
 	path := l.searchPathOf(e)
 
-	rank := 0
+	span := 0
 	for _, v := range path.levSpan {
-		rank += v
+		span += v
 	}
 
-	return rank - 1 // 0-based
+	return span - 1
 }
 
 // Add an element to the list.
@@ -332,31 +332,29 @@ func (l *List) searchPathOf(e Element) *searchPath {
 	path.levSpan[0] = 0
 
 	ilev := 0
-	levSpan := 0
 	for {
-		doUp := false
+		idle, levSpan := true, 0
+
 		for i := ilev + 1; i < len(eN.lev); i++ {
-			doUp = true
+			idle = false
 			path.prev[i] = e
 			path.prevNode[i] = eN
 			path.levSpan[i] = 0
 			ilev++
 		}
 
-		doPrev := false
 		for eN != l.root && (ilev+1) >= len(eN.lev) {
-			doPrev = true
+			idle = false
 			e = eN.lev[ilev].prev
 			eN = e.getNode()
 			levSpan += eN.lev[ilev].span
 		}
 
-		if !doUp && !doPrev {
+		if idle {
 			break
 		}
 
 		path.levSpan[ilev] = levSpan
-		levSpan = 0
 	}
 
 	return path
@@ -428,11 +426,11 @@ func (l *List) searchToScore(score Scorable, path *searchPath) (Element, bool) {
 }
 
 func (l *List) searchToRank(rank int, path *searchPath) (Element, bool) {
-	rank += 1 // 1-based
+	span := rank + 1
 	poscomp := func(ilev int, p, n Element, pN, nN *Node) int {
-		ret := rank - pN.lev[ilev].span
+		ret := span - pN.lev[ilev].span
 		if ret >= 0 {
-			rank = ret
+			span = ret
 		}
 		return ret
 	}

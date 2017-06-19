@@ -29,9 +29,7 @@ import (
 	"github.com/someonegg/golog/handler/hjson"
 	"github.com/someonegg/golog/handler/hmulti"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 )
 
 var (
@@ -61,28 +59,4 @@ func SetOutput(path string) error {
 	logF = file
 
 	return nil
-}
-
-func init() {
-	go logSig()
-}
-
-func logSig() {
-	defer func() { recover() }()
-
-	// SIGUSR1 to reload log.
-	rC := make(chan os.Signal, 1)
-	signal.Notify(rC, syscall.SIGUSR1)
-
-	for {
-		select {
-		case <-rC:
-			locker.Lock()
-			path := logS
-			locker.Unlock()
-			if len(path) > 0 {
-				SetOutput(path)
-			}
-		}
-	}
 }

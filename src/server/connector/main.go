@@ -6,8 +6,8 @@ package main
 
 import (
 	"github.com/someonegg/golog"
-	"github.com/someonegg/goutility/netutil"
-	"github.com/someonegg/goutility/pidf"
+	"github.com/someonegg/goutil/pidf"
+	"github.com/someonegg/gox/netx"
 	"math/rand"
 	"os"
 	"os/signal"
@@ -51,7 +51,7 @@ func main() {
 		return
 	}
 
-	var debugS *netutil.HttpService
+	var debugS *netx.HTTPService
 	if Config.ServiceS.Debug.Check() {
 		debugS, err = debugsvc.Start(&Config.ServiceS.Debug)
 		if err != nil {

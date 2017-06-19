@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package netutil
+package netx
 
 import (
 	"errors"
-	"github.com/someonegg/goutility/chanutil"
+	"github.com/someonegg/gox/syncx"
 	"golang.org/x/net/context"
 	"net"
 	"net/http"
@@ -22,12 +22,12 @@ type ContextHandler interface {
 	ContextServeHTTP(context.Context, http.ResponseWriter, *http.Request)
 }
 
-// HttpService is a wrapper of http.Server.
-type HttpService struct {
+// HTTPService is a wrapper of http.Server.
+type HTTPService struct {
 	err     error
 	quitCtx context.Context
 	quitF   context.CancelFunc
-	stopD   chanutil.DoneChan
+	stopD   syncx.DoneChan
 
 	l   *net.TCPListener
 	h   ContextHandler
@@ -36,19 +36,19 @@ type HttpService struct {
 	reqWG sync.WaitGroup
 }
 
-// NewHttpService is a short cut to use NewHttpServiceEx.
-func NewHttpService(l *net.TCPListener, h http.Handler,
-	maxConcurrent int) *HttpService {
+// NewHTTPService is a short cut to use NewHTTPServiceEx.
+func NewHTTPService(l *net.TCPListener, h http.Handler,
+	maxConcurrent int) *HTTPService {
 
-	return NewHttpServiceEx(l, NewMaxConcurrentHandler(NewHttpHandler(h),
+	return NewHTTPServiceEx(l, NewMaxConcurrentHandler(NewHTTPHandler(h),
 		maxConcurrent, DefaultHesitateTime, DefaultMaxConcurrentNotifier))
 }
 
-func NewHttpServiceEx(l *net.TCPListener, h ContextHandler) *HttpService {
-	s := &HttpService{}
+func NewHTTPServiceEx(l *net.TCPListener, h ContextHandler) *HTTPService {
+	s := &HTTPService{}
 
 	s.quitCtx, s.quitF = context.WithCancel(context.Background())
-	s.stopD = chanutil.NewDoneChan()
+	s.stopD = syncx.NewDoneChan()
 	s.l = l
 	s.h = h
 	s.srv = &http.Server{
@@ -62,23 +62,23 @@ func NewHttpServiceEx(l *net.TCPListener, h ContextHandler) *HttpService {
 	return s
 }
 
-func (s *HttpService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *HTTPService) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.reqWG.Add(1)
 	defer s.reqWG.Done()
 	s.h.ContextServeHTTP(s.quitCtx, w, r)
 }
 
-func (s *HttpService) Start() {
+func (s *HTTPService) Start() {
 	go s.serve()
 }
 
-func (s *HttpService) serve() {
+func (s *HTTPService) serve() {
 	defer s.ending()
 
 	s.err = s.srv.Serve(TcpKeepAliveListener{s.l})
 }
 
-func (s *HttpService) ending() {
+func (s *HTTPService) ending() {
 	if e := recover(); e != nil {
 		switch v := e.(type) {
 		case error:
@@ -92,29 +92,29 @@ func (s *HttpService) ending() {
 	s.stopD.SetDone()
 }
 
-func (s *HttpService) Err() error {
+func (s *HTTPService) Err() error {
 	return s.err
 }
 
-func (s *HttpService) Stop() {
+func (s *HTTPService) Stop() {
 	s.srv.SetKeepAlivesEnabled(false)
 	s.quitF()
 	s.l.Close()
 }
 
-func (s *HttpService) StopD() chanutil.DoneChanR {
+func (s *HTTPService) StopD() syncx.DoneChanR {
 	return s.stopD.R()
 }
 
-func (s *HttpService) Stopped() bool {
+func (s *HTTPService) Stopped() bool {
 	return s.stopD.R().Done()
 }
 
-func (s *HttpService) WaitRequests() {
+func (s *HTTPService) WaitRequests() {
 	s.reqWG.Wait()
 }
 
-func (s *HttpService) QuitCtx() context.Context {
+func (s *HTTPService) QuitCtx() context.Context {
 	return s.quitCtx
 }
 
@@ -124,7 +124,7 @@ type httpHandler struct {
 
 // The http handler type is an adapter to allow the use of
 // ordinary http.Handler as ContextHandler.
-func NewHttpHandler(oh http.Handler) ContextHandler {
+func NewHTTPHandler(oh http.Handler) ContextHandler {
 	return httpHandler{oh}
 }
 
@@ -136,7 +136,7 @@ func (h httpHandler) ContextServeHTTP(ctx context.Context,
 
 type maxConcurrentHandler struct {
 	oh           ContextHandler
-	concur       chanutil.Semaphore
+	concur       syncx.Semaphore
 	hesitateTime time.Duration
 	notifier     MaxConcurrentNotifier
 }
@@ -158,7 +158,7 @@ func NewMaxConcurrentHandler(oh ContextHandler,
 
 	return &maxConcurrentHandler{
 		oh:           oh,
-		concur:       chanutil.NewSemaphore(maxConcurrent),
+		concur:       syncx.NewSemaphore(maxConcurrent),
 		hesitateTime: hesitateTime,
 		notifier:     notifier,
 	}

@@ -7,7 +7,7 @@ package queue
 
 import (
 	"github.com/someonegg/gocontainer/list"
-	"github.com/someonegg/goutility/chanutil"
+	"github.com/someonegg/gox/syncx"
 	"sync"
 )
 
@@ -83,13 +83,13 @@ func (q *Queue) ObtainList() *list.List {
 // You must init the queue manually, see Init method.
 type EventQueue struct {
 	Queue
-	event chanutil.Event
+	event syncx.Event
 }
 
 // Init the queue manually, with a locker (can be nil).
 func (q *EventQueue) Init(l sync.Locker) {
 	q.Queue.Init(l)
-	q.event = chanutil.NewEvent()
+	q.event = syncx.NewEvent()
 }
 
 func (q *EventQueue) PushFront(e list.Element) {
@@ -118,7 +118,7 @@ func (q *EventQueue) PopBack() list.Element {
 	return e
 }
 
-func (q *EventQueue) Event() chanutil.EventR {
+func (q *EventQueue) Event() syncx.EventR {
 	return q.event.R()
 }
 

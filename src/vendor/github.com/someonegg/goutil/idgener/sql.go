@@ -6,12 +6,12 @@ package idgener
 
 import (
 	"database/sql"
-	"github.com/someonegg/goutility/dbutil"
+	"github.com/someonegg/gox/dbx"
 	"golang.org/x/net/context"
 )
 
 type sqlGener struct {
-	db *dbutil.SQLDB
+	db *dbx.SQLDB
 	tn string
 }
 
@@ -35,7 +35,7 @@ func NewSqlGener(driver, dsn, tn string,
 	}
 	_db.Exec("INSERT INTO ? (id) VALUES (0)", tn)
 
-	db := dbutil.NewSQLDB(_db, maxConcurrent)
+	db := dbx.NewSQLDB(_db, maxConcurrent)
 	return &sqlGener{db: db, tn: tn}, nil
 }
 
