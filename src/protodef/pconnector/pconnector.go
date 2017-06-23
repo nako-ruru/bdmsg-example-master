@@ -13,60 +13,88 @@ import (
 )
 
 const (
-	MsgTypeConnect      = 1
-	MsgTypeConnectReply = 2
+	MsgTypeRegister = 0
 
-	MsgTypeClientHello = 3
-
-	MsgTypeServerHello = 4
+	MsgTypeChat 		= 1
+	MsgTypeSupport = 2
+	MsgTypeSendGift = 3
+	MsgTypeEnterRoom = 4
+	MsgTypeShare = 5
+	MsgTypeLevelUp = 6
 )
 
-type ConnectRequst struct {
-	ID   string
-	Pass string
+type Register struct {
+	UserId string
+	Pass   string
 }
 
-func (p *ConnectRequst) Marshal() ([]byte, error) {
+func (p *Register) Marshal() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p *ConnectRequst) Unmarshal(b []byte) error {
+func (p *Register) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
 
-type ConnectReply struct {
-	Code  int
-	Token string
+type Chat struct {
+	RoomId string
+	Content string
 }
 
-func (p *ConnectReply) Marshal() ([]byte, error) {
+func (p *Chat) Marshal() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p *ConnectReply) Unmarshal(b []byte) error {
+func (p *Chat) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
 
-type ClientHello struct {
-	Message string
+type Support struct {
+	RoomId string
 }
 
-func (p *ClientHello) Marshal() ([]byte, error) {
+func (p *Support) Marshal() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p *ClientHello) Unmarshal(b []byte) error {
+func (p *Support) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
 
-type ServerHello struct {
-	Message string
+type SendGift struct {
+	RoomId string
+	GiftId string
 }
 
-func (p *ServerHello) Marshal() ([]byte, error) {
+func (p *SendGift) Marshal() ([]byte, error) {
 	return json.Marshal(p)
 }
 
-func (p *ServerHello) Unmarshal(b []byte) error {
+func (p *SendGift) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
+
+type Share struct {
+}
+
+func (p *Share) Marshal() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p *Share) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, p)
+}
+
+
+type LevelUp struct {
+	level int
+}
+
+func (p *LevelUp) Marshal() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p *LevelUp) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, p)
+}
+

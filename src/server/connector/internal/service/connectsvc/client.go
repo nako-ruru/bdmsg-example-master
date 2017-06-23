@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	. "common/errdef"
-	. "protodef/pconnector"
+	_ "protodef/pconnector"
 	"server/connector/internal/manager"
 )
 
@@ -35,25 +35,6 @@ func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager) (
 
 	t.msc.SetUserData(t)
 	return t, nil
-}
-
-func (c *Client) monitor() {
-	defer c.ending()
-
-	c.ServerHello("SERVER_INITED")
-
-	for q := false; !q; {
-		select {
-		case <-c.msc.StopD():
-			q = true
-		case msg := <-c.msgC:
-			log.Info("Client$monitor$clienthello", "content", msg)
-			c.ServerHello("SERVER_RECEIVED " + msg)
-		}
-	}
-
-	stat := c.msc.Statis()
-	log.Info("Client$monitor$", "id", c.ID, "mscerror", c.msc.Err(), "mscstat", stat)
 }
 
 func (c *Client) ending() {
@@ -91,13 +72,6 @@ func (c *Client) ClientHello(msg string) {
 	}
 }
 
-func (c *Client) ServerHello(msg string) {
-	var hello ServerHello
-	hello.Message = msg
-	mr, _ := hello.Marshal()
-	c.msc.Output(MsgTypeServerHello, mr)
-}
-
 type ClientManager struct {
 	mSet *manager.ManagerSet
 
@@ -133,7 +107,6 @@ func (m *ClientManager) clientIn(id, pass string, msc *bdmsg.SClient) (*Client, 
 	}
 
 	m.clients[id] = c
-	go c.monitor()
 
 	return c, nil
 }

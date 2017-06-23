@@ -14,7 +14,7 @@ import (
 	"syscall"
 	"time"
 
-	"common/logf"
+	//"common/logf"
 	"common/service/debugsvc"
 	. "server/connector/internal/config"
 	"server/connector/internal/manager"
@@ -33,11 +33,12 @@ func main() {
 		return
 	}
 
+	/*
 	err = logf.SetOutput(Config.Logfile)
 	if err != nil {
 		log.Error("main$SetOutput", "error", err)
 		return
-	}
+	}*/
 
 	mSet := manager.NewManagerSet(&Config.Manager)
 

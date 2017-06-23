@@ -26,21 +26,19 @@ func newClient(conn net.Conn, pumperInN, pumperOutN int) *client {
 	c := &client{}
 
 	mux := bdmsg.NewPumpMux(nil)
-	mux.HandleFunc(MsgTypeConnectReply, c.handleConnectReply)
-	mux.HandleFunc(MsgTypeServerHello, c.handleServerHello)
 
 	c.Client = bdmsg.NewClient(nil, conn, bdmsg.DefaultIOC,
 		mux, pumperInN, pumperOutN)
-	c.doConnect()
+	c.doRegister()
 	return c
 }
 
-func (c *client) doConnect() {
-	var request ConnectRequst
+func (c *client) doRegister() {
+	var request Register
 	// init request
 	mr, _ := request.Marshal() // marshal request
 
-	c.Client.Output(MsgTypeConnect, mr)
+	c.Client.Output(MsgTypeRegister, mr)
 }
 
 func (c *client) handleConnectReply(ctx context.Context,
