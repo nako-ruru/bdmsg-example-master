@@ -75,13 +75,67 @@ func (s *service) handleConnect(ctx context.Context, p *bdmsg.Pumper, t bdmsg.Ms
 func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
 
-	var hello Chat
-	err := hello.Unmarshal(m) // unmarshal hello
-	if err != nil {
-		panic(ErrParameter)
+	var roomId string
+	var params map[string]string;
+
+	switch t {
+	case 1:
+		var hello Chat
+		err := hello.Unmarshal(m) // unmarshal hello
+		if err != nil {
+			panic(ErrParameter)
+		}
+		roomId = hello.RoomId
+		params = map[string]string{"content": hello.Content}
+		break
+	case 2:
+		var hello Support
+		err := hello.Unmarshal(m) // unmarshal hello
+		if err != nil {
+			panic(ErrParameter)
+		}
+		roomId = hello.RoomId
+		params = map[string]string{}
+		break
+	case 3:
+		var hello SendGift
+		err := hello.Unmarshal(m) // unmarshal hello
+		if err != nil {
+			panic(ErrParameter)
+		}
+		roomId = hello.RoomId
+		params = map[string]string{"giftId": hello.GiftId}
+		break
+	case 4:
+		var hello EnterRoom
+		err := hello.Unmarshal(m) // unmarshal hello
+		if err != nil {
+			panic(ErrParameter)
+		}
+		roomId = hello.RoomId
+		params = map[string]string{}
+		break
+	case 5:
+		var hello Share
+		err := hello.Unmarshal(m) // unmarshal hello
+		if err != nil {
+			panic(ErrParameter)
+		}
+		roomId = hello.RoomId
+		params = map[string]string{}
+		break
+	case 6:
+		var hello LevelUp
+		err := hello.Unmarshal(m) // unmarshal hello
+		if err != nil {
+			panic(ErrParameter)
+		}
+		roomId = hello.RoomId
+		params = map[string]string{"level": hello.Level}
+		break
 	}
-	var params = map[string]string{"content": hello.Content}
-	var redisMsg = RedisMsg{hello.RoomId, c.ID, time.Now().Unix(), 1, params}
+
+	var redisMsg = RedisMsg{roomId, c.ID, time.Now().Unix(), int(t), params}
 	var bytes,_ = json.Marshal(redisMsg)
 
 	client := redis.NewClient(&redis.Options{
@@ -93,8 +147,7 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 	pong, err := client.Ping().Result()
 	fmt.Println(pong, err)
 
-	client.LPush(hello.RoomId, bytes)
-
+	client.LPush(roomId, bytes)
 }
 
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager) (*bdmsg.Server, error) {

@@ -74,7 +74,20 @@ func (p *SendGift) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
 
+type EnterRoom struct {
+	RoomId string
+}
+
+func (p *EnterRoom) Marshal() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p *EnterRoom) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, p)
+}
+
 type Share struct {
+	RoomId string
 }
 
 func (p *Share) Marshal() ([]byte, error) {
@@ -87,7 +100,8 @@ func (p *Share) Unmarshal(b []byte) error {
 
 
 type LevelUp struct {
-	level int
+	RoomId string
+	Level  string
 }
 
 func (p *LevelUp) Marshal() ([]byte, error) {
