@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"sync"
 
-	. "common/errdef"
+	//. "common/errdef"
 	_ "protodef/pconnector"
 	"server/connector/internal/manager"
 )
@@ -98,7 +98,7 @@ func (m *ClientManager) clientIn(id, pass string, msc *bdmsg.SClient) (*Client, 
 
 	c := m.clients[id]
 	if c != nil {
-		return c, ErrAlreadyExist
+		//return c, ErrAlreadyExist
 	}
 
 	c, err := createClient(id, pass, msc, m)

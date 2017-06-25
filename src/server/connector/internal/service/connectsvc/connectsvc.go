@@ -147,7 +147,7 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 	pong, err := client.Ping().Result()
 	fmt.Println(pong, err)
 
-	client.LPush(roomId, bytes)
+	client.RPush(roomId, bytes)
 }
 
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager) (*bdmsg.Server, error) {

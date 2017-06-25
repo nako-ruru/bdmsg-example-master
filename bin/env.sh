@@ -1,4 +1,2 @@
-export GOPATH="$(pwd):$GOPATH"
+export GOPATH="$(pwd)"
 
-mkdir -p "test/run"
-mkdir -p "test/log"
