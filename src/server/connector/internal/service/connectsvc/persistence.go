@@ -6,5 +6,7 @@ type RedisMsg struct {
 	UserId  string 			`json:"userId"`
 	Time    int64			`json:"time"`
 	MsgType int 			`json:"type"`
+	Nickname string			`json:"nickname"`
+	Level int 			`json:"level"`
 	Params  map[string]string 	`json:"params"`
 }

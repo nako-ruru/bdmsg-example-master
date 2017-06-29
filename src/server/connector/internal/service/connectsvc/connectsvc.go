@@ -15,16 +15,11 @@ import (
 	. "common/errdef"
 	. "protodef/pconnector"
 	"encoding/json"
-	"flag"
 	"github.com/go-redis/redis"
 	"fmt"
 )
 
 var log = golog.SubLoggerWithFields(golog.RootLogger, "module", "connectsvc")
-var (
-	redisAddress   = flag.String("redis-address", ":6379", "Address to the Redis server")
-	maxConnections = flag.Int("max-connections", 10, "Max connections to Redis")
-)
 
 type service struct {
 	*bdmsg.Server
@@ -76,6 +71,8 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 	c := p.UserData().(*Client)
 
 	var roomId string
+	var level int
+	var nickname string
 	var params map[string]string;
 
 	switch t {
@@ -86,6 +83,8 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 			panic(ErrParameter)
 		}
 		roomId = hello.RoomId
+		level = hello.Level
+		nickname = hello.Nickname
 		params = map[string]string{"content": hello.Content}
 		break
 	case 2:
@@ -95,6 +94,8 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 			panic(ErrParameter)
 		}
 		roomId = hello.RoomId
+		level = hello.Level
+		nickname = hello.Nickname
 		params = map[string]string{}
 		break
 	case 3:
@@ -104,6 +105,8 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 			panic(ErrParameter)
 		}
 		roomId = hello.RoomId
+		level = hello.Level
+		nickname = hello.Nickname
 		params = map[string]string{"giftId": hello.GiftId}
 		break
 	case 4:
@@ -113,6 +116,8 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 			panic(ErrParameter)
 		}
 		roomId = hello.RoomId
+		level = hello.Level
+		nickname = hello.Nickname
 		params = map[string]string{}
 		break
 	case 5:
@@ -122,6 +127,8 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 			panic(ErrParameter)
 		}
 		roomId = hello.RoomId
+		level = hello.Level
+		nickname = hello.Nickname
 		params = map[string]string{}
 		break
 	case 6:
@@ -131,11 +138,13 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 			panic(ErrParameter)
 		}
 		roomId = hello.RoomId
-		params = map[string]string{"level": hello.Level}
+		level = hello.Level
+		nickname = hello.Nickname
+		params = map[string]string{"level": fmt.Sprint(hello.Level)}
 		break
 	}
 
-	var redisMsg = RedisMsg{roomId, c.ID, time.Now().Unix(), int(t), params}
+	var redisMsg = RedisMsg{roomId, c.ID, time.Now().UnixNano() / 1000000, int(t), nickname, level, params}
 	var bytes,_ = json.Marshal(redisMsg)
 
 	client := redis.NewClient(&redis.Options{

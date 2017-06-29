@@ -39,6 +39,8 @@ func (p *Register) Unmarshal(b []byte) error {
 type Chat struct {
 	RoomId string
 	Content string
+	Nickname string
+	Level int
 }
 
 func (p *Chat) Marshal() ([]byte, error) {
@@ -51,6 +53,8 @@ func (p *Chat) Unmarshal(b []byte) error {
 
 type Support struct {
 	RoomId string
+	Nickname string
+	Level int
 }
 
 func (p *Support) Marshal() ([]byte, error) {
@@ -64,6 +68,8 @@ func (p *Support) Unmarshal(b []byte) error {
 type SendGift struct {
 	RoomId string
 	GiftId string
+	Nickname string
+	Level int
 }
 
 func (p *SendGift) Marshal() ([]byte, error) {
@@ -76,6 +82,8 @@ func (p *SendGift) Unmarshal(b []byte) error {
 
 type EnterRoom struct {
 	RoomId string
+	Nickname string
+	Level int
 }
 
 func (p *EnterRoom) Marshal() ([]byte, error) {
@@ -88,6 +96,8 @@ func (p *EnterRoom) Unmarshal(b []byte) error {
 
 type Share struct {
 	RoomId string
+	Nickname string
+	Level int
 }
 
 func (p *Share) Marshal() ([]byte, error) {
@@ -101,7 +111,8 @@ func (p *Share) Unmarshal(b []byte) error {
 
 type LevelUp struct {
 	RoomId string
-	Level  string
+	Nickname string
+	Level int
 }
 
 func (p *LevelUp) Marshal() ([]byte, error) {
