@@ -75,6 +75,9 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 	var nickname string
 	var params map[string]string;
 
+
+	log.Info("handleConnect", "bdmsg.Msg", fmt.Sprintf("%v : %v : %v", c.ID, t, string(m[:])))
+
 	switch t {
 	case 1:
 		var hello Chat
@@ -154,7 +157,9 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 	})
 
 	pong, err := client.Ping().Result()
-	fmt.Println(pong, err)
+	if err != nil {
+		fmt.Println(pong, err)
+	}
 
 	client.RPush(roomId, bytes)
 }
