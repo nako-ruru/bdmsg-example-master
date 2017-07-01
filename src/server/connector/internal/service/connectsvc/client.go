@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"sync"
 
-	//. "common/errdef"
+	_ "common/errdef"
 	_ "protodef/pconnector"
 	"server/connector/internal/manager"
 )

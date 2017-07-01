@@ -6,6 +6,7 @@ package main
 
 import (
 	"github.com/someonegg/golog"
+	"github.com/someonegg/goutil/gologf"
 	"github.com/someonegg/goutil/pidf"
 	"github.com/someonegg/gox/netx"
 	"math/rand"
@@ -14,7 +15,6 @@ import (
 	"syscall"
 	"time"
 
-	//"common/logf"
 	"common/service/debugsvc"
 	. "server/connector/internal/config"
 	"server/connector/internal/manager"
@@ -33,12 +33,11 @@ func main() {
 		return
 	}
 
-	/*
-	err = logf.SetOutput(Config.Logfile)
+	err = gologf.SetOutput(Config.Logfile)
 	if err != nil {
 		log.Error("main$SetOutput", "error", err)
 		return
-	}*/
+	}
 
 	mSet := manager.NewManagerSet(&Config.Manager)
 

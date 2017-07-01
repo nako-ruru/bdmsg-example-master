@@ -32,20 +32,20 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	s := &service{clientM: clientM}
 
 	mux := bdmsg.NewPumpMux(nil)
-	mux.HandleFunc(MsgTypeRegister, s.handleConnect)
-	mux.HandleFunc(MsgTypeEnterRoom, s.handleChat)
-	mux.HandleFunc(MsgTypeChat, s.handleChat)
-	mux.HandleFunc(MsgTypeSupport, s.handleChat)
-	mux.HandleFunc(MsgTypeSendGift, s.handleChat)
-	mux.HandleFunc(MsgTypeShare, s.handleChat)
-	mux.HandleFunc(MsgTypeLevelUp, s.handleChat)
+	mux.HandleFunc(MsgTypeRegister, s.handleRegister)
+	mux.HandleFunc(MsgTypeEnterRoom, s.handleMsg)
+	mux.HandleFunc(MsgTypeChat, s.handleMsg)
+	mux.HandleFunc(MsgTypeSupport, s.handleMsg)
+	mux.HandleFunc(MsgTypeSendGift, s.handleMsg)
+	mux.HandleFunc(MsgTypeShare, s.handleMsg)
+	mux.HandleFunc(MsgTypeLevelUp, s.handleMsg)
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO,
 		mux, pumperInN, pumperOutN)
 	return s
 }
 
-func (s *service) handleConnect(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
+func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	msc := p.UserData().(*bdmsg.SClient)
 	if msc.Handshaked() {
 		panic(ErrUnexpected)
@@ -59,7 +59,7 @@ func (s *service) handleConnect(ctx context.Context, p *bdmsg.Pumper, t bdmsg.Ms
 
 	_, err = s.clientM.clientIn(request.UserId, request.Pass, msc)
 	if err != nil {
-		log.Error("handleConnect", "error", err)
+		log.Error("handleRegister", "error", err)
 		panic(ErrUnexpected)
 	}
 
@@ -67,7 +67,7 @@ func (s *service) handleConnect(ctx context.Context, p *bdmsg.Pumper, t bdmsg.Ms
 	msc.Handshake()
 }
 
-func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
+func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
 
 	var roomId string
@@ -76,7 +76,7 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 	var params map[string]string;
 
 
-	log.Info("handleConnect", "bdmsg.Msg", fmt.Sprintf("%v : %v : %v", c.ID, t, string(m[:])))
+	log.Info("handleMsg", "bdmsg.Msg", fmt.Sprintf("%v : %v : %v", c.ID, t, string(m[:])))
 
 	switch t {
 	case 1:
@@ -92,7 +92,7 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 		break
 	case 2:
 		var hello Support
-		err := hello.Unmarshal(m) // unmarshal hello
+		err := hello.Unmarshal(m)
 		if err != nil {
 			panic(ErrParameter)
 		}
@@ -103,7 +103,7 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 		break
 	case 3:
 		var hello SendGift
-		err := hello.Unmarshal(m) // unmarshal hello
+		err := hello.Unmarshal(m)
 		if err != nil {
 			panic(ErrParameter)
 		}
@@ -114,7 +114,7 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 		break
 	case 4:
 		var hello EnterRoom
-		err := hello.Unmarshal(m) // unmarshal hello
+		err := hello.Unmarshal(m)
 		if err != nil {
 			panic(ErrParameter)
 		}
@@ -125,7 +125,7 @@ func (s *service) handleChat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTy
 		break
 	case 5:
 		var hello Share
-		err := hello.Unmarshal(m) // unmarshal hello
+		err := hello.Unmarshal(m)
 		if err != nil {
 			panic(ErrParameter)
 		}
