@@ -21,6 +21,8 @@ const (
 	MsgTypeEnterRoom = 4
 	MsgTypeShare = 5
 	MsgTypeLevelUp = 6
+
+	MsgTypePush = 30000
 )
 
 type Register struct {
@@ -123,3 +125,17 @@ func (p *LevelUp) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
 
+
+type PushMsg struct {
+	UserId  string 			`json:"userId"`
+	ModuleId    string		`json:"moduleId"`
+	Content string			`json:"content"`
+}
+
+func (p *PushMsg) Marshal() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p *PushMsg) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, p)
+}

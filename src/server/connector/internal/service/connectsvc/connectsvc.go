@@ -31,6 +31,31 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s := &service{clientM: clientM}
 
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	pubsub := client.Subscribe("mychannel")
+	go func() {
+		for {
+			msg, err := pubsub.ReceiveMessage()
+			fmt.Println("Receive from channel:", msg.Channel, msg.Payload)
+			if err != nil {
+				break
+			}
+			var hello PushMsg
+			hello.Unmarshal([]byte(msg.Payload))
+			i, ok := s.clientM.clients[hello.UserId]
+			fmt.Println("ok1:", ok)
+			if ok {
+				fmt.Println("ok2:", ok)
+				i.ServerHello(hello)
+			}
+		}
+	}()
+
 	mux := bdmsg.NewPumpMux(nil)
 	mux.HandleFunc(MsgTypeRegister, s.handleRegister)
 	mux.HandleFunc(MsgTypeEnterRoom, s.handleMsg)
@@ -155,6 +180,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
+	defer client.Close()
 
 	pong, err := client.Ping().Result()
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	_ "common/errdef"
 	_ "protodef/pconnector"
 	"server/connector/internal/manager"
+	"protodef/pconnector"
 )
 
 type Client struct {
@@ -70,6 +71,11 @@ func (c *Client) ClientHello(msg string) {
 	default:
 		// discard
 	}
+}
+
+func (c *Client) ServerHello(hello pconnector.PushMsg) {
+	mr, _ := hello.Marshal()
+	c.msc.Output(pconnector.MsgTypePush, mr)
 }
 
 type ClientManager struct {
