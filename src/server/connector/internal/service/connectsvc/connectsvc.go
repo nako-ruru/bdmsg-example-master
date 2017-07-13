@@ -32,8 +32,8 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	s := &service{clientM: clientM}
 
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
+		Addr:     "localhost:9921",
+		Password: "BrightHe0", // no password set
 		DB:       0,  // use default DB
 	})
 
@@ -176,8 +176,8 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	var bytes,_ = json.Marshal(redisMsg)
 
 	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
+		Addr:     "localhost:9921",
+		Password: "BrightHe0", // no password set
 		DB:       0,  // use default DB
 	})
 	defer client.Close()
@@ -187,7 +187,13 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		fmt.Println(pong, err)
 	}
 
-	client.RPush(roomId, bytes)
+
+	var sendDirectly = false
+	if(sendDirectly) {
+		client.RPush(roomId, bytes)
+	} else {
+		client.Publish("connector", string(bytes))
+	}
 }
 
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager) (*bdmsg.Server, error) {
