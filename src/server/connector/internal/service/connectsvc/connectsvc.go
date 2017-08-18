@@ -21,6 +21,12 @@ import (
 
 var log = golog.SubLoggerWithFields(golog.RootLogger, "module", "connectsvc")
 
+var client = redis.NewClient(&redis.Options{
+	Addr:     "localhost:9921",
+	Password: "BrightHe0", // no password set
+	DB:       0,  // use default DB
+})
+
 type service struct {
 	*bdmsg.Server
 	clientM *ClientManager
@@ -30,12 +36,6 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	clientM *ClientManager) *service {
 
 	s := &service{clientM: clientM}
-
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:9921",
-		Password: "BrightHe0", // no password set
-		DB:       0,  // use default DB
-	})
 
 	pubsub := client.Subscribe("mychannel")
 	go func() {
@@ -174,13 +174,6 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 
 	var redisMsg = RedisMsg{roomId, c.ID, time.Now().UnixNano() / 1000000, int(t), nickname, level, params}
 	var bytes,_ = json.Marshal(redisMsg)
-
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:9921",
-		Password: "BrightHe0", // no password set
-		DB:       0,  // use default DB
-	})
-	defer client.Close()
 
 	pong, err := client.Ping().Result()
 	if err != nil {
