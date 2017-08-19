@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"github.com/go-redis/redis"
 	"github.com/streadway/amqp"
+	"github.com/satori/go.uuid"
 	"fmt"
 )
 
@@ -180,17 +181,17 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		break
 	}
 
-	var redisMsg = RedisMsg{roomId, c.ID, time.Now().UnixNano() / 1000000, int(t), nickname, level, params}
+	var redisMsg = RedisMsg{uuid.NewV4().String(),roomId, c.ID, time.Now().UnixNano() / 1000000, int(t), nickname, level, params}
 	var bytes,_ = json.Marshal(redisMsg)
-
-	pong, err := client.Ping().Result()
-	if err != nil {
-		fmt.Println(pong, err)
-	}
 
 
 	var sendDirectly = false
 	if(sendDirectly) {
+		pong, err := client.Ping().Result()
+		if err != nil {
+			fmt.Println(pong, err)
+		}
+
 		client.RPush(roomId, bytes)
 	} else {
 		conn, err := amqp.Dial("amqp://live_stream:BrightHe0@47.92.98.23:5672/")
