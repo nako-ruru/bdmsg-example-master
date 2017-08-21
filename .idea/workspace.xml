@@ -2,53 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="173b7b09-97ec-42c4-9bef-656bcf261b82" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/src/github.com/codegangsta/inject" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/src/github.com/codegangsta/martini" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/go-redis/redis" afterPath="$PROJECT_DIR$/src/github.com/go-redis/redis" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/onsi/ginkgo" afterPath="$PROJECT_DIR$/src/github.com/onsi/ginkgo" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/onsi/gomega" afterPath="$PROJECT_DIR$/src/github.com/onsi/gomega" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/satori/go.uuid/.travis.yml" afterPath="$PROJECT_DIR$/src/vendor/github.com/satori/go.uuid/.travis.yml" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/satori/go.uuid/LICENSE" afterPath="$PROJECT_DIR$/src/vendor/github.com/satori/go.uuid/LICENSE" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/satori/go.uuid/README.md" afterPath="$PROJECT_DIR$/src/vendor/github.com/satori/go.uuid/README.md" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/satori/go.uuid/benchmarks_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/satori/go.uuid/benchmarks_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/satori/go.uuid/uuid.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/satori/go.uuid/uuid.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/satori/go.uuid/uuid_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/satori/go.uuid/uuid_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/.gitignore" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/.gitignore" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/.travis.yml" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/.travis.yml" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/CONTRIBUTING.md" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/CONTRIBUTING.md" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/LICENSE" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/LICENSE" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/README.md" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/README.md" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/_examples/pubsub/pubsub.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/_examples/pubsub/pubsub.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/_examples/simple-consumer/consumer.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/_examples/simple-consumer/consumer.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/_examples/simple-producer/producer.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/_examples/simple-producer/producer.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/allocator.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/allocator.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/allocator_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/allocator_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/auth.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/auth.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/certs.sh" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/certs.sh" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/channel.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/channel.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/client_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/client_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/confirms.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/confirms.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/confirms_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/confirms_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/connection.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/connection.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/connection_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/connection_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/consumers.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/consumers.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/delivery.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/delivery.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/delivery_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/delivery_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/doc.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/doc.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/examples_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/examples_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/fuzz.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/fuzz.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/gen.sh" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/gen.sh" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/integration_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/integration_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/pre-commit" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/pre-commit" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/read.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/read.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/read_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/read_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/reconnect_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/reconnect_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/return.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/return.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/shared_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/shared_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/spec/amqp0-9-1.stripped.extended.xml" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/spec/amqp0-9-1.stripped.extended.xml" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/spec/gen.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/spec/gen.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/spec091.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/spec091.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/tls_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/tls_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/types.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/types.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/uri.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/uri.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/uri_test.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/uri_test.go" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/github.com/streadway/amqp/write.go" afterPath="$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/write.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -59,33 +20,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="client.go" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/vendor/github.com/someonegg/bdmsg/client.go">
+      <file leaf-file-name="connectsvc.go" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-342">
-              <caret line="6" column="8" lean-forward="false" selection-start-line="6" selection-start-column="8" selection-end-line="6" selection-end-column="8" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="main.go" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/server/connector/main.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="910">
-              <caret line="77" column="17" lean-forward="false" selection-start-line="77" selection-start-column="17" selection-end-line="77" selection-end-column="17" />
-              <folding>
-                <element signature="e#169#518#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="httpservice.go" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/vendor/github.com/someonegg/gox/netx/httpservice.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1057">
-              <caret line="98" column="30" lean-forward="true" selection-start-line="98" selection-start-column="30" selection-end-line="98" selection-end-column="30" />
+            <state relative-caret-position="122">
+              <caret line="17" column="28" lean-forward="false" selection-start-line="17" selection-start-column="28" selection-end-line="17" selection-end-column="28" />
               <folding />
             </state>
           </provider>
@@ -139,8 +78,10 @@
         <option value="$PROJECT_DIR$/src/server/connector/internal/manager/manager.go" />
         <option value="$PROJECT_DIR$/src/protodef/pconnector/pconnector.go" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go" />
-        <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" />
         <option value="$PROJECT_DIR$/src/server/connector/main.go" />
+        <option value="$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/cluster.go" />
+        <option value="$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/ring.go" />
+        <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" />
       </list>
     </option>
   </component>
@@ -189,32 +130,6 @@
               <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
               <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="github.com" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="server" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="server" type="462c0819:PsiDirectoryNode" />
-              <item name="connector" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="vendor" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="vendor" type="462c0819:PsiDirectoryNode" />
               <item name="github.com" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -373,12 +288,12 @@
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="754" extended-state="6" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.28517398" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.28517398" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.5045386" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25925925" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.36231884" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.49546143" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -416,20 +331,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-114">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/cluster.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="13" column="39" lean-forward="false" selection-start-line="13" selection-start-column="39" selection-end-line="13" selection-end-column="39" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/ring.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="18" column="0" lean-forward="true" selection-start-line="18" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
         </state>
       </provider>
     </entry>
@@ -475,7 +376,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/example_test.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/example_test.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="126">
           <caret line="33" column="20" lean-forward="false" selection-start-line="33" selection-start-column="20" selection-end-line="33" selection-end-column="20" />
@@ -517,7 +418,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/redis.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/redis.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5928">
           <caret line="320" column="5" lean-forward="false" selection-start-line="320" selection-start-column="5" selection-end-line="320" selection-end-column="5" />
@@ -525,7 +426,7 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/push.go" />
-    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/pubsub.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/pubsub.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="19">
           <caret line="304" column="17" lean-forward="false" selection-start-line="304" selection-start-column="17" selection-end-line="304" selection-end-column="17" />
@@ -553,14 +454,14 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/bench_test.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/bench_test.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="95">
           <caret line="11" column="24" lean-forward="false" selection-start-line="11" selection-start-column="24" selection-end-line="11" selection-end-column="24" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/cluster_test.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/cluster_test.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="13395">
           <caret line="720" column="18" lean-forward="false" selection-start-line="720" selection-start-column="18" selection-end-line="720" selection-end-column="18" />
@@ -574,7 +475,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/pool_test.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/pool_test.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="19">
           <caret line="90" column="37" lean-forward="false" selection-start-line="90" selection-start-column="37" selection-end-line="90" selection-end-column="37" />
@@ -621,10 +522,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/commands.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/commands.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="19">
           <caret line="965" column="14" lean-forward="false" selection-start-line="965" selection-start-column="14" selection-end-line="965" selection-end-column="14" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -632,6 +534,9 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-114">
           <caret line="6" column="7" lean-forward="true" selection-start-line="6" selection-start-column="7" selection-end-line="6" selection-end-column="7" />
+          <folding>
+            <element signature="e#175#346#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -642,20 +547,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2601">
-          <caret line="225" column="42" lean-forward="true" selection-start-line="225" selection-start-column="42" selection-end-line="225" selection-end-column="42" />
-          <folding>
-            <element signature="e#175#463#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/codegangsta/martini/martini.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/codegangsta/martini/martini.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="109">
           <caret line="85" column="24" lean-forward="false" selection-start-line="85" selection-start-column="24" selection-end-line="85" selection-end-column="24" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -722,10 +618,11 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/codegangsta/inject/inject.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/codegangsta/inject/inject.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="57">
           <caret line="3" column="7" lean-forward="true" selection-start-line="3" selection-start-column="7" selection-end-line="3" selection-end-column="7" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -737,6 +634,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/server/connector/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="910">
+          <caret line="77" column="17" lean-forward="false" selection-start-line="77" selection-start-column="17" selection-end-line="77" selection-end-column="17" />
+          <folding>
+            <element signature="e#169#518#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/vendor/github.com/someonegg/gox/netx/httpservice.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1057">
@@ -745,13 +652,27 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/server/connector/main.go">
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/ring.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="910">
-          <caret line="77" column="17" lean-forward="false" selection-start-line="77" selection-start-column="17" selection-end-line="77" selection-end-column="17" />
-          <folding>
-            <element signature="e#169#518#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="124">
+          <caret line="10" column="0" lean-forward="false" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/cluster.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="114">
+          <caret line="9" column="20" lean-forward="false" selection-start-line="9" selection-start-column="20" selection-end-line="9" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="122">
+          <caret line="17" column="28" lean-forward="false" selection-start-line="17" selection-start-column="28" selection-end-line="17" selection-end-column="28" />
+          <folding />
         </state>
       </provider>
     </entry>
