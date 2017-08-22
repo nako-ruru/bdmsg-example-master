@@ -53,16 +53,15 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	go func() {
 		for {
 			msg, err := pubsub.ReceiveMessage()
-			fmt.Println("Receive from channel:", msg.Channel, msg.Payload)
+			log.Info("Receive from channel:", "channel", msg.Channel, "payload", msg.Payload)
 			if err != nil {
 				break
 			}
 			var hello PushMsg
 			hello.Unmarshal([]byte(msg.Payload))
 			i, ok := s.clientM.clients[hello.UserId]
-			fmt.Println("ok1:", ok)
 			if ok {
-				fmt.Println("ok2:", ok)
+				log.Info("found client", "userId", hello.UserId)
 				i.ServerHello(hello)
 			}
 		}
@@ -192,7 +191,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	if(sendDirectly) {
 		pong, err := client.Ping().Result()
 		if err != nil {
-			fmt.Println(pong, err)
+			log.Error("handleMsg", "pong", pong, "err", err)
 		}
 
 		client.RPush(roomId, bytes)
