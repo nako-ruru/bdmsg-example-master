@@ -2,23 +2,48 @@ package connectsvc
 
 import (
 	"github.com/jcelliott/lumber"
+	. "server/connector/internal/config"
+	"github.com/someonegg/goutil/gologf"
+	"github.com/someonegg/golog"
 )
 
-func createLogger() (l *lumber.MultiLogger) {
-	mlog := lumber.NewMultiLogger()
+var log *lumber.MultiLogger
+
+func init()  {
+	golog.RootLogger.AddPredef("app", "connector")
+
+	err := ParseConfig()
+	if err != nil {
+		log.Error("main$ParseConfig", "error", err)
+		return
+	}
+
+	err = gologf.SetOutput(Config.Logfile)
+	if err != nil {
+		log.Error("main$SetOutput, err=%s", err)
+		return
+	}
+
+	log = lumber.NewMultiLogger()
+
 	consoleLog := lumber.NewConsoleLogger(lumber.INFO)
-	mlog.AddLoggers(consoleLog)
-	fileLog, err1 := lumber.NewFileLogger("log/connector.err", lumber.INFO, lumber.ROTATE, 5000, 9, 100)
+	log.AddLoggers(consoleLog)
+
+	fileLog, err1 := lumber.NewFileLogger(Config.Logfile, lumber.INFO, lumber.ROTATE, 5000, 9, 100)
 	if err1 == nil {
-		mlog.AddLoggers(fileLog)
+		log.AddLoggers(fileLog)
 	} else {
-		mlog.Error("createLogger, err=%s", err1)
+		log.Error("createLogger, err=%s", err1)
 	}
-	fileError, err2 := lumber.NewFileLogger("log/connector.err", lumber.ERROR, lumber.ROTATE, 5000, 9, 100)
+
+	fileError, err2 := lumber.NewFileLogger(Config.LogErrorFile, lumber.ERROR, lumber.ROTATE, 5000, 9, 100)
 	if err2 == nil {
-		mlog.AddLoggers(fileError)
+		log.AddLoggers(fileError)
 	} else {
-		mlog.Error("createLogger, err=%s", err2)
+		log.Error("createLogger, err=%s", err2)
 	}
-	return mlog
+}
+
+func GetLogger() (l *lumber.MultiLogger) {
+	return log
 }

@@ -18,9 +18,8 @@ import (
 	"github.com/streadway/amqp"
 	"github.com/satori/go.uuid"
 	"fmt"
+	. "server/connector/internal/config"
 )
-
-var log = createLogger()
 
 var client = redis.NewClient(&redis.Options{
 	Addr:     "localhost:9921",
@@ -199,7 +198,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		var err error
 		if ch == nil {
 			var conn *amqp.Connection
-			conn, err = amqp.Dial("amqp://live_stream:BrightHe0@47.92.98.23:5672/")
+			conn, err = amqp.Dial(Config.RabbitMqUrl)
 			failOnError(err, "Failed to connect to RabbitMQ")
 			ch, err = conn.Channel()
 			failOnError(err, "Failed to open a channel")

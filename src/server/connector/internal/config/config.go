@@ -50,10 +50,12 @@ func (c *ManagerConfT) Check() bool {
 }
 
 type ConfigT struct {
-	Pidfile  string        `json:"pidfile"`
-	Logfile  string        `json:"logfile"`
-	ServiceS ServiceSConfT `json:"service"`
-	Manager  ManagerConfT  `json:"manager"`
+	Pidfile  string        	`json:"pidfile"`
+	Logfile  string        	`json:"logfile"`
+	LogErrorFile string		`json:"logerrorfile"`
+	ServiceS ServiceSConfT 	`json:"service"`
+	Manager  ManagerConfT  	`json:"manager"`
+	RabbitMqUrl string		`json:"rabbitmqurl"`
 }
 
 func (c *ConfigT) Check() bool {
