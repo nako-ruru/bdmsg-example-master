@@ -2,7 +2,7 @@ package connectsvc
 
 
 type RedisMsg struct {
-	MessageId string		`json: "messageId"`
+	MessageId string		`json:"messageId"`
 	RoomId  string 			`json:"roomId"`
 	UserId  string 			`json:"userId"`
 	Time    int64			`json:"time"`
