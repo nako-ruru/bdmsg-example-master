@@ -53,10 +53,11 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	go func() {
 		for {
 			msg, err := pubsub.ReceiveMessage()
-			log.Info("Receive from channel:", "channel", msg.Channel, "payload", msg.Payload)
 			if err != nil {
+				log.Error("Receive from channel:", "error", err)
 				break
 			}
+			log.Info("Receive from channel:", "channel", msg.Channel, "payload", msg.Payload)
 			var hello PushMsg
 			hello.Unmarshal([]byte(msg.Payload))
 			i, ok := s.clientM.clients[hello.UserId]
@@ -199,13 +200,13 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		var err error
 		if ch == nil {
 			var conn *amqp.Connection
-			conn, err = amqp.Dial("amqp://live_stream:BrightHe0@47.92.98.23:5672/")
+			conn, err = amqp.Dial("amqp://live_stream:BrightHe0@127.0.0.1:5672/")
 			failOnError(err, "Failed to connect to RabbitMQ")
 			ch, err = conn.Channel()
 			failOnError(err, "Failed to open a channel")
 
 			q, err = ch.QueueDeclare(
-				"connector_test", // name
+				"connector", // name
 				false,   // durable
 				false,   // delete when unused
 				false,   // exclusive
