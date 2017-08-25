@@ -6,7 +6,6 @@ package connectsvc
 
 import (
 	"github.com/someonegg/bdmsg"
-	"github.com/someonegg/golog"
 	"golang.org/x/net/context"
 	"net"
 	"time"
@@ -21,7 +20,7 @@ import (
 	"fmt"
 )
 
-var log = golog.SubLoggerWithFields(golog.RootLogger, "module", "connectsvc")
+var log = createLogger()
 
 var client = redis.NewClient(&redis.Options{
 	Addr:     "localhost:9921",
@@ -31,7 +30,7 @@ var client = redis.NewClient(&redis.Options{
 
 func failOnError(err error, msg string) {
 	if err != nil {
-		log.Error("failOnError", "error", err)
+		log.Error("failOnError, error=%s", err)
 		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
 }
@@ -54,15 +53,15 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 		for {
 			msg, err := pubsub.ReceiveMessage()
 			if err != nil {
-				log.Error("Receive from channel:", "error", err)
+				log.Error("Receive from channel, err=%s", err)
 				break
 			}
-			log.Info("Receive from channel:", "channel", msg.Channel, "payload", msg.Payload)
+			log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
 			var hello PushMsg
 			hello.Unmarshal([]byte(msg.Payload))
 			i, ok := s.clientM.clients[hello.UserId]
 			if ok {
-				log.Info("found client", "userId", hello.UserId)
+				log.Info("found client, userId=%s", hello.UserId)
 				i.ServerHello(hello)
 			}
 		}
@@ -96,7 +95,7 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 
 	_, err = s.clientM.clientIn(request.UserId, request.Pass, msc)
 	if err != nil {
-		log.Error("handleRegister", "error", err)
+		log.Error("handleRegister, err=%s", err)
 		panic(ErrUnexpected)
 	}
 
@@ -113,7 +112,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	var params map[string]string;
 
 
-	log.Info("handleMsg", "bdmsg.Msg", fmt.Sprintf("%v : %v : %v", c.ID, t, string(m[:])))
+	log.Info("handleMsg, id=%s, t=%d, m=%s", c.ID, t, string(m[:]))
 
 	switch t {
 	case 1:
@@ -192,7 +191,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	if(sendDirectly) {
 		pong, err := client.Ping().Result()
 		if err != nil {
-			log.Error("handleMsg", "pong", pong, "err", err)
+			log.Error("handleMsg, pong=%s, err=%s", pong, err)
 		}
 
 		client.RPush(roomId, bytes)
@@ -200,7 +199,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		var err error
 		if ch == nil {
 			var conn *amqp.Connection
-			conn, err = amqp.Dial("amqp://live_stream:BrightHe0@127.0.0.1:5672/")
+			conn, err = amqp.Dial("amqp://live_stream:BrightHe0@47.92.98.23:5672/")
 			failOnError(err, "Failed to connect to RabbitMQ")
 			ch, err = conn.Channel()
 			failOnError(err, "Failed to open a channel")
@@ -233,7 +232,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager) (*bdmsg.Server, error) {
 	l, err := net.ListenTCP("tcp", (*net.TCPAddr)(&conf.ListenAddr))
 	if err != nil {
-		log.Error("Start$net.ListenTCP", "error", err)
+		log.Error("Start$net.ListenTCP, err=%s", err)
 		return nil, ErrAddress
 	}
 

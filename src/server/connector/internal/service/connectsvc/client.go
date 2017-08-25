@@ -25,7 +25,7 @@ type Client struct {
 }
 
 func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager) (*Client, error) {
-	log.Info("createClient", "id", id, "remoteaddr", msc.Conn().RemoteAddr())
+	log.Info("createClient, id=%s, remoteaddr=%s", id, msc.Conn().RemoteAddr())
 
 	t := &Client{
 		ID:      id,
@@ -45,7 +45,7 @@ func (c *Client) ending() {
 		const size = 16 << 10
 		buf := make([]byte, size)
 		buf = buf[:runtime.Stack(buf, false)]
-		log.Error("Client$monitor", "error", "panic", "stack", fmt.Sprintf("\n%s", buf))
+		log.Error("Client$monitor, buf=%s", fmt.Sprintf("\n%s", buf))
 	}
 
 	defer func() { recover() }()
