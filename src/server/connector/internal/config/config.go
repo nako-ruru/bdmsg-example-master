@@ -56,6 +56,7 @@ type ConfigT struct {
 	ServiceS ServiceSConfT 	`json:"service"`
 	Manager  ManagerConfT  	`json:"manager"`
 	RabbitMqUrl string		`json:"rabbitmqurl"`
+	KafkaBrokers[] string 	`json:"kafkabrokers"`
 }
 
 func (c *ConfigT) Check() bool {

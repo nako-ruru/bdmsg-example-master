@@ -17,6 +17,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/streadway/amqp"
 	"github.com/satori/go.uuid"
+	"github.com/Shopify/sarama"
 	"fmt"
 	. "server/connector/internal/config"
 )
@@ -37,6 +38,9 @@ func failOnError(err error, msg string) {
 
 var q amqp.Queue
 var ch *amqp.Channel
+
+var producer sarama.SyncProducer
+var producerInited = false
 
 type service struct {
 	*bdmsg.Server
@@ -188,7 +192,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 
 
 	var sendDirectly = false
-	var useRabbitMq = false
+	var mqType = "kafka"
 	if sendDirectly {
 		pong, err := client.Ping().Result()
 		if err != nil {
@@ -196,8 +200,36 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		}
 
 		client.RPush(roomId, bytes)
-	} else if !useRabbitMq {
+	} else if mqType == "radismq" {
 		client.RPush("connector", bytes)
+	} else if mqType == "kafka" {
+		if !producerInited {
+			config := sarama.NewConfig()
+			config.Producer.RequiredAcks = sarama.WaitForAll
+			config.Producer.Partitioner = sarama.NewRandomPartitioner
+			config.Producer.Return.Successes = true
+
+			var err error
+			producer, err = sarama.NewSyncProducer(Config.KafkaBrokers, config)
+			if err != nil {
+				log.Error("%s", err)
+				panic(err)
+			}
+			producerInited = true
+		}
+
+		msg := &sarama.ProducerMessage {
+			Topic: 			"connector",
+			Partition: 		int32(-1),
+			Key:       		sarama.StringEncoder("key"),
+			Value:			sarama.ByteEncoder(bytes),
+		}
+
+		partition, offset, err := producer.SendMessage(msg)
+		if err != nil {
+			log.Error("Send message Fail, %s", err)
+		}
+		log.Trace("Partition = %d, offset=%d\n", partition, offset)
 	} else {
 		var err error
 		if ch == nil {
