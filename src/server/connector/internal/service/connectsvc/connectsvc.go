@@ -29,6 +29,7 @@ var client = redis.NewClient(&redis.Options{
 
 func failOnError(err error, msg string) {
 	if err != nil {
+		ch = nil
 		log.Error("failOnError, error=%s", err)
 		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
@@ -187,13 +188,16 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 
 
 	var sendDirectly = false
-	if(sendDirectly) {
+	var useRabbitMq = false
+	if sendDirectly {
 		pong, err := client.Ping().Result()
 		if err != nil {
 			log.Error("handleMsg, pong=%s, err=%s", pong, err)
 		}
 
 		client.RPush(roomId, bytes)
+	} else if !useRabbitMq {
+		client.RPush("connector", bytes)
 	} else {
 		var err error
 		if ch == nil {
