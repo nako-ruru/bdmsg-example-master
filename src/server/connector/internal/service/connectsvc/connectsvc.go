@@ -208,6 +208,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 			config.Producer.RequiredAcks = sarama.WaitForAll
 			config.Producer.Partitioner = sarama.NewRandomPartitioner
 			config.Producer.Return.Successes = true
+			config.Producer.Compression = sarama.CompressionGZIP
 
 			var err error
 			producer, err = sarama.NewSyncProducer(Config.KafkaBrokers, config)
