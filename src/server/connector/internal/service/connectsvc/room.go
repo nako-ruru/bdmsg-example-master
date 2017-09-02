@@ -24,13 +24,15 @@ func (m *RoomManager) clientIn(id, roomId string) {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
-	if m.clients[roomId] == nil {
-		m.clients[roomId] = []string{}
+	if roomId != "" {
+		if m.clients[roomId] == nil {
+			m.clients[roomId] = []string{}
+		}
+
+		m.internalEnding(id)
+
+		m.clients[roomId] = append(m.clients[roomId], id)
 	}
-
-	m.internalEnding(id)
-
-	m.clients[roomId] = append(m.clients[roomId], id)
 }
 
 func (c *RoomManager) ending(id string) {

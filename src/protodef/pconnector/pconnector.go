@@ -28,7 +28,6 @@ const (
 type Register struct {
 	UserId string
 	Pass   string
-	RoomId string
 }
 
 func (p *Register) Marshal() ([]byte, error) {

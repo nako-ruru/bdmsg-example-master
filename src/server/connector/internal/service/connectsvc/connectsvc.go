@@ -87,18 +87,16 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	mux := bdmsg.NewPumpMux(nil)
 	mux.HandleFunc(MsgTypeRegister, s.handleRegister)
-	mux.HandleFunc(MsgTypeEnterRoom, s.handleMsg)
+	mux.HandleFunc(MsgTypeEnterRoom, s.handleEnterRoom)
 	mux.HandleFunc(MsgTypeChat, s.handleMsg)
-	mux.HandleFunc(MsgTypeSupport, s.handleMsg)
-	mux.HandleFunc(MsgTypeSendGift, s.handleMsg)
-	mux.HandleFunc(MsgTypeShare, s.handleMsg)
-	mux.HandleFunc(MsgTypeLevelUp, s.handleMsg)
 
-	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO,
-		mux, pumperInN, pumperOutN)
+	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 	return s
 }
 
+/*
+  客户端登记
+ */
 func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	msc := p.UserData().(*bdmsg.SClient)
 	if msc.Handshaked() {
@@ -111,23 +109,37 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 		panic(ErrParameter)
 	}
 
-	_, err = s.clientM.clientIn(register.UserId, register.Pass, msc)
+	_, err = s.clientM.clientIn(register.UserId, register.Pass, msc, s.roomM)
 	if err != nil {
 		log.Error("handleRegister, err=%s", err)
 		panic(ErrUnexpected)
 	} else {
-		s.roomM.clientIn(register.UserId, register.RoomId)
-		log.Info("handleRegister, id=%s, roomId=%s, remoteaddr=%s", register.UserId, register.RoomId, msc.Conn().RemoteAddr())
+		log.Info("handleRegister, id=%s, remoteaddr=%s", register.UserId, msc.Conn().RemoteAddr())
 	}
 
 	// tell bdmsg that client is authorized
 	msc.Handshake()
 }
 
+
+func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
+	c := p.UserData().(*Client)
+
+	var enterRoom EnterRoom
+	err := enterRoom.Unmarshal(m) // unmarshal enterRoom
+	if err != nil {
+		panic(ErrParameter)
+	}
+
+	c.roomId = enterRoom.RoomId
+	s.roomM.clientIn(c.ID, enterRoom.RoomId)
+	log.Info("handleEnterRoom, id=%s, roomId=%s", c.ID, enterRoom.RoomId)
+}
+
 func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
 
-	var roomId string
+	var roomId string = c.roomId
 	var level int
 	var nickname string
 	var params map[string]string;
@@ -137,74 +149,20 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 
 	switch t {
 	case 1:
-		var hello Chat
-		err := hello.Unmarshal(m) // unmarshal hello
+		var chat Chat
+		err := chat.Unmarshal(m) // unmarshal chat
 		if err != nil {
 			panic(ErrParameter)
 		}
-		roomId = hello.RoomId
-		level = hello.Level
-		nickname = hello.Nickname
-		params = map[string]string{"content": hello.Content}
-		break
-	case 2:
-		var hello Support
-		err := hello.Unmarshal(m)
-		if err != nil {
-			panic(ErrParameter)
+		if chat.RoomId != "" {
+			roomId = chat.RoomId
+			s.roomM.clientIn(c.ID, roomId)
 		}
-		roomId = hello.RoomId
-		level = hello.Level
-		nickname = hello.Nickname
-		params = map[string]string{}
-		break
-	case 3:
-		var hello SendGift
-		err := hello.Unmarshal(m)
-		if err != nil {
-			panic(ErrParameter)
-		}
-		roomId = hello.RoomId
-		level = hello.Level
-		nickname = hello.Nickname
-		params = map[string]string{"giftId": hello.GiftId}
-		break
-	case 4:
-		var hello EnterRoom
-		err := hello.Unmarshal(m)
-		if err != nil {
-			panic(ErrParameter)
-		}
-		roomId = hello.RoomId
-		level = hello.Level
-		nickname = hello.Nickname
-		params = map[string]string{}
-		break
-	case 5:
-		var hello Share
-		err := hello.Unmarshal(m)
-		if err != nil {
-			panic(ErrParameter)
-		}
-		roomId = hello.RoomId
-		level = hello.Level
-		nickname = hello.Nickname
-		params = map[string]string{}
-		break
-	case 6:
-		var hello LevelUp
-		err := hello.Unmarshal(m) // unmarshal hello
-		if err != nil {
-			panic(ErrParameter)
-		}
-		roomId = hello.RoomId
-		level = hello.Level
-		nickname = hello.Nickname
-		params = map[string]string{"level": fmt.Sprint(hello.Level)}
+		level = chat.Level
+		nickname = chat.Nickname
+		params = map[string]string{"content": chat.Content}
 		break
 	}
-
-	s.roomM.clientIn(c.ID, roomId)
 
 	var redisMsg = RedisMsg{uuid.NewV4().String(),roomId, c.ID, time.Now().UnixNano() / 1000000, int(t), nickname, level, params}
 	var bytes,_ = json.Marshal(redisMsg)

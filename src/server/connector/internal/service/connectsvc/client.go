@@ -18,22 +18,33 @@ import (
 
 type Client struct {
 	ID      string
+	roomId string
 	msc     *bdmsg.SClient
 	clientM *ClientManager
-
-	msgC chan string
+	room	*RoomManager
 }
 
-func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager) (*Client, error) {
+func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, room *RoomManager) (*Client, error) {
 	t := &Client{
 		ID:      id,
 		msc:     msc,
 		clientM: clientM,
-		msgC:    make(chan string, 1),
+		room: 	room,
 	}
 
 	t.msc.SetUserData(t)
 	return t, nil
+}
+
+func (c *Client) monitor() {
+	defer c.ending()
+
+	for q := false; !q; {
+		select {
+		case <-c.msc.StopD():
+			q = true
+		}
+	}
 }
 
 func (c *Client) ending() {
@@ -50,6 +61,7 @@ func (c *Client) ending() {
 
 	c.msc.SetUserData(nil)
 	c.clientM.removeClient(c.ID)
+	c.room.ending(c.ID)
 }
 
 // Never fail.
@@ -61,14 +73,6 @@ func (c *Client) Close() error {
 // Not nil.
 func (c *Client) MSC() *bdmsg.SClient {
 	return c.msc
-}
-
-func (c *Client) ClientHello(msg string) {
-	select {
-	case c.msgC <- msg:
-	default:
-		// discard
-	}
 }
 
 func (c *Client) ServerHello(hello pconnector.PushMsg) {
@@ -96,7 +100,7 @@ func (m *ClientManager) Client(id string) *Client {
 	return m.clients[id]
 }
 
-func (m *ClientManager) clientIn(id, pass string, msc *bdmsg.SClient) (*Client, error) {
+func (m *ClientManager) clientIn(id, pass string, msc *bdmsg.SClient, room *RoomManager) (*Client, error) {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
@@ -105,12 +109,13 @@ func (m *ClientManager) clientIn(id, pass string, msc *bdmsg.SClient) (*Client, 
 		//return c, ErrAlreadyExist
 	}
 
-	c, err := createClient(id, pass, msc, m)
+	c, err := createClient(id, pass, msc, m, room)
 	if err != nil {
 		return nil, err
 	}
 
 	m.clients[id] = c
+	go c.monitor()
 
 	return c, nil
 }
