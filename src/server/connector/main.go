@@ -28,7 +28,9 @@ func main() {
 
 	clientM := connectsvc.NewClientManager(mSet)
 
-	connectS, err := connectsvc.Start(&Config.ServiceS.Connect.BDMsgSvcConfT, clientM)
+	roomM := connectsvc.NewRoomManager(mSet)
+
+	connectS, err := connectsvc.Start(&Config.ServiceS.Connect.BDMsgSvcConfT, clientM, roomM)
 	if err != nil {
 		log.Error("main$connectsvc.Startt, err=%s", err)
 		return

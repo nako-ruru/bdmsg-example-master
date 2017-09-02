@@ -25,8 +25,6 @@ type Client struct {
 }
 
 func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager) (*Client, error) {
-	log.Info("createClient, id=%s, remoteaddr=%s", id, msc.Conn().RemoteAddr())
-
 	t := &Client{
 		ID:      id,
 		msc:     msc,

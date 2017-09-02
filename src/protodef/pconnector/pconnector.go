@@ -28,6 +28,7 @@ const (
 type Register struct {
 	UserId string
 	Pass   string
+	RoomId string
 }
 
 func (p *Register) Marshal() ([]byte, error) {
@@ -128,7 +129,8 @@ func (p *LevelUp) Unmarshal(b []byte) error {
 
 type PushMsg struct {
 	UserId  string 			`json:"userId"`
-	ModuleId    string		`json:"moduleId"`
+	RoomId string			`json:"roomId"`
+	ModuleId  string		`json:"moduleId"`
 	Content string			`json:"content"`
 }
 

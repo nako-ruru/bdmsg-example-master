@@ -45,12 +45,12 @@ var producerInited = false
 type service struct {
 	*bdmsg.Server
 	clientM *ClientManager
+	roomM *RoomManager
 }
 
-func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN int,
-	clientM *ClientManager) *service {
+func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN int, clientM *ClientManager, roomM *RoomManager) *service {
 
-	s := &service{clientM: clientM}
+	s := &service{clientM: clientM, roomM: roomM}
 
 	pubsub := client.Subscribe("mychannel")
 	go func() {
@@ -63,10 +63,24 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 			log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
 			var hello PushMsg
 			hello.Unmarshal([]byte(msg.Payload))
-			i, ok := s.clientM.clients[hello.UserId]
-			if ok {
-				log.Info("found client, userId=%s", hello.UserId)
-				i.ServerHello(hello)
+			if hello.UserId != "" {
+				client, ok := s.clientM.clients[hello.UserId]
+				if ok {
+					log.Info("found client, userId=%s", hello.UserId)
+					client.ServerHello(hello)
+				}
+			}
+			if hello.RoomId != "" {
+				userIds, ok := s.roomM.clients[hello.RoomId]
+				if ok {
+					for _, userId := range userIds {
+						client, ok := s.clientM.clients[userId]
+						if ok {
+							client.ServerHello(hello)
+						}
+					}
+					log.Info("found client, roomId=%s, userIds=%s", hello.RoomId, userIds)
+				}
 			}
 		}
 	}()
@@ -91,16 +105,19 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 		panic(ErrUnexpected)
 	}
 
-	var request Register
-	err := request.Unmarshal(m) // unmarshal request
+	var register Register
+	err := register.Unmarshal(m) // unmarshal register
 	if err != nil {
 		panic(ErrParameter)
 	}
 
-	_, err = s.clientM.clientIn(request.UserId, request.Pass, msc)
+	_, err = s.clientM.clientIn(register.UserId, register.Pass, msc)
 	if err != nil {
 		log.Error("handleRegister, err=%s", err)
 		panic(ErrUnexpected)
+	} else {
+		s.roomM.clientIn(register.UserId, register.RoomId)
+		log.Info("handleRegister, id=%s, roomId=%s, remoteaddr=%s", register.UserId, register.RoomId, msc.Conn().RemoteAddr())
 	}
 
 	// tell bdmsg that client is authorized
@@ -187,6 +204,8 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		break
 	}
 
+	s.roomM.clientIn(c.ID, roomId)
+
 	var redisMsg = RedisMsg{uuid.NewV4().String(),roomId, c.ID, time.Now().UnixNano() / 1000000, int(t), nickname, level, params}
 	var bytes,_ = json.Marshal(redisMsg)
 
@@ -265,14 +284,14 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	}
 }
 
-func Start(conf *BDMsgSvcConfT, clientM *ClientManager) (*bdmsg.Server, error) {
+func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bdmsg.Server, error) {
 	l, err := net.ListenTCP("tcp", (*net.TCPAddr)(&conf.ListenAddr))
 	if err != nil {
 		log.Error("Start$net.ListenTCP, err=%s", err)
 		return nil, ErrAddress
 	}
 
-	s := newService(l, time.Duration(conf.HandshakeTO), conf.InqueueN, conf.OutqueueN, clientM)
+	s := newService(l, time.Duration(conf.HandshakeTO), conf.InqueueN, conf.OutqueueN, clientM, roomM)
 	s.Start()
 
 	return s.Server, nil
