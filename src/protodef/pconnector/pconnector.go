@@ -14,14 +14,8 @@ import (
 
 const (
 	MsgTypeRegister = 0
-
 	MsgTypeChat 		= 1
-	MsgTypeSupport = 2
-	MsgTypeSendGift = 3
 	MsgTypeEnterRoom = 4
-	MsgTypeShare = 5
-	MsgTypeLevelUp = 6
-
 	MsgTypePush = 30000
 )
 
@@ -126,17 +120,48 @@ func (p *LevelUp) Unmarshal(b []byte) error {
 }
 
 
-type PushMsg struct {
-	UserId  string 			`json:"userId"`
-	RoomId string			`json:"roomId"`
-	ModuleId  string		`json:"moduleId"`
-	Content string			`json:"content"`
+type FromRouterMessage struct {
+	ToUserId string 				`json:"toUserId"`
+	ToRoomId string					`json:"toRoomId"`
+	Params   map[string]string		`json:"params"`
+	//Deprecated
+	UserId string					`json:"userId"`
+	//Deprecated
+	RoomId string					`json:"roomId"`
+	//Deprecated
+	Content  string					`json:"content"`
 }
 
-func (p *PushMsg) Marshal() ([]byte, error) {
+func (p *FromRouterMessage) Unmarshal(b []byte) error {
+	result := json.Unmarshal(b, p)
+	if result != nil {
+		if p.UserId != "" && p.ToUserId == "" {
+			p.ToUserId = p.UserId
+		}
+		if p.RoomId != "" && p.ToRoomId == "" {
+			p.ToRoomId = p.RoomId
+		}
+		v, ok := p.Params["content"]
+		if p.Content != "" && (!ok || v == "") {
+			p.ToUserId = v
+		}
+	}
+	return result
+}
+
+
+type ToClientMessage struct {
+	ToUserId string 				`json:"toUserId"`
+	ToRoomId string					`json:"toRoomId"`
+	Params   map[string]string		`json:"params"`
+	//Deprecated
+	UserId string					`json:"userId"`
+	//Deprecated
+	RoomId string					`json:"roomId"`
+	//Deprecated
+	Content  string					`json:"content"`
+}
+
+func (p *ToClientMessage) Marshal() ([]byte, error) {
 	return json.Marshal(p)
-}
-
-func (p *PushMsg) Unmarshal(b []byte) error {
-	return json.Unmarshal(b, p)
 }

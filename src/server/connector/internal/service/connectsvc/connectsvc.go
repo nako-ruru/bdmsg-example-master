@@ -52,7 +52,10 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s := &service{clientM: clientM, roomM: roomM}
 
-	pubsub := client.Subscribe("mychannel")
+	channelName1 := "router"
+	//Deprecated
+	channelName2 := "mychannel"
+	pubsub := client.Subscribe(channelName1, channelName2)
 	go func() {
 		for {
 			msg, err := pubsub.ReceiveMessage()
@@ -61,25 +64,46 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 				break
 			}
 			log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
-			var hello PushMsg
-			hello.Unmarshal([]byte(msg.Payload))
-			if hello.UserId != "" {
-				client, ok := s.clientM.clients[hello.UserId]
-				if ok {
-					log.Info("found client, userId=%s", hello.UserId)
-					client.ServerHello(hello)
+
+			if msg.Channel == channelName1 || msg.Channel == channelName2 {
+				var fromRouterMessage FromRouterMessage
+				fromRouterMessage.Unmarshal([]byte(msg.Payload))
+				if fromRouterMessage.ToUserId != "" {
+					client, ok := s.clientM.clients[fromRouterMessage.ToUserId]
+					if ok {
+						log.Info("found client, userId=%s", fromRouterMessage.ToUserId)
+						toClientMessage := ToClientMessage {
+							ToRoomId: fromRouterMessage.ToRoomId,
+							ToUserId: fromRouterMessage.ToUserId,
+							Params:   fromRouterMessage.Params,
+
+							RoomId:  fromRouterMessage.ToRoomId,
+							UserId:  fromRouterMessage.ToUserId,
+							Content: fromRouterMessage.Params["content"],
+						}
+						client.ServerHello(toClientMessage)
+					}
 				}
-			}
-			if hello.RoomId != "" {
-				userIds, ok := s.roomM.clients[hello.RoomId]
-				if ok {
-					for _, userId := range userIds {
-						client, ok := s.clientM.clients[userId]
-						if ok {
-							client.ServerHello(hello)
+				if fromRouterMessage.ToRoomId != "" {
+					userIds, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
+					if ok {
+						log.Info("found client, roomId=%s, userIds=%s", fromRouterMessage.ToRoomId, userIds)
+						for _, userId := range userIds {
+							client, ok := s.clientM.clients[userId]
+							if ok {
+								toClientMessage := ToClientMessage {
+									ToRoomId: fromRouterMessage.ToRoomId,
+									ToUserId: fromRouterMessage.ToUserId,
+									Params:   fromRouterMessage.Params,
+
+									RoomId:  fromRouterMessage.ToRoomId,
+									UserId:  fromRouterMessage.ToUserId,
+									Content: fromRouterMessage.Params["content"],
+								}
+								client.ServerHello(toClientMessage)
+							}
 						}
 					}
-					log.Info("found client, roomId=%s, userIds=%s", hello.RoomId, userIds)
 				}
 			}
 		}
@@ -164,7 +188,16 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		break
 	}
 
-	var redisMsg = RedisMsg{uuid.NewV4().String(),roomId, c.ID, time.Now().UnixNano() / 1000000, int(t), nickname, level, params}
+	var redisMsg = ToComputeMessage{
+		uuid.NewV4().String(),
+		roomId,
+		c.ID,
+		nickname,
+		level,
+		int(t),
+		params,
+		time.Now().UnixNano() / 1000000,
+	}
 	var bytes,_ = json.Marshal(redisMsg)
 
 

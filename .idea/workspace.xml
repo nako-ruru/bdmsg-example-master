@@ -3,8 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="173b7b09-97ec-42c4-9bef-656bcf261b82" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/protodef/pconnector/pconnector.go" afterPath="$PROJECT_DIR$/src/protodef/pconnector/pconnector.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -15,23 +17,21 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="main.go" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/server/connector/main.go">
+      <file leaf-file-name="connector.conf" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/connector.conf">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="32" column="32" lean-forward="false" selection-start-line="32" selection-start-column="32" selection-end-line="32" selection-end-column="32" />
-              <folding>
-                <element signature="e#169#450#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="95">
+              <caret line="5" column="49" lean-forward="true" selection-start-line="5" selection-start-column="49" selection-end-line="5" selection-end-column="49" />
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="connectsvc.go" pinned="false" current-in-tab="false">
+      <file leaf-file-name="connectsvc.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1085">
-              <caret line="247" column="50" lean-forward="false" selection-start-line="247" selection-start-column="50" selection-end-line="247" selection-end-column="50" />
+            <state relative-caret-position="508">
+              <caret line="89" column="108" lean-forward="false" selection-start-line="89" selection-start-column="108" selection-end-line="89" selection-end-column="108" />
               <folding>
                 <element signature="e#175#500#0" expanded="true" />
               </folding>
@@ -39,37 +39,23 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="persistence.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="152">
+              <caret line="8" column="44" lean-forward="false" selection-start-line="8" selection-start-column="44" selection-end-line="8" selection-end-column="44" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="pconnector.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/protodef/pconnector/pconnector.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-2149">
-              <caret line="5" column="17" lean-forward="false" selection-start-line="5" selection-start-column="17" selection-end-line="5" selection-end-column="17" />
+            <state relative-caret-position="155">
+              <caret line="152" column="5" lean-forward="false" selection-start-line="152" selection-start-column="5" selection-end-line="152" selection-end-column="5" />
               <folding>
                 <element signature="e#237#264#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="client.go" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="417">
-              <caret line="26" column="24" lean-forward="true" selection-start-line="26" selection-start-column="24" selection-end-line="26" selection-end-column="24" />
-              <folding>
-                <element signature="e#175#346#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="room.go" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/room.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="19">
-              <caret line="8" column="28" lean-forward="false" selection-start-line="8" selection-start-column="28" selection-end-line="8" selection-end-column="28" />
-              <folding>
-                <element signature="e#20#75#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -86,12 +72,9 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>app</find>
-      <find>content</find>
       <find>PONG</find>
       <find>bdmsg.Msg</find>
       <find>992</find>
-      <find>9921</find>
       <find>B</find>
       <find>Br</find>
       <find>Bright</find>
@@ -116,6 +99,9 @@
       <find>con</find>
       <find>createClient</find>
       <find>moni</find>
+      <find>9921</find>
+      <find>:</find>
+      <find>:\d+</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -140,14 +126,14 @@
         <option value="$PROJECT_DIR$/src/server/connector/connector.conf.org" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/logfactory.go" />
         <option value="$PROJECT_DIR$/test/log/connector.log" />
-        <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/config/config.go" />
         <option value="$PROJECT_DIR$/test/connector.conf" />
         <option value="$PROJECT_DIR$/src/github.com/Shopify/sarama/async_producer.go" />
         <option value="$PROJECT_DIR$/src/server/connector/main.go" />
-        <option value="$PROJECT_DIR$/src/protodef/pconnector/pconnector.go" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/room.go" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go" />
+        <option value="$PROJECT_DIR$/src/protodef/pconnector/pconnector.go" />
+        <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" />
       </list>
     </option>
@@ -158,7 +144,7 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="-4" />
     <option name="width" value="1382" />
     <option name="height" value="754" />
@@ -179,6 +165,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -194,6 +181,46 @@
             <path>
               <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
               <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="server" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
+              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="server" type="462c0819:PsiDirectoryNode" />
+              <item name="connector" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
+              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="server" type="462c0819:PsiDirectoryNode" />
+              <item name="connector" type="462c0819:PsiDirectoryNode" />
+              <item name="internal" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
+              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="server" type="462c0819:PsiDirectoryNode" />
+              <item name="connector" type="462c0819:PsiDirectoryNode" />
+              <item name="internal" type="462c0819:PsiDirectoryNode" />
+              <item name="service" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
+              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="server" type="462c0819:PsiDirectoryNode" />
+              <item name="connector" type="462c0819:PsiDirectoryNode" />
+              <item name="internal" type="462c0819:PsiDirectoryNode" />
+              <item name="service" type="462c0819:PsiDirectoryNode" />
+              <item name="connectsvc" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
+              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
               <item name="test" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -201,7 +228,6 @@
         </subPane>
       </pane>
       <pane id="Scope" />
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -349,20 +375,20 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1382" height="754" extended-state="6" />
+    <frame x="-8" y="-8" width="1382" height="754" extended-state="7" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22617246" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22919819" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.5045386" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.5362319" sideWeight="0.49707174" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33333334" sideWeight="0.49707174" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36231884" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.49546143" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23188406" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.34138486" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -379,19 +405,11 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="241" />
+      <option name="time" value="246" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/streadway/amqp/channel.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="425" column="0" lean-forward="false" selection-start-line="425" selection-start-column="0" selection-end-line="425" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/vendor/github.com/go-redis/redis/commands.go" />
     <entry file="file://$PROJECT_DIR$/src/vendor/github.com/codegangsta/martini/martini.go" />
     <entry file="file://$PROJECT_DIR$/src/go4.org/go4test/cloudlaunch/serve_on_cloud.go">
       <provider selected="true" editor-type-id="text-editor">
@@ -477,13 +495,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="106">
           <caret line="51" column="5" lean-forward="false" selection-start-line="51" selection-start-column="5" selection-end-line="51" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://D:/Go/src/builtin/builtin.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="106">
-          <caret line="225" column="5" lean-forward="false" selection-start-line="225" selection-start-column="5" selection-end-line="225" selection-end-column="5" />
         </state>
       </provider>
     </entry>
@@ -583,13 +594,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/test/log/connector.err" />
     <entry file="file://$PROJECT_DIR$/test/log/connector.log" />
-    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="76">
-          <caret line="4" column="34" lean-forward="false" selection-start-line="4" selection-start-column="34" selection-end-line="4" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://D:/Go/src/sync/rwmutex.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6">
@@ -620,13 +624,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/connector.conf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="247">
-          <caret line="13" column="41" lean-forward="false" selection-start-line="13" selection-start-column="41" selection-end-line="13" selection-end-column="41" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/config/config.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-127">
@@ -636,7 +633,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/server/connector/main.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
+        <state relative-caret-position="361">
           <caret line="32" column="32" lean-forward="false" selection-start-line="32" selection-start-column="32" selection-end-line="32" selection-end-column="32" />
           <folding>
             <element signature="e#169#450#0" expanded="true" />
@@ -644,19 +641,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/protodef/pconnector/pconnector.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2149">
-          <caret line="5" column="17" lean-forward="false" selection-start-line="5" selection-start-column="17" selection-end-line="5" selection-end-column="17" />
-          <folding>
-            <element signature="e#237#264#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/room.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
+        <state relative-caret-position="95">
           <caret line="8" column="28" lean-forward="false" selection-start-line="8" selection-start-column="28" selection-end-line="8" selection-end-column="28" />
           <folding>
             <element signature="e#20#75#0" expanded="true" />
@@ -668,26 +655,74 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-323">
           <caret line="80" column="5" lean-forward="false" selection-start-line="80" selection-start-column="5" selection-end-line="80" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/go-redis/redis/redis.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="19">
+          <caret line="408" column="17" lean-forward="false" selection-start-line="408" selection-start-column="17" selection-end-line="408" selection-end-column="17" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="81">
+          <caret line="77" column="50" lean-forward="true" selection-start-line="77" selection-start-column="50" selection-end-line="77" selection-end-column="50" />
+          <folding>
+            <element signature="e#175#346#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/Go/src/builtin/builtin.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="238">
+          <caret line="253" column="5" lean-forward="false" selection-start-line="253" selection-start-column="5" selection-end-line="253" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/logs/connector.log">
+      <provider selected="true" editor-type-id="LogFileEditorProvider">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/connector.conf">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="95">
+          <caret line="5" column="49" lean-forward="true" selection-start-line="5" selection-start-column="49" selection-end-line="5" selection-end-column="49" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/protodef/pconnector/pconnector.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="155">
+          <caret line="152" column="5" lean-forward="false" selection-start-line="152" selection-start-column="5" selection-end-line="152" selection-end-column="5" />
+          <folding>
+            <element signature="e#237#264#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="152">
+          <caret line="8" column="44" lean-forward="false" selection-start-line="8" selection-start-column="44" selection-end-line="8" selection-end-column="44" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1085">
-          <caret line="247" column="50" lean-forward="false" selection-start-line="247" selection-start-column="50" selection-end-line="247" selection-end-column="50" />
+        <state relative-caret-position="508">
+          <caret line="89" column="108" lean-forward="false" selection-start-line="89" selection-start-column="108" selection-end-line="89" selection-end-column="108" />
           <folding>
             <element signature="e#175#500#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="417">
-          <caret line="26" column="24" lean-forward="true" selection-start-line="26" selection-start-column="24" selection-end-line="26" selection-end-column="24" />
-          <folding>
-            <element signature="e#175#346#0" expanded="true" />
           </folding>
         </state>
       </provider>

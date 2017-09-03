@@ -75,7 +75,7 @@ func (c *Client) MSC() *bdmsg.SClient {
 	return c.msc
 }
 
-func (c *Client) ServerHello(hello pconnector.PushMsg) {
+func (c *Client) ServerHello(hello pconnector.ToClientMessage) {
 	mr, _ := hello.Marshal()
 	c.msc.Output(pconnector.MsgTypePush, mr)
 }
