@@ -48,6 +48,8 @@ func (c *Client) monitor() {
 }
 
 func (c *Client) ending() {
+	log.Info("Client$ending, id=%s, roomId=%s", c.ID, c.roomId)
+
 	if e := recover(); e != nil {
 		c.Close()
 

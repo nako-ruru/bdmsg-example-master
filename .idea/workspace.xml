@@ -2,11 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="173b7b09-97ec-42c4-9bef-656bcf261b82" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/protodef/pconnector/pconnector.go" afterPath="$PROJECT_DIR$/src/protodef/pconnector/pconnector.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -17,46 +14,123 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="connector.conf" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/test/connector.conf">
+      <file leaf-file-name="room.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/room.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="95">
-              <caret line="5" column="49" lean-forward="true" selection-start-line="5" selection-start-column="49" selection-end-line="5" selection-end-column="49" />
+            <state relative-caret-position="-42">
+              <caret line="37" column="5" lean-forward="false" selection-start-line="37" selection-start-column="5" selection-end-line="37" selection-end-column="5" />
+              <folding>
+                <element signature="e#20#75#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="treeset.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/github.com/emirpasic/gods/sets/treeset/treeset.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="171">
+              <caret line="9" column="15" lean-forward="false" selection-start-line="9" selection-start-column="8" selection-end-line="9" selection-end-column="15" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="connectsvc.go" pinned="false" current-in-tab="true">
+      <file leaf-file-name="builtin.go" pinned="false" current-in-tab="false">
+        <entry file="file://D:/Go/src/builtin/builtin.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="149">
+              <caret line="133" column="5" lean-forward="false" selection-start-line="133" selection-start-column="5" selection-end-line="133" selection-end-column="5" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="connectsvc.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="508">
-              <caret line="89" column="108" lean-forward="false" selection-start-line="89" selection-start-column="108" selection-end-line="89" selection-end-column="108" />
+            <state relative-caret-position="1026">
+              <caret line="102" column="67" lean-forward="true" selection-start-line="102" selection-start-column="67" selection-end-line="102" selection-end-column="67" />
               <folding>
                 <element signature="e#175#500#0" expanded="true" />
+                <marker date="1504827708704" expanded="true" signature="1138:3302" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="1325:3019" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="1333:3016" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="1611:3012" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="2321:3007" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="2398:3001" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="3304:3318" ph="/*...*/" />
+                <marker date="1504827708704" expanded="true" signature="3420:3952" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="3481:3508" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="3600:3626" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="3718:3788" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="3794:3891" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="4057:4354" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="4183:4209" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="4452:7101" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="4659:4975" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="4669:4972" ph="..." />
+                <marker date="1504827708704" expanded="true" signature="4747:4775" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="4799:4862" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="5009:5132" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="5238:5387" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="5294:5353" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="5416:5455" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="5482:6324" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="5505:5932" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="5857:5903" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="5967:6109" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="6181:6259" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="6330:7099" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="6363:6815" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="6977:7045" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="7202:7499" ph="{...}" />
+                <marker date="1504827708704" expanded="true" signature="7285:7362" ph="{...}" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="persistence.go" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go">
+      <file leaf-file-name="client.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/vendor/github.com/someonegg/bdmsg/client.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="152">
-              <caret line="8" column="44" lean-forward="false" selection-start-line="8" selection-start-column="44" selection-end-line="8" selection-end-column="44" />
+            <state relative-caret-position="134">
+              <caret line="15" column="5" lean-forward="false" selection-start-line="15" selection-start-column="5" selection-end-line="15" selection-end-column="5" />
+              <folding>
+                <element signature="e#170#215#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="client.go" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="134">
+              <caret line="88" column="23" lean-forward="false" selection-start-line="88" selection-start-column="23" selection-end-line="88" selection-end-column="30" />
+              <folding>
+                <element signature="e#175#346#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="enumerable.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/github.com/emirpasic/gods/sets/treeset/enumerable.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="134">
+              <caret line="16" column="16" lean-forward="false" selection-start-line="16" selection-start-column="16" selection-end-line="16" selection-end-column="16" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="pconnector.go" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/protodef/pconnector/pconnector.go">
+      <file leaf-file-name="iterator.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/github.com/emirpasic/gods/sets/treeset/iterator.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="155">
-              <caret line="152" column="5" lean-forward="false" selection-start-line="152" selection-start-column="5" selection-end-line="152" selection-end-column="5" />
-              <folding>
-                <element signature="e#237#264#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="38">
+              <caret line="23" column="16" lean-forward="false" selection-start-line="23" selection-start-column="16" selection-end-line="23" selection-end-column="16" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -131,10 +205,10 @@
         <option value="$PROJECT_DIR$/src/github.com/Shopify/sarama/async_producer.go" />
         <option value="$PROJECT_DIR$/src/server/connector/main.go" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/room.go" />
-        <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go" />
         <option value="$PROJECT_DIR$/src/protodef/pconnector/pconnector.go" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" />
+        <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go" />
       </list>
     </option>
   </component>
@@ -182,41 +256,7 @@
               <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
               <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="server" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="server" type="462c0819:PsiDirectoryNode" />
-              <item name="connector" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="server" type="462c0819:PsiDirectoryNode" />
-              <item name="connector" type="462c0819:PsiDirectoryNode" />
-              <item name="internal" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="server" type="462c0819:PsiDirectoryNode" />
-              <item name="connector" type="462c0819:PsiDirectoryNode" />
-              <item name="internal" type="462c0819:PsiDirectoryNode" />
-              <item name="service" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
-              <item name="bdmsg-example-master" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="server" type="462c0819:PsiDirectoryNode" />
-              <item name="connector" type="462c0819:PsiDirectoryNode" />
-              <item name="internal" type="462c0819:PsiDirectoryNode" />
-              <item name="service" type="462c0819:PsiDirectoryNode" />
-              <item name="connectsvc" type="462c0819:PsiDirectoryNode" />
+              <item name="github.com" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="bdmsg-example-master" type="b2602c69:ProjectViewProjectNode" />
@@ -375,8 +415,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1382" height="754" extended-state="7" />
-    <editor active="true" />
+    <frame x="-8" y="-8" width="1382" height="754" extended-state="6" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22919819" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -388,13 +427,24 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.49546143" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.34138486" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3800322" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.5045386" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.36231884" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.49546143" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.22919819" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33333334" sideWeight="0.49707174" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.34138486" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -456,8 +506,11 @@
     <entry file="file://$PROJECT_DIR$/src/vendor/github.com/codegangsta/inject/inject.go" />
     <entry file="file://$PROJECT_DIR$/src/vendor/github.com/someonegg/bdmsg/client.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-342">
-          <caret line="6" column="8" lean-forward="false" selection-start-line="6" selection-start-column="8" selection-end-line="6" selection-end-column="8" />
+        <state relative-caret-position="134">
+          <caret line="15" column="5" lean-forward="false" selection-start-line="15" selection-start-column="5" selection-end-line="15" selection-end-column="5" />
+          <folding>
+            <element signature="e#170#215#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -606,7 +659,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-575">
           <caret line="40" column="52" lean-forward="false" selection-start-line="40" selection-start-column="52" selection-end-line="40" selection-end-column="52" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -643,8 +695,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/room.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
-          <caret line="8" column="28" lean-forward="false" selection-start-line="8" selection-start-column="28" selection-end-line="8" selection-end-column="28" />
+        <state relative-caret-position="-42">
+          <caret line="37" column="5" lean-forward="false" selection-start-line="37" selection-start-column="5" selection-end-line="37" selection-end-column="5" />
           <folding>
             <element signature="e#20#75#0" expanded="true" />
           </folding>
@@ -662,14 +714,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="19">
           <caret line="408" column="17" lean-forward="false" selection-start-line="408" selection-start-column="17" selection-end-line="408" selection-end-column="17" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="81">
-          <caret line="77" column="50" lean-forward="true" selection-start-line="77" selection-start-column="50" selection-end-line="77" selection-end-column="50" />
+        <state relative-caret-position="134">
+          <caret line="88" column="23" lean-forward="false" selection-start-line="88" selection-start-column="23" selection-end-line="88" selection-end-column="30" />
           <folding>
             <element signature="e#175#346#0" expanded="true" />
           </folding>
@@ -678,8 +729,8 @@
     </entry>
     <entry file="file://D:/Go/src/builtin/builtin.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="253" column="5" lean-forward="false" selection-start-line="253" selection-start-column="5" selection-end-line="253" selection-end-column="5" />
+        <state relative-caret-position="149">
+          <caret line="133" column="5" lean-forward="false" selection-start-line="133" selection-start-column="5" selection-end-line="133" selection-end-column="5" />
           <folding />
         </state>
       </provider>
@@ -695,7 +746,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="95">
           <caret line="5" column="49" lean-forward="true" selection-start-line="5" selection-start-column="49" selection-end-line="5" selection-end-column="49" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -703,9 +753,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="155">
           <caret line="152" column="5" lean-forward="false" selection-start-line="152" selection-start-column="5" selection-end-line="152" selection-end-column="5" />
-          <folding>
-            <element signature="e#237#264#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -713,16 +760,48 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="152">
           <caret line="8" column="44" lean-forward="false" selection-start-line="8" selection-start-column="44" selection-end-line="8" selection-end-column="44" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="508">
-          <caret line="89" column="108" lean-forward="false" selection-start-line="89" selection-start-column="108" selection-end-line="89" selection-end-column="108" />
+        <state relative-caret-position="1026">
+          <caret line="102" column="67" lean-forward="true" selection-start-line="102" selection-start-column="67" selection-end-line="102" selection-end-column="67" />
           <folding>
             <element signature="e#175#500#0" expanded="true" />
+            <marker date="1504827708704" expanded="true" signature="1138:3302" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="1325:3019" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="1333:3016" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="1611:3012" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="2321:3007" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="2398:3001" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="3304:3318" ph="/*...*/" />
+            <marker date="1504827708704" expanded="true" signature="3420:3952" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="3481:3508" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="3600:3626" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="3718:3788" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="3794:3891" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="4057:4354" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="4183:4209" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="4452:7101" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="4659:4975" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="4669:4972" ph="..." />
+            <marker date="1504827708704" expanded="true" signature="4747:4775" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="4799:4862" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="5009:5132" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="5238:5387" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="5294:5353" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="5416:5455" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="5482:6324" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="5505:5932" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="5857:5903" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="5967:6109" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="6181:6259" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="6330:7099" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="6363:6815" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="6977:7045" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="7202:7499" ph="{...}" />
+            <marker date="1504827708704" expanded="true" signature="7285:7362" ph="{...}" />
           </folding>
         </state>
       </provider>

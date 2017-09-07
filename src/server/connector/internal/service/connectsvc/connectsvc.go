@@ -238,7 +238,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 
 		partition, offset, err := producer.SendMessage(msg)
 		if err != nil {
-			log.Error("Send message Fail, %s", err)
+			log.Error("Send message Fail, %s, host=%s", err, Config.KafkaBrokers)
 		}
 		log.Trace("Partition = %d, offset=%d\n", partition, offset)
 	} else {
