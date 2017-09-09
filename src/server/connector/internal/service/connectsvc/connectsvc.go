@@ -85,24 +85,35 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 					}
 				}
 				if fromRouterMessage.ToRoomId != "" {
-					userIds, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
+					treeSet, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
 					if ok {
-						log.Info("found client, roomId=%s, userIds=%s", fromRouterMessage.ToRoomId, userIds)
-						for _, userId := range userIds {
-							client, ok := s.clientM.clients[userId]
-							if ok {
-								toClientMessage := ToClientMessage {
-									ToRoomId: fromRouterMessage.ToRoomId,
-									ToUserId: fromRouterMessage.ToUserId,
-									Params:   fromRouterMessage.Params,
-
-									RoomId:  fromRouterMessage.ToRoomId,
-									UserId:  fromRouterMessage.ToUserId,
-									Content: fromRouterMessage.Params["content"],
-								}
-								client.ServerHello(toClientMessage)
-							}
+						userIds := []string{}
+						count := 0;
+						treeSet.Select(func(index int, value interface{}) bool {
+							count++
+							return count <= 5
+						}).Each(func(index int, value interface{}) {
+							userIds = append(userIds, value.(string))
+						})
+						more := ""
+						totalSize := treeSet.Size()
+						if(totalSize > len(userIds)) {
+							more = "..."
 						}
+						log.Info("found client, roomId=%s, totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIds, more)
+						treeSet.Each(func(index int, value interface{}) {
+							toClientMessage := ToClientMessage{
+								ToRoomId: fromRouterMessage.ToRoomId,
+								ToUserId: fromRouterMessage.ToUserId,
+								Params:   fromRouterMessage.Params,
+
+								RoomId:  fromRouterMessage.ToRoomId,
+								UserId:  fromRouterMessage.ToUserId,
+								Content: fromRouterMessage.Params["content"],
+							}
+							client := s.clientM.clients[value.(string)]
+							client.ServerHello(toClientMessage)
+						})
 					}
 				}
 			}
@@ -169,7 +180,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	var params map[string]string;
 
 
-	log.Info("handleMsg, id=%s, t=%d, m=%s", c.ID, t, string(m[:]))
+	log.Info("handleMsg, id=%s, t=%d, time=%d, m=%s", c.ID, t, time.Now().UnixNano() / 1000000, string(m[:]))
 
 	switch t {
 	case 1:

@@ -3,20 +3,21 @@ package connectsvc
 import (
 	"server/connector/internal/manager"
 	"sync"
+	"github.com/emirpasic/gods/sets/treeset"
 )
 
 type RoomManager struct {
 	mSet *manager.ManagerSet
 
 	locker  sync.RWMutex
-	clients map[string][]string
+	clients map[string]*treeset.Set
 }
 
 
 func NewRoomManager(mSet *manager.ManagerSet) *RoomManager {
 	return &RoomManager{
 		mSet:    mSet,
-		clients: make(map[string][]string),
+		clients: make(map[string]*treeset.Set),
 	}
 }
 
@@ -26,13 +27,18 @@ func (m *RoomManager) clientIn(id, roomId string) {
 
 	if roomId != "" {
 		if m.clients[roomId] == nil {
-			m.clients[roomId] = []string{}
+			m.clients[roomId] = treeset.NewWithStringComparator()
 		}
 
-		m.internalEnding(id)
-
-		m.clients[roomId] = append(m.clients[roomId], id)
+		found := search(m, roomId, id)
+		if !found {
+			m.clients[roomId].Add(id)
+		}
 	}
+}
+
+func search(m *RoomManager, roomId string, id string) bool {
+	return m.clients[roomId].Contains(id)
 }
 
 func (c *RoomManager) ending(id string) {
@@ -41,16 +47,9 @@ func (c *RoomManager) ending(id string) {
 
 	c.internalEnding(id)
 }
+
 func (c *RoomManager) internalEnding(id string) {
-	for k, v := range c.clients {
-		elements := []string{}
-		for _, e := range v {
-			if e == id {
-				continue
-			} else {
-				elements = append(elements, e)
-			}
-		}
-		c.clients[k] = elements
+	for k := range c.clients {
+		c.clients[k].Remove(id)
 	}
 }

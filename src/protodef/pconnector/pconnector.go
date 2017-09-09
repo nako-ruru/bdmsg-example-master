@@ -37,6 +37,7 @@ type Chat struct {
 	Content string
 	Nickname string
 	Level int
+	ClientTime uint64
 }
 
 func (p *Chat) Marshal() ([]byte, error) {
