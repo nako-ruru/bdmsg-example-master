@@ -20,6 +20,7 @@ import (
 	"github.com/Shopify/sarama"
 	"fmt"
 	. "server/connector/internal/config"
+	"github.com/eapache/queue"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -97,7 +98,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 						})
 						more := ""
 						totalSize := treeSet.Size()
-						if(totalSize > len(userIds)) {
+						if totalSize > len(userIds) {
 							more = "..."
 						}
 						log.Info("found client, roomId=%s, totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIds, more)
@@ -126,6 +127,9 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	mux.HandleFunc(MsgTypeChat, s.handleMsg)
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
+
+	go consume()
+
 	return s
 }
 
@@ -211,7 +215,29 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	}
 	var bytes,_ = json.Marshal(redisMsg)
 
+	if msgs[roomId] == nil {
+		msgs[roomId] = queue.New()
+	}
+	msgs[roomId].Add(bytes)
+	for ; msgs[roomId].Length() > 1000; {
+		msgs[roomId].Remove()
+	}
+	msgChan <- roomId
+}
 
+var msgChan = make(chan string)
+var msgs = make(map[string]*queue.Queue)
+
+func consume() {
+	for k, v := range msgs {
+		for ;v.Length() > 0; {
+			e := v.Remove().([]byte)
+			deliver(k, e)
+		}
+	}
+}
+
+func deliver(roomId string, bytes[]byte ) {
 	var sendDirectly = false
 	var mqType = "kafka"
 	if sendDirectly {
@@ -240,11 +266,11 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 			producerInited = true
 		}
 
-		msg := &sarama.ProducerMessage {
-			Topic: 			"connector",
-			Partition: 		int32(-1),
-			Key:       		sarama.StringEncoder("key"),
-			Value:			sarama.ByteEncoder(bytes),
+		msg := &sarama.ProducerMessage{
+			Topic:     "connector",
+			Partition: int32(-1),
+			Key:       sarama.StringEncoder("key"),
+			Value:     sarama.ByteEncoder(bytes),
 		}
 
 		partition, offset, err := producer.SendMessage(msg)
@@ -263,11 +289,11 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 
 			q, err = ch.QueueDeclare(
 				"connector", // name
-				false,   // durable
-				false,   // delete when unused
-				false,   // exclusive
-				false,   // no-wait
-				nil,     // arguments
+				false,       // durable
+				false,       // delete when unused
+				false,       // exclusive
+				false,       // no-wait
+				nil,         // arguments
 			)
 			failOnError(err, "Failed to declare a queue")
 		}
@@ -278,7 +304,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 			q.Name, // routing key
 			false,  // mandatory
 			false,  // immediate
-			amqp.Publishing {
+			amqp.Publishing{
 				ContentType: "text/plain",
 				Body:        []byte(body),
 			})
