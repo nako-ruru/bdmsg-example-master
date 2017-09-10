@@ -13,6 +13,10 @@ type RoomManager struct {
 	clients map[string]*treeset.Set
 }
 
+type Room struct {
+	 userIds *treeset.Set
+	locker  sync.RWMutex
+}
 
 func NewRoomManager(mSet *manager.ManagerSet) *RoomManager {
 	return &RoomManager{

@@ -20,7 +20,8 @@ import (
 	"github.com/Shopify/sarama"
 	"fmt"
 	. "server/connector/internal/config"
-	"github.com/eapache/queue"
+	"sync"
+	"github.com/emirpasic/gods/lists/doublylinkedlist"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -70,7 +71,9 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 				var fromRouterMessage FromRouterMessage
 				fromRouterMessage.Unmarshal([]byte(msg.Payload))
 				if fromRouterMessage.ToUserId != "" {
+					s.clientM.locker.Lock()
 					client, ok := s.clientM.clients[fromRouterMessage.ToUserId]
+					s.clientM.locker.Unlock()
 					if ok {
 						log.Info("found client, userId=%s", fromRouterMessage.ToUserId)
 						toClientMessage := ToClientMessage {
@@ -86,23 +89,27 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 					}
 				}
 				if fromRouterMessage.ToRoomId != "" {
+					s.roomM.locker.Lock()
 					treeSet, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
+					s.roomM.locker.Unlock()
+
 					if ok {
 						userIds := []string{}
-						count := 0;
-						treeSet.Select(func(index int, value interface{}) bool {
-							count++
-							return count <= 5
-						}).Each(func(index int, value interface{}) {
+
+						s.roomM.locker.Lock()
+						treeSet.Each(func(index int, value interface{}) {
 							userIds = append(userIds, value.(string))
 						})
+						s.roomM.locker.Unlock()
+
 						more := ""
-						totalSize := treeSet.Size()
-						if totalSize > len(userIds) {
+						totalSize := len(userIds)
+						if totalSize > 20 {
 							more = "..."
 						}
-						log.Info("found client, roomId=%s, totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIds, more)
-						treeSet.Each(func(index int, value interface{}) {
+						log.Info("found client, roomId=%s, totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIds[0:20], more)
+
+						for _, value := range userIds {
 							toClientMessage := ToClientMessage{
 								ToRoomId: fromRouterMessage.ToRoomId,
 								ToUserId: fromRouterMessage.ToUserId,
@@ -112,9 +119,11 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 								UserId:  fromRouterMessage.ToUserId,
 								Content: fromRouterMessage.Params["content"],
 							}
-							client := s.clientM.clients[value.(string)]
+							s.clientM.locker.Lock()
+							client := s.clientM.clients[value]
+							s.clientM.locker.Unlock()
 							client.ServerHello(toClientMessage)
-						})
+						}
 					}
 				}
 			}
@@ -215,29 +224,46 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	}
 	var bytes,_ = json.Marshal(redisMsg)
 
+	locker.Lock()
 	if msgs[roomId] == nil {
-		msgs[roomId] = queue.New()
+		msgs[roomId] = NewRoomMsgToCompute()
 	}
+	locker.Unlock()
+	msgs[roomId].locker.Lock()
 	msgs[roomId].Add(bytes)
-	for ; msgs[roomId].Length() > 1000; {
-		msgs[roomId].Remove()
-	}
-	msgChan <- roomId
+	msgs[roomId].locker.Unlock()
+
+	produce(bytes)
 }
 
-var msgChan = make(chan string)
-var msgs = make(map[string]*queue.Queue)
+var msgChan = make(chan []byte)
+var msgs = make(map[string]*RoomMsgToCompute)
+var locker sync.RWMutex
+
+func produce(msg []byte)  {
+	msgChan <- msg
+}
 
 func consume() {
-	for k, v := range msgs {
-		for ;v.Length() > 0; {
-			e := v.Remove().([]byte)
-			deliver(k, e)
+	for {
+		msg := <-msgChan
+		log.Info("consume: msg=%s", msg)
+
+		readyToDeliver := *doublylinkedlist.New()
+		for k, v := range msgs {
+			v.locker.Lock()
+			v.DrainTo(k, &readyToDeliver)
+			v.locker.Unlock()
 		}
+
+		readyToDeliver.Each(func(index int, value interface{}) {
+			entry := value.(Entry)
+			deliver(entry.roomId, entry.bytes)
+		})
 	}
 }
 
-func deliver(roomId string, bytes[]byte ) {
+func deliver(roomId string, bytes[] byte ) {
 	var sendDirectly = false
 	var mqType = "kafka"
 	if sendDirectly {
