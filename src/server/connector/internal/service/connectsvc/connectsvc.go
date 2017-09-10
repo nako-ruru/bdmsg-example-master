@@ -19,8 +19,8 @@ import (
 	"github.com/Shopify/sarama"
 	. "server/connector/internal/config"
 	"sync"
-	"github.com/emirpasic/gods/lists/doublylinkedlist"
 	"fmt"
+	"container/list"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -237,23 +237,24 @@ func consume() {
 		<- produceEvt
 		log.Info("produceEvt")
 
-		readyToDeliver := *doublylinkedlist.New()
+		readyToDeliver := list.New()
 		locker.Lock()
 		for k, v := range msgs {
-			v.DrainTo(k, &readyToDeliver)
+			v.DrainTo(k, readyToDeliver)
 			delete(msgs, k)
 		}
 		locker.Unlock()
 
-		deliver(&readyToDeliver)
+		deliver(readyToDeliver)
 	}
 	log.Error("consume error")
 }
 
-func deliver(list *doublylinkedlist.List) {
+func deliver(list *list.List) {
 	var jsonText string
 	batchSize := 100000
-	list.Each(func(index int, value interface{}) {
+	index := 0
+	for e := list.Front(); e != nil; e = e.Next() {
 		if index % batchSize == 0 {
 			if jsonText != "" {
 				jsonText += "]"
@@ -261,10 +262,11 @@ func deliver(list *doublylinkedlist.List) {
 			}
 			jsonText = "["
 		}
-		entry := value.(Entry)
-		jsonText0, _ := json.Marshal(entry.toComputeMessage)
+		toComputeMessage := e.Value.(ToComputeMessage)
+		jsonText0, _ := json.Marshal(toComputeMessage)
 		jsonText += fmt.Sprintf("%s,", jsonText0)
-	})
+		index++
+	}
 	if jsonText != "" {
 		jsonText += "]"
 		deliverOnce(jsonText)
