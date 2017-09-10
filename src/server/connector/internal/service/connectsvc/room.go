@@ -55,5 +55,8 @@ func (c *RoomManager) ending(id string) {
 func (c *RoomManager) internalEnding(id string) {
 	for k := range c.clients {
 		c.clients[k].Remove(id)
+		if c.clients[k].Empty() {
+			delete(c.clients, k)
+		}
 	}
 }

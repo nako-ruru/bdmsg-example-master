@@ -15,13 +15,12 @@ import (
 	. "protodef/pconnector"
 	"encoding/json"
 	"github.com/go-redis/redis"
-	"github.com/streadway/amqp"
 	"github.com/satori/go.uuid"
 	"github.com/Shopify/sarama"
-	"fmt"
 	. "server/connector/internal/config"
 	"sync"
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
+	"fmt"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -29,17 +28,6 @@ var client = redis.NewClient(&redis.Options{
 	Password: "BrightHe0", // no password set
 	DB:       0,  // use default DB
 })
-
-func failOnError(err error, msg string) {
-	if err != nil {
-		ch = nil
-		log.Error("failOnError, error=%s", err)
-		panic(fmt.Sprintf("%s: %s", msg, err))
-	}
-}
-
-var q amqp.Queue
-var ch *amqp.Channel
 
 var producer sarama.SyncProducer
 var producerInited = false
@@ -222,120 +210,98 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		params,
 		time.Now().UnixNano() / 1000000,
 	}
-	var bytes,_ = json.Marshal(redisMsg)
 
 	locker.Lock()
 	if msgs[roomId] == nil {
 		msgs[roomId] = NewRoomMsgToCompute()
 	}
 	locker.Unlock()
-	msgs[roomId].locker.Lock()
-	msgs[roomId].Add(bytes)
-	msgs[roomId].locker.Unlock()
+	msgs[roomId].Add(redisMsg)
 
-	produce(bytes)
+	produce()
 }
 
-var msgChan = make(chan []byte)
+var produceEvt = make(chan bool, 1)
 var msgs = make(map[string]*RoomMsgToCompute)
 var locker sync.RWMutex
 
-func produce(msg []byte)  {
-	msgChan <- msg
+func produce()  {
+	select {
+	case produceEvt <- true:
+		default:
+	}
 }
 
 func consume() {
 	for {
-		msg := <-msgChan
-		log.Info("consume: msg=%s", msg)
+		<- produceEvt
+		log.Info("produceEvt")
 
 		readyToDeliver := *doublylinkedlist.New()
+		locker.Lock()
 		for k, v := range msgs {
-			v.locker.Lock()
 			v.DrainTo(k, &readyToDeliver)
-			v.locker.Unlock()
+			delete(msgs, k)
 		}
+		locker.Unlock()
 
-		readyToDeliver.Each(func(index int, value interface{}) {
-			entry := value.(Entry)
-			deliver(entry.roomId, entry.bytes)
-		})
+		deliver(&readyToDeliver)
+	}
+	log.Error("consume error")
+}
+
+func deliver(list *doublylinkedlist.List) {
+	var jsonText string
+	batchSize := 100000
+	list.Each(func(index int, value interface{}) {
+		if index % batchSize == 0 {
+			if jsonText != "" {
+				jsonText += "]"
+				deliverOnce(jsonText)
+			}
+			jsonText = "["
+		}
+		entry := value.(Entry)
+		jsonText0, _ := json.Marshal(entry.toComputeMessage)
+		jsonText += fmt.Sprintf("%s,", jsonText0)
+	})
+	if jsonText != "" {
+		jsonText += "]"
+		deliverOnce(jsonText)
 	}
 }
 
-func deliver(roomId string, bytes[] byte ) {
-	var sendDirectly = false
-	var mqType = "kafka"
-	if sendDirectly {
-		pong, err := client.Ping().Result()
-		if err != nil {
-			log.Error("handleMsg, pong=%s, err=%s", pong, err)
-		}
+func deliverOnce(jsonText string)  {
+	if !producerInited {
+		config := sarama.NewConfig()
+		config.Producer.MaxMessageBytes = 1024 * 1024 * 1024;
+		config.Producer.RequiredAcks = sarama.WaitForAll
+		config.Producer.Partitioner = sarama.NewRandomPartitioner
+		config.Producer.Return.Successes = true
+		config.Producer.Compression = sarama.CompressionGZIP
 
-		client.RPush(roomId, bytes)
-	} else if mqType == "radismq" {
-		client.RPush("connector", bytes)
-	} else if mqType == "kafka" {
-		if !producerInited {
-			config := sarama.NewConfig()
-			config.Producer.RequiredAcks = sarama.WaitForAll
-			config.Producer.Partitioner = sarama.NewRandomPartitioner
-			config.Producer.Return.Successes = true
-			config.Producer.Compression = sarama.CompressionGZIP
-
-			var err error
-			producer, err = sarama.NewSyncProducer(Config.KafkaBrokers, config)
-			if err != nil {
-				log.Error("%s", err)
-				panic(err)
-			}
-			producerInited = true
-		}
-
-		msg := &sarama.ProducerMessage{
-			Topic:     "connector",
-			Partition: int32(-1),
-			Key:       sarama.StringEncoder("key"),
-			Value:     sarama.ByteEncoder(bytes),
-		}
-
-		partition, offset, err := producer.SendMessage(msg)
-		if err != nil {
-			log.Error("Send message Fail, %s, host=%s", err, Config.KafkaBrokers)
-		}
-		log.Trace("Partition = %d, offset=%d\n", partition, offset)
-	} else {
 		var err error
-		if ch == nil {
-			var conn *amqp.Connection
-			conn, err = amqp.Dial(Config.RabbitMqUrl)
-			failOnError(err, "Failed to connect to RabbitMQ")
-			ch, err = conn.Channel()
-			failOnError(err, "Failed to open a channel")
-
-			q, err = ch.QueueDeclare(
-				"connector", // name
-				false,       // durable
-				false,       // delete when unused
-				false,       // exclusive
-				false,       // no-wait
-				nil,         // arguments
-			)
-			failOnError(err, "Failed to declare a queue")
+		producer, err = sarama.NewSyncProducer(Config.KafkaBrokers, config)
+		if err != nil {
+			log.Error("%s", err)
+			panic(err)
 		}
-
-		body := string(bytes)
-		err = ch.Publish(
-			"",     // exchange
-			q.Name, // routing key
-			false,  // mandatory
-			false,  // immediate
-			amqp.Publishing{
-				ContentType: "text/plain",
-				Body:        []byte(body),
-			})
-		failOnError(err, "Failed to publish a message")
+		producerInited = true
 	}
+
+	msg := &sarama.ProducerMessage{
+		Topic:     "testweixuan",
+		Partition: int32(-1),
+		Key:       sarama.StringEncoder("key"),
+		Value:     sarama.StringEncoder(jsonText),
+	}
+
+	log.Info("deliver, jsonText=%s", jsonText)
+	partition, offset, err := producer.SendMessage(msg)
+	if err != nil {
+		log.Error("Send message Fail, %s, host=%s", err, Config.KafkaBrokers)
+	}
+	log.Trace("Partition = %d, offset=%d\n", partition, offset)
 }
 
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bdmsg.Server, error) {

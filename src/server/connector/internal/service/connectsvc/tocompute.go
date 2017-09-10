@@ -3,6 +3,7 @@ package connectsvc
 import (
 	"sync"
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
+	"encoding/json"
 )
 
 type RoomMsgToCompute struct {
@@ -12,32 +13,42 @@ type RoomMsgToCompute struct {
 }
 
 type Entry struct {
-	roomId string
-	bytes []byte
+	roomId           string
+	toComputeMessage ToComputeMessage
 }
 
 func NewRoomMsgToCompute() *RoomMsgToCompute {
 	return &RoomMsgToCompute{
 		queue:    doublylinkedlist.New(),
-		size: 1000,
+		size: 100,
 	}
 }
 
 
-func (m *RoomMsgToCompute) Add(msg []byte) {
+func (m *RoomMsgToCompute) Add(msg ToComputeMessage) {
+	m.locker.Lock()
+	defer m.locker.Unlock()
+
 	m.queue.Add(msg)
 	for ; m.queue.Size() > m.size; {
-		log.Info("discard")
+		e, _ := m.queue.Get(0)
+		c := e.(ToComputeMessage)
+		text, _ := json.Marshal(c)
+		log.Info("discard: %s", text)
 		m.queue.Remove(0)
 	}
 }
 
 func (m *RoomMsgToCompute) DrainTo(roomId string, list *doublylinkedlist.List)()  {
+	m.locker.Lock()
+	defer m.locker.Unlock()
+
 	m.queue.Each(func(index int, value interface{}) {
 		entry := Entry{
-			roomId: roomId,
-			bytes: value.([]byte),
+			roomId:           roomId,
+			toComputeMessage: value.(ToComputeMessage),
 		}
 		list.Add(entry)
 	})
+	m.queue.Clear()
 }
