@@ -5,6 +5,7 @@ import (
 	. "server/connector/internal/config"
 	"github.com/someonegg/goutil/gologf"
 	"github.com/someonegg/golog"
+	"fmt"
 )
 
 var log *lumber.MultiLogger
@@ -14,13 +15,13 @@ func init()  {
 
 	err := ParseConfig()
 	if err != nil {
-		log.Error("main$ParseConfig", "error", err)
+		fmt.Printf("ParseConfig, error=%s\n", err)
 		return
 	}
 
 	err = gologf.SetOutput(Config.Logfile)
 	if err != nil {
-		log.Error("main$SetOutput, err=%s", err)
+		fmt.Printf("ParseConfig, error=%s\n", err)
 		return
 	}
 
@@ -36,7 +37,7 @@ func init()  {
 		log.Error("createLogger, err=%s", err1)
 	}
 
-	fileError, err2 := lumber.NewFileLogger(Config.LogErrorFile, lumber.ERROR, lumber.ROTATE, 5000, 9, 100)
+	fileError, err2 := lumber.NewFileLogger(Config.LogErrorFile, lumber.WARN, lumber.ROTATE, 5000, 9, 100)
 	if err2 == nil {
 		log.AddLoggers(fileError)
 	} else {

@@ -37,6 +37,11 @@ type ServiceSConfT struct {
 	Connect ConnectSvcConfT `json:"connect"`
 }
 
+type Mq struct {
+	KafkaBrokers[] string 	`json:"kafkabrokers"`
+	Topic string			`json:"topic"`
+}
+
 func (c *ServiceSConfT) Check() bool {
 	// debug maybe unset.
 	return c.Connect.Check()
@@ -55,8 +60,7 @@ type ConfigT struct {
 	LogErrorFile string		`json:"logerrorfile"`
 	ServiceS ServiceSConfT 	`json:"service"`
 	Manager  ManagerConfT  	`json:"manager"`
-	RabbitMqUrl string		`json:"rabbitmqurl"`
-	KafkaBrokers[] string 	`json:"kafkabrokers"`
+	Mq Mq					`json:"mq"`
 }
 
 func (c *ConfigT) Check() bool {

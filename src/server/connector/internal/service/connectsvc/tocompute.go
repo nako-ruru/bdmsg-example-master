@@ -2,18 +2,19 @@ package connectsvc
 
 import (
 	"sync"
+	"github.com/emirpasic/gods/lists/doublylinkedlist"
 	"encoding/json"
-	"container/list"
 )
 
 type RoomMsgToCompute struct {
-	queue list.List
+	queue *doublylinkedlist.List
 	locker  sync.RWMutex
 	size int
 }
 
 func NewRoomMsgToCompute() *RoomMsgToCompute {
 	return &RoomMsgToCompute{
+		queue:    doublylinkedlist.New(),
 		size: 100,
 	}
 }
@@ -23,24 +24,22 @@ func (m *RoomMsgToCompute) Add(msg ToComputeMessage) {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
-	m.queue.PushBack(msg)
-	for ; m.queue.Len() > m.size; {
-		for e := m.queue.Front(); e != nil; e = e.Next() {
-			first := e.Value.(ToComputeMessage)
-			jsonText, _ := json.Marshal(first)
-			log.Info("discard: %s", jsonText)
-			m.queue.Remove(e)
-			break
-		}
+	m.queue.Add(msg)
+	for ; m.queue.Size() > m.size; {
+		e, _ := m.queue.Get(0)
+		c := e.(ToComputeMessage)
+		text, _ := json.Marshal(c)
+		log.Info("discard: %s", text)
+		m.queue.Remove(0)
 	}
 }
 
-func (m *RoomMsgToCompute) DrainTo(roomId string, list *list.List)  {
+func (m *RoomMsgToCompute) DrainTo(roomId string, list *doublylinkedlist.List)()  {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
-	for e := m.queue.Front(); e != nil; e = e.Next() {
-		list.PushBack(e.Value)
-		m.queue.Remove(e)
-	}
+	m.queue.Each(func(index int, value interface{}) {
+		list.Add(value)
+	})
+	m.queue.Clear()
 }

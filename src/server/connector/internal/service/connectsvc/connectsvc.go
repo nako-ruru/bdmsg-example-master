@@ -19,8 +19,8 @@ import (
 	"github.com/Shopify/sarama"
 	. "server/connector/internal/config"
 	"sync"
+	"github.com/emirpasic/gods/lists/doublylinkedlist"
 	"fmt"
-	"container/list"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -95,7 +95,15 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 						if totalSize > 20 {
 							more = "..."
 						}
-						log.Info("found client, roomId=%s, totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIds[0:20], more)
+						var userIdsText string
+						if totalSize == 0 {
+							userIdsText = "[]"
+						} else if totalSize <= 20 {
+							userIdsText = fmt.Sprintf("%s", userIds)
+						} else {
+							userIdsText = fmt.Sprintf("%s", userIds[:20])
+						}
+						log.Info("found client, roomId=%s, totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIdsText, more)
 
 						for _, value := range userIds {
 							toClientMessage := ToClientMessage{
@@ -125,7 +133,9 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	go consume()
+	for i:=0; i < 40; i++ {
+		go consume(i)
+	}
 
 	return s
 }
@@ -215,60 +225,77 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	if msgs[roomId] == nil {
 		msgs[roomId] = NewRoomMsgToCompute()
 	}
-	locker.Unlock()
 	msgs[roomId].Add(redisMsg)
+	locker.Unlock()
 
 	produce()
 }
 
-var produceEvt = make(chan bool, 1)
+var produceEvt = make(chan int, 1)
 var msgs = make(map[string]*RoomMsgToCompute)
 var locker sync.RWMutex
+var counter = 0
 
 func produce()  {
+	var i int
+	locker.Lock()
+	counter++;
+	i = counter
+	locker.Unlock()
 	select {
-	case produceEvt <- true:
-		default:
+	case produceEvt <- i:
+		log.Info("produce: produceEvt <- true, cap=%d, len=%d, i=%d", cap(produceEvt), len(produceEvt), i)
+		log.Warn("produce, i=%d",  i)
+	default:
+		log.Info("produce: default")
 	}
 }
 
-func consume() {
+func consume(id int) {
 	for {
-		<- produceEvt
-		log.Info("produceEvt")
-
-		readyToDeliver := list.New()
-		locker.Lock()
-		for k, v := range msgs {
-			v.DrainTo(k, readyToDeliver)
-			delete(msgs, k)
-		}
-		locker.Unlock()
-
-		deliver(readyToDeliver)
+		i :=<- produceEvt
+		conumeEvet(i, id)
 	}
 	log.Error("consume error")
 }
+func conumeEvet(i int, id int) {
+	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
+		if err:=recover();err!=nil{
+			log.Error("err, %s", err) // 这里的err其实就是panic传入的内容，55
+		}
+	}()
 
-func deliver(list *list.List) {
+	log.Info("consume: <- produceEvt")
+	readyToDeliver := *doublylinkedlist.New()
+	start := time.Now().UnixNano() / 1000000
+	log.Warn("consume, id=%d, event=%d, time=%d", id, i, start)
+	locker.RLock()
+	for k, v := range msgs {
+		v.DrainTo(k, &readyToDeliver)
+	}
+	locker.RUnlock()
+	end := time.Now().UnixNano() / 1000000
+	log.Warn("finish consume, i=%d, time=%d, cost=%d", i, end, end- start)
+	deliver(&readyToDeliver)
+}
+
+func deliver(list *doublylinkedlist.List) {
 	var jsonText string
 	batchSize := 100000
-	index := 0
-	for e := list.Front(); e != nil; e = e.Next() {
+	list.Each(func(index int, value interface{}) {
 		if index % batchSize == 0 {
 			if jsonText != "" {
-				jsonText += "]"
+				jsonText = jsonText[:len(jsonText) - 1] + "]"
 				deliverOnce(jsonText)
 			}
 			jsonText = "["
 		}
-		toComputeMessage := e.Value.(ToComputeMessage)
+		toComputeMessage := value.(ToComputeMessage)
 		jsonText0, _ := json.Marshal(toComputeMessage)
 		jsonText += fmt.Sprintf("%s,", jsonText0)
-		index++
-	}
+	})
 	if jsonText != "" {
-		jsonText += "]"
+		jsonText = jsonText[:len(jsonText) - 1] + "]"
 		deliverOnce(jsonText)
 	}
 }
@@ -283,7 +310,7 @@ func deliverOnce(jsonText string)  {
 		config.Producer.Compression = sarama.CompressionGZIP
 
 		var err error
-		producer, err = sarama.NewSyncProducer(Config.KafkaBrokers, config)
+		producer, err = sarama.NewSyncProducer(Config.Mq.KafkaBrokers, config)
 		if err != nil {
 			log.Error("%s", err)
 			panic(err)
@@ -292,7 +319,7 @@ func deliverOnce(jsonText string)  {
 	}
 
 	msg := &sarama.ProducerMessage{
-		Topic:     "testweixuan",
+		Topic:     Config.Mq.Topic,
 		Partition: int32(-1),
 		Key:       sarama.StringEncoder("key"),
 		Value:     sarama.StringEncoder(jsonText),
@@ -301,7 +328,7 @@ func deliverOnce(jsonText string)  {
 	log.Info("deliver, jsonText=%s", jsonText)
 	partition, offset, err := producer.SendMessage(msg)
 	if err != nil {
-		log.Error("Send message Fail, %s, host=%s", err, Config.KafkaBrokers)
+		log.Error("Send message Fail, %s, host=%s", err, Config.Mq.KafkaBrokers)
 	}
 	log.Trace("Partition = %d, offset=%d\n", partition, offset)
 }
