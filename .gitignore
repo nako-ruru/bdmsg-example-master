@@ -1,5 +1,4 @@
 .DS_Store
 /pkg
-/test/log/connector.log
 /test/connector.exe
-/test/log
+/test/logs
