@@ -39,7 +39,18 @@ func (m *RoomMsgToCompute) DrainTo(roomId string, list *doublylinkedlist.List)()
 	defer m.locker.Unlock()
 
 	m.queue.Each(func(index int, value interface{}) {
-		list.Add(value)
+		if(index < 100000) {
+			list.Add(value)
+		}
 	})
-	m.queue.Clear()
+	for i,n := 0, list.Size(); i < n; i++ {
+		m.queue.Remove(0)
+	}
+}
+
+func min(a int, b int)(int) {
+	if a <= b {
+		return a;
+	}
+	return b;
 }

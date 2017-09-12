@@ -79,7 +79,13 @@ func (c *Client) MSC() *bdmsg.SClient {
 
 func (c *Client) ServerHello(hello pconnector.ToClientMessage) {
 	mr, _ := hello.Marshal()
-	c.msc.Output(pconnector.MsgTypePush, mr)
+	if c == nil {
+		log.Warn("ServerHello, c == nil")
+	} else if c.msc == nil {
+		log.Warn("ServerHello, c.msc == nil")
+	} else {
+		c.msc.Output(pconnector.MsgTypePush, mr)
+	}
 }
 
 type ClientManager struct {

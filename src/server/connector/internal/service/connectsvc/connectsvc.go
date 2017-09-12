@@ -105,16 +105,16 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 						}
 						log.Info("found client, roomId=%s, totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIdsText, more)
 
-						for _, value := range userIds {
-							toClientMessage := ToClientMessage{
-								ToRoomId: fromRouterMessage.ToRoomId,
-								ToUserId: fromRouterMessage.ToUserId,
-								Params:   fromRouterMessage.Params,
+						toClientMessage := ToClientMessage{
+							ToRoomId: fromRouterMessage.ToRoomId,
+							ToUserId: fromRouterMessage.ToUserId,
+							Params:   fromRouterMessage.Params,
 
-								RoomId:  fromRouterMessage.ToRoomId,
-								UserId:  fromRouterMessage.ToUserId,
-								Content: fromRouterMessage.Params["content"],
-							}
+							RoomId:  fromRouterMessage.ToRoomId,
+							UserId:  fromRouterMessage.ToUserId,
+							Content: fromRouterMessage.Params["content"],
+						}
+						for _, value := range userIds {
 							s.clientM.locker.Lock()
 							client := s.clientM.clients[value]
 							s.clientM.locker.Unlock()
@@ -133,7 +133,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	for i:=0; i < 40; i++ {
+	for i:=0; i < 256; i++ {
 		go consume(i)
 	}
 
@@ -274,22 +274,14 @@ func conumeEvet(i int, id int) {
 		v.DrainTo(k, &readyToDeliver)
 	}
 	locker.RUnlock()
+	deliver(&readyToDeliver)
 	end := time.Now().UnixNano() / 1000000
 	log.Warn("finish consume, i=%d, time=%d, cost=%d", i, end, end- start)
-	deliver(&readyToDeliver)
 }
 
 func deliver(list *doublylinkedlist.List) {
-	var jsonText string
-	batchSize := 100000
+	var jsonText string = "["
 	list.Each(func(index int, value interface{}) {
-		if index % batchSize == 0 {
-			if jsonText != "" {
-				jsonText = jsonText[:len(jsonText) - 1] + "]"
-				deliverOnce(jsonText)
-			}
-			jsonText = "["
-		}
 		toComputeMessage := value.(ToComputeMessage)
 		jsonText0, _ := json.Marshal(toComputeMessage)
 		jsonText += fmt.Sprintf("%s,", jsonText0)
