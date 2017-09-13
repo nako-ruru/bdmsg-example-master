@@ -133,7 +133,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	for i:=0; i < 256; i++ {
+	for i:=0; i < 4; i++ {
 		go consume(i)
 	}
 
@@ -267,28 +267,30 @@ func consumeEvent(i int, id int) {
 
 	log.Info("consume: <- produceEvt")
 	readyToDeliver := *doublylinkedlist.New()
-	start := time.Now().UnixNano() / 1000000
-	log.Warn("consume, id=%d, event=%d, time=%d", id, i, start)
-	locker.RLock()
-	for k, v := range msgs {
-		v.DrainTo(k, &readyToDeliver)
-	}
-	locker.RUnlock()
-	deliver(&readyToDeliver)
-	end := time.Now().UnixNano() / 1000000
-	log.Warn("finish consume, i=%d, time=%d, cost=%d", i, end, end- start)
+	func() {
+		locker.RLock()
+		defer locker.RUnlock()
+		start := time.Now().UnixNano() / 1000000
+		log.Warn("consume, id=%d, event=%d, time=%d", id, i, start)
+		for k, v := range msgs {
+			v.DrainTo(k, &readyToDeliver)
+		}
+		deliver(&readyToDeliver, i, start)
+	}()
 }
 
-func deliver(list *doublylinkedlist.List) {
-	var jsonText string = "["
-	list.Each(func(index int, value interface{}) {
-		toComputeMessage := value.(ToComputeMessage)
-		jsonText0, _ := json.Marshal(toComputeMessage)
-		jsonText += fmt.Sprintf("%s,", jsonText0)
-	})
-	if jsonText != "" {
+func deliver(list *doublylinkedlist.List, i int, start int64) {
+	if !list.Empty() {
+		var jsonText string = "["
+		list.Each(func(index int, value interface{}) {
+			toComputeMessage := value.(ToComputeMessage)
+			jsonText0, _ := json.Marshal(toComputeMessage)
+			jsonText += fmt.Sprintf("%s,", jsonText0)
+		})
 		jsonText = jsonText[:len(jsonText) - 1] + "]"
 		deliverOnce(jsonText)
+		end := time.Now().UnixNano() / 1000000
+		log.Warn("finish consume, i=%d, time=%d, cost=%d, textSize=%d", i, end, end- start, len(jsonText))
 	}
 }
 
