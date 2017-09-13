@@ -254,11 +254,11 @@ func produce()  {
 func consume(id int) {
 	for {
 		i :=<- produceEvt
-		conumeEvet(i, id)
+		consumeEvent(i, id)
 	}
 	log.Error("consume error")
 }
-func conumeEvet(i int, id int) {
+func consumeEvent(i int, id int) {
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
 		if err:=recover();err!=nil{
 			log.Error("err, %s", err) // 这里的err其实就是panic传入的内容，55
@@ -296,7 +296,7 @@ func deliverOnce(jsonText string)  {
 	if !producerInited {
 		config := sarama.NewConfig()
 		config.Producer.MaxMessageBytes = 1024 * 1024 * 1024;
-		config.Producer.RequiredAcks = sarama.WaitForAll
+		config.Producer.RequiredAcks = sarama.NoResponse
 		config.Producer.Partitioner = sarama.NewRandomPartitioner
 		config.Producer.Return.Successes = true
 		config.Producer.Compression = sarama.CompressionGZIP
@@ -310,7 +310,7 @@ func deliverOnce(jsonText string)  {
 		producerInited = true
 	}
 
-	msg := &sarama.ProducerMessage{
+	msg := &sarama.ProducerMessage {
 		Topic:     Config.Mq.Topic,
 		Partition: int32(-1),
 		Key:       sarama.StringEncoder("key"),
