@@ -19,8 +19,8 @@ import (
 	"github.com/Shopify/sarama"
 	. "server/connector/internal/config"
 	"sync"
-	"github.com/emirpasic/gods/lists/doublylinkedlist"
 	"fmt"
+	"container/list"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -266,27 +266,27 @@ func consumeEvent(i int, id int) {
 	}()
 
 	log.Info("consume: <- produceEvt")
-	readyToDeliver := *doublylinkedlist.New()
+	start := time.Now().UnixNano() / 1000000
+	log.Warn("consume, id=%d, event=%d, time=%d", id, i, start)
+	readyToDeliver := list.New()
 	func() {
 		locker.RLock()
 		defer locker.RUnlock()
-		start := time.Now().UnixNano() / 1000000
-		log.Warn("consume, id=%d, event=%d, time=%d", id, i, start)
 		for k, v := range msgs {
-			v.DrainTo(k, &readyToDeliver)
+			v.DrainTo(k, readyToDeliver)
 		}
-		deliver(&readyToDeliver, i, start)
 	}()
+	deliver(readyToDeliver, i, start)
 }
 
-func deliver(list *doublylinkedlist.List, i int, start int64) {
-	if !list.Empty() {
+func deliver(list *list.List, i int, start int64) {
+	if list.Len() > 0 {
 		var jsonText string = "["
-		list.Each(func(index int, value interface{}) {
-			toComputeMessage := value.(ToComputeMessage)
+		for e := list.Front(); e != nil; e = e.Next() {
+			toComputeMessage := e.Value.(ToComputeMessage)
 			jsonText0, _ := json.Marshal(toComputeMessage)
 			jsonText += fmt.Sprintf("%s,", jsonText0)
-		})
+		}
 		jsonText = jsonText[:len(jsonText) - 1] + "]"
 		deliverOnce(jsonText)
 		end := time.Now().UnixNano() / 1000000
