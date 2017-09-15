@@ -20,7 +20,6 @@ import (
 	. "server/connector/internal/config"
 	"sync"
 	"fmt"
-	"container/list"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -133,7 +132,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	for i:=0; i < 4; i++ {
+	for i:=0; i < 8; i++ {
 		go consume(i)
 	}
 
@@ -245,7 +244,7 @@ func produce()  {
 	select {
 	case produceEvt <- i:
 		log.Info("produce: produceEvt <- true, cap=%d, len=%d, i=%d", cap(produceEvt), len(produceEvt), i)
-		log.Warn("produce, i=%d",  i)
+		log.Debug("produce, i=%d",  i)
 	default:
 		log.Info("produce: default")
 	}
@@ -262,39 +261,39 @@ func consumeEvent(i int, id int) {
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
 		if err:=recover();err!=nil{
 			log.Error("err, %s", err) // 这里的err其实就是panic传入的内容，55
+			print(err)
 		}
 	}()
 
 	log.Info("consume: <- produceEvt")
+	readyToDeliver := make([]ToComputeMessage, 0, 5000)
 	start := time.Now().UnixNano() / 1000000
-	log.Warn("consume, id=%d, event=%d, time=%d", id, i, start)
-	readyToDeliver := list.New()
+	log.Debug("consume, id=%d, event=%d, time=%d", id, i, start)
 	func() {
 		locker.RLock()
 		defer locker.RUnlock()
+		maxLength := 1000
 		for k, v := range msgs {
-			v.DrainTo(k, readyToDeliver)
+			readyToDeliver = v.DrainTo(k, readyToDeliver, maxLength)
+			if len(readyToDeliver) >= maxLength {
+				break
+			}
+			log.Debug("size: %d", len(readyToDeliver))
 		}
 	}()
 	deliver(readyToDeliver, i, start)
 }
 
-func deliver(list *list.List, i int, start int64) {
-	if list.Len() > 0 {
-		var jsonText string = "["
-		for e := list.Front(); e != nil; e = e.Next() {
-			toComputeMessage := e.Value.(ToComputeMessage)
-			jsonText0, _ := json.Marshal(toComputeMessage)
-			jsonText += fmt.Sprintf("%s,", jsonText0)
-		}
-		jsonText = jsonText[:len(jsonText) - 1] + "]"
-		deliverOnce(jsonText)
+func deliver(list []ToComputeMessage, i int, start int64) {
+	if len(list) > 0 {
+		bytes, _ := json.Marshal(list)
+		deliverOnce(bytes)
 		end := time.Now().UnixNano() / 1000000
-		log.Warn("finish consume, i=%d, time=%d, cost=%d, textSize=%d", i, end, end- start, len(jsonText))
+		log.Warn("finish consume, i=%d, time=%d, cost=%d, msgsLength=%d, textSize=%d", i, end, end- start, len(list), len(bytes))
 	}
 }
 
-func deliverOnce(jsonText string)  {
+func deliverOnce(bytes []byte)  {
 	if !producerInited {
 		config := sarama.NewConfig()
 		config.Producer.MaxMessageBytes = 1024 * 1024 * 1024;
@@ -316,10 +315,9 @@ func deliverOnce(jsonText string)  {
 		Topic:     Config.Mq.Topic,
 		Partition: int32(-1),
 		Key:       sarama.StringEncoder("key"),
-		Value:     sarama.StringEncoder(jsonText),
+		Value:     sarama.ByteEncoder(bytes),
 	}
 
-	log.Info("deliver, jsonText=%s", jsonText)
 	partition, offset, err := producer.SendMessage(msg)
 	if err != nil {
 		log.Error("Send message Fail, %s, host=%s", err, Config.Mq.KafkaBrokers)

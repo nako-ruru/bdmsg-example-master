@@ -2,19 +2,19 @@ package connectsvc
 
 import (
 	"sync"
-	"container/list"
-	"encoding/json"
+	"github.com/emirpasic/gods/lists/singlylinkedlist"
 )
 
 type RoomMsgToCompute struct {
-	queue list.List
+	queue *singlylinkedlist.List
 	locker  sync.RWMutex
 	size int
 }
 
 func NewRoomMsgToCompute() *RoomMsgToCompute {
 	return &RoomMsgToCompute{
-		size: 100,
+		queue:	singlylinkedlist.New(),
+		size: 	100,
 	}
 }
 
@@ -23,34 +23,26 @@ func (m *RoomMsgToCompute) Add(msg ToComputeMessage) {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
-	m.queue.PushBack(msg)
-	for ; m.queue.Len() > m.size; {
-		for e := m.queue.Front(); e != nil; e = e.Next() {
-			first := e.Value.(ToComputeMessage)
-			jsonText, _ := json.Marshal(first)
-			log.Info("discard: %s", jsonText)
-			m.queue.Remove(e)
-			break
-		}
+	m.queue.Add(msg)
+	for ; m.queue.Size() > m.size; {
+		m.queue.Remove(0)
 	}
 }
 
-func (m *RoomMsgToCompute) DrainTo(roomId string, list *list.List)  {
+func (m *RoomMsgToCompute) DrainTo(roomId string, msgs []ToComputeMessage, maxLength int)([]ToComputeMessage)  {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
-	if m.queue.Len() <= 100000 {
-		list.PushBackList(&m.queue)
-		m.queue.Init()
-	} else {
-		count := 0;
-		for e := m.queue.Front(); e != nil; e = e.Next() {
-			list.PushBack(e.Value)
-			m.queue.Remove(e)
-			count ++
-			if count >= 100000 {
-				break;
-			}
+	oldLen := len(msgs)
+
+	m.queue.Each(func(index int, value interface{}) {
+		if len(msgs) < maxLength {
+			msgs = append(msgs, value.(ToComputeMessage))
 		}
+	})
+	for i,n := oldLen, len(msgs); i < n; i++ {
+		m.queue.Remove(0)
 	}
+
+	return msgs
 }
