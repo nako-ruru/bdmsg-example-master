@@ -132,7 +132,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	for i:=0; i < 8; i++ {
+	for i:=0; i < 16; i++ {
 		go consume(i)
 	}
 
@@ -243,10 +243,10 @@ func produce()  {
 	locker.Unlock()
 	select {
 	case produceEvt <- i:
-		log.Info("produce: produceEvt <- true, cap=%d, len=%d, i=%d", cap(produceEvt), len(produceEvt), i)
+		log.Debug("produce: produceEvt <- true, cap=%d, len=%d, i=%d", cap(produceEvt), len(produceEvt), i)
 		log.Debug("produce, i=%d",  i)
 	default:
-		log.Info("produce: default")
+		log.Debug("produce: default")
 	}
 }
 
@@ -265,31 +265,31 @@ func consumeEvent(i int, id int) {
 		}
 	}()
 
-	log.Info("consume: <- produceEvt")
+	log.Debug("consume: <- produceEvt")
 	readyToDeliver := make([]ToComputeMessage, 0, 5000)
+	totalRestSize := 0;
 	start := time.Now().UnixNano() / 1000000
 	log.Debug("consume, id=%d, event=%d, time=%d", id, i, start)
 	func() {
 		locker.RLock()
 		defer locker.RUnlock()
-		maxLength := 1000
+		maxLength := 10000
 		for k, v := range msgs {
-			readyToDeliver = v.DrainTo(k, readyToDeliver, maxLength)
-			if len(readyToDeliver) >= maxLength {
-				break
-			}
+			var  restSize int
+			readyToDeliver, restSize = v.DrainTo(k, readyToDeliver, maxLength)
+			totalRestSize += restSize
 			log.Debug("size: %d", len(readyToDeliver))
 		}
 	}()
-	deliver(readyToDeliver, i, start)
+	deliver(readyToDeliver, totalRestSize, i, start)
 }
 
-func deliver(list []ToComputeMessage, i int, start int64) {
+func deliver(list []ToComputeMessage,totalRestSize int, i int, start int64) {
 	if len(list) > 0 {
 		bytes, _ := json.Marshal(list)
 		deliverOnce(bytes)
 		end := time.Now().UnixNano() / 1000000
-		log.Warn("finish consume, i=%d, time=%d, cost=%d, msgsLength=%d, textSize=%d", i, end, end- start, len(list), len(bytes))
+		log.Warn("finish consume, i=%d, time=%d, cost=%d, msgsLength=%d, textSize=%d, restSize=%d", i, end, end- start, len(list), len(bytes), totalRestSize)
 	}
 }
 

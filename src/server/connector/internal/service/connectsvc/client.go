@@ -62,8 +62,8 @@ func (c *Client) ending() {
 	defer func() { recover() }()
 
 	c.msc.SetUserData(nil)
+	c.room.ending(c.roomId, c.ID)
 	c.clientM.removeClient(c.ID)
-	c.room.ending(c.ID)
 }
 
 // Never fail.

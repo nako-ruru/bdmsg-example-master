@@ -14,7 +14,7 @@ type RoomManager struct {
 }
 
 type Room struct {
-	 userIds *treeset.Set
+	userIds *treeset.Set
 	locker  sync.RWMutex
 }
 
@@ -45,18 +45,12 @@ func search(m *RoomManager, roomId string, id string) bool {
 	return m.clients[roomId].Contains(id)
 }
 
-func (c *RoomManager) ending(id string) {
+func (c *RoomManager) ending(roomId string, id string) {
 	c.locker.Lock()
 	defer c.locker.Unlock()
 
-	c.internalEnding(id)
-}
-
-func (c *RoomManager) internalEnding(id string) {
-	for k := range c.clients {
-		c.clients[k].Remove(id)
-		if c.clients[k].Empty() {
-			delete(c.clients, k)
-		}
+	c.clients[roomId].Remove(id)
+	if c.clients[roomId].Empty() {
+		delete(c.clients, roomId)
 	}
 }

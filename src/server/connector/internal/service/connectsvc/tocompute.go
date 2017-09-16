@@ -29,7 +29,7 @@ func (m *RoomMsgToCompute) Add(msg ToComputeMessage) {
 	}
 }
 
-func (m *RoomMsgToCompute) DrainTo(roomId string, msgs []ToComputeMessage, maxLength int)([]ToComputeMessage)  {
+func (m *RoomMsgToCompute) DrainTo(roomId string, msgs []ToComputeMessage, maxLength int)([]ToComputeMessage, int)  {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
@@ -44,5 +44,5 @@ func (m *RoomMsgToCompute) DrainTo(roomId string, msgs []ToComputeMessage, maxLe
 		m.queue.Remove(0)
 	}
 
-	return msgs
+	return msgs, m.queue.Size()
 }
