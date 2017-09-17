@@ -19,7 +19,7 @@ func NewRoomMsgToCompute() *RoomMsgToCompute {
 }
 
 
-func (m *RoomMsgToCompute) Add(msg ToComputeMessage) {
+func (m *RoomMsgToCompute) Add(msg FromConnectorMessage) {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
@@ -29,7 +29,7 @@ func (m *RoomMsgToCompute) Add(msg ToComputeMessage) {
 	}
 }
 
-func (m *RoomMsgToCompute) DrainTo(roomId string, msgs []ToComputeMessage, maxLength int)([]ToComputeMessage, int)  {
+func (m *RoomMsgToCompute) DrainTo(roomId string, msgs []*FromConnectorMessage, maxLength int)([]*FromConnectorMessage, int)  {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
@@ -37,7 +37,8 @@ func (m *RoomMsgToCompute) DrainTo(roomId string, msgs []ToComputeMessage, maxLe
 
 	m.queue.Each(func(index int, value interface{}) {
 		if len(msgs) < maxLength {
-			msgs = append(msgs, value.(ToComputeMessage))
+			message := value.(FromConnectorMessage)
+			msgs = append(msgs, &message)
 		}
 	})
 	for i,n := oldLen, len(msgs); i < n; i++ {

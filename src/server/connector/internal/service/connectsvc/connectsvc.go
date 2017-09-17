@@ -13,13 +13,13 @@ import (
 	. "common/config"
 	. "common/errdef"
 	. "protodef/pconnector"
-	"encoding/json"
 	"github.com/go-redis/redis"
 	"github.com/satori/go.uuid"
 	"github.com/Shopify/sarama"
 	. "server/connector/internal/config"
 	"sync"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -209,15 +209,15 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		break
 	}
 
-	var redisMsg = ToComputeMessage{
+	var redisMsg = FromConnectorMessage{
 		uuid.NewV4().String(),
 		roomId,
 		c.ID,
 		nickname,
-		level,
-		int(t),
+		time.Now().UnixNano() / 1000000.,
+		int32(level),
+		int32(t),
 		params,
-		time.Now().UnixNano() / 1000000,
 	}
 
 	locker.Lock()
@@ -266,7 +266,7 @@ func consumeEvent(i int, id int) {
 	}()
 
 	log.Debug("consume: <- produceEvt")
-	readyToDeliver := make([]ToComputeMessage, 0, 5000)
+	readyToDeliver := []*FromConnectorMessage{}
 	totalRestSize := 0;
 	start := time.Now().UnixNano() / 1000000
 	log.Debug("consume, id=%d, event=%d, time=%d", id, i, start)
@@ -284,9 +284,12 @@ func consumeEvent(i int, id int) {
 	deliver(readyToDeliver, totalRestSize, i, start)
 }
 
-func deliver(list []ToComputeMessage,totalRestSize int, i int, start int64) {
+func deliver(list []*FromConnectorMessage, totalRestSize int, i int, start int64) {
 	if len(list) > 0 {
-		bytes, _ := json.Marshal(list)
+		msgs := FromConnectorMessages {
+			Messages:list,
+		}
+		bytes, _ := proto.Marshal(&msgs)
 		deliverOnce(bytes)
 		end := time.Now().UnixNano() / 1000000
 		log.Warn("finish consume, i=%d, time=%d, cost=%d, msgsLength=%d, textSize=%d, restSize=%d", i, end, end- start, len(list), len(bytes), totalRestSize)
