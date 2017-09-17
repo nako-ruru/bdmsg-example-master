@@ -14,12 +14,13 @@ import (
 	. "common/errdef"
 	. "protodef/pconnector"
 	"github.com/go-redis/redis"
-	"github.com/satori/go.uuid"
+	"sync/atomic"
 	"github.com/Shopify/sarama"
 	. "server/connector/internal/config"
 	"sync"
 	"fmt"
 	"github.com/golang/protobuf/proto"
+	"strconv"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -28,7 +29,7 @@ var client = redis.NewClient(&redis.Options{
 	DB:       0,  // use default DB
 })
 
-var producer sarama.SyncProducer
+var producer sarama.AsyncProducer
 var producerInited = false
 
 type service struct {
@@ -36,6 +37,9 @@ type service struct {
 	clientM *ClientManager
 	roomM *RoomManager
 }
+
+var ops uint64 = 0
+var ops2 uint64 = 0
 
 func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN int, clientM *ClientManager, roomM *RoomManager) *service {
 
@@ -210,7 +214,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	}
 
 	var redisMsg = FromConnectorMessage{
-		uuid.NewV4().String(),
+		strconv.FormatUint(atomic.AddUint64(&ops, 1), 10),
 		roomId,
 		c.ID,
 		nickname,
@@ -230,17 +234,12 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	produce()
 }
 
-var produceEvt = make(chan int, 1)
+var produceEvt = make(chan uint64, 1)
 var msgs = make(map[string]*RoomMsgToCompute)
 var locker sync.RWMutex
-var counter = 0
 
 func produce()  {
-	var i int
-	locker.Lock()
-	counter++;
-	i = counter
-	locker.Unlock()
+	i := atomic.AddUint64(&ops2, 1)
 	select {
 	case produceEvt <- i:
 		log.Debug("produce: produceEvt <- true, cap=%d, len=%d, i=%d", cap(produceEvt), len(produceEvt), i)
@@ -257,7 +256,7 @@ func consume(id int) {
 	}
 	log.Error("consume error")
 }
-func consumeEvent(i int, id int) {
+func consumeEvent(i uint64, id int) {
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
 		if err:=recover();err!=nil{
 			log.Error("err, %s", err) // 这里的err其实就是panic传入的内容，55
@@ -267,7 +266,7 @@ func consumeEvent(i int, id int) {
 
 	log.Debug("consume: <- produceEvt")
 	readyToDeliver := []*FromConnectorMessage{}
-	totalRestSize := 0;
+	totalRestSize := 0
 	start := time.Now().UnixNano() / 1000000
 	log.Debug("consume, id=%d, event=%d, time=%d", id, i, start)
 	func() {
@@ -284,12 +283,13 @@ func consumeEvent(i int, id int) {
 	deliver(readyToDeliver, totalRestSize, i, start)
 }
 
-func deliver(list []*FromConnectorMessage, totalRestSize int, i int, start int64) {
+func deliver(list []*FromConnectorMessage, totalRestSize int, i uint64, start int64) {
 	if len(list) > 0 {
 		msgs := FromConnectorMessages {
 			Messages:list,
 		}
 		bytes, _ := proto.Marshal(&msgs)
+		start = time.Now().UnixNano() / 1000000
 		deliverOnce(bytes)
 		end := time.Now().UnixNano() / 1000000
 		log.Warn("finish consume, i=%d, time=%d, cost=%d, msgsLength=%d, textSize=%d, restSize=%d", i, end, end- start, len(list), len(bytes), totalRestSize)
@@ -301,12 +301,12 @@ func deliverOnce(bytes []byte)  {
 		config := sarama.NewConfig()
 		config.Producer.MaxMessageBytes = 1024 * 1024 * 1024;
 		config.Producer.RequiredAcks = sarama.NoResponse
+		config.Producer.Flush.Frequency = time.Duration(1000)
 		config.Producer.Partitioner = sarama.NewRandomPartitioner
 		config.Producer.Return.Successes = true
 		config.Producer.Compression = sarama.CompressionGZIP
-
 		var err error
-		producer, err = sarama.NewSyncProducer(Config.Mq.KafkaBrokers, config)
+		producer, err = sarama.NewAsyncProducer(Config.Mq.KafkaBrokers, config)
 		if err != nil {
 			log.Error("%s", err)
 			panic(err)
@@ -321,11 +321,7 @@ func deliverOnce(bytes []byte)  {
 		Value:     sarama.ByteEncoder(bytes),
 	}
 
-	partition, offset, err := producer.SendMessage(msg)
-	if err != nil {
-		log.Error("Send message Fail, %s, host=%s", err, Config.Mq.KafkaBrokers)
-	}
-	log.Trace("Partition = %d, offset=%d\n", partition, offset)
+	producer.Input() <- msg
 }
 
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bdmsg.Server, error) {
