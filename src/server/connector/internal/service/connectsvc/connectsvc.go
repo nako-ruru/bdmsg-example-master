@@ -29,9 +29,6 @@ var client = redis.NewClient(&redis.Options{
 	DB:       0,  // use default DB
 })
 
-var producer sarama.AsyncProducer
-var producerInited = false
-
 type service struct {
 	*bdmsg.Server
 	clientM *ClientManager
@@ -297,21 +294,16 @@ func deliver(list []*FromConnectorMessage, totalRestSize int, i uint64, start in
 }
 
 func deliverOnce(bytes []byte)  {
-	if !producerInited {
-		config := sarama.NewConfig()
-		config.Producer.MaxMessageBytes = 1024 * 1024 * 1024;
-		config.Producer.RequiredAcks = sarama.NoResponse
-		config.Producer.Flush.Frequency = time.Duration(1000)
-		config.Producer.Partitioner = sarama.NewRandomPartitioner
-		config.Producer.Return.Successes = true
-		config.Producer.Compression = sarama.CompressionGZIP
-		var err error
-		producer, err = sarama.NewAsyncProducer(Config.Mq.KafkaBrokers, config)
-		if err != nil {
-			log.Error("%s", err)
-			panic(err)
-		}
-		producerInited = true
+	config := sarama.NewConfig()
+	config.Producer.MaxMessageBytes = 1024 * 1024 * 1024;
+	config.Producer.RequiredAcks = sarama.NoResponse
+	config.Producer.Partitioner = sarama.NewRandomPartitioner
+	config.Producer.Return.Successes = true
+	config.Producer.Compression = sarama.CompressionGZIP
+	producer, err := sarama.NewAsyncProducer(Config.Mq.KafkaBrokers, config)
+	if err != nil {
+		log.Error("%s", err)
+		panic(err)
 	}
 
 	msg := &sarama.ProducerMessage {
