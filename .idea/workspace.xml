@@ -3,10 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="173b7b09-97ec-42c4-9bef-656bcf261b82" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/config/config.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/config/config.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/logfactory.go" afterPath="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/logfactory.go" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test/connector.conf" afterPath="$PROJECT_DIR$/test/connector.conf" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -31,11 +28,69 @@
       <file leaf-file-name="connectsvc.go" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="141">
-              <caret line="235" column="1" lean-forward="true" selection-start-line="235" selection-start-column="1" selection-end-line="235" selection-end-column="1" />
-              <folding>
-                <element signature="e#175#495#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="-3114">
+              <caret line="22" column="8" lean-forward="false" selection-start-line="22" selection-start-column="8" selection-end-line="22" selection-end-column="8" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="builtin.go" pinned="false" current-in-tab="false">
+        <entry file="file://D:/Go/src/builtin/builtin.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="115">
+              <caret line="154" column="5" lean-forward="false" selection-start-line="154" selection-start-column="5" selection-end-line="154" selection-end-column="5" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="buffer.go" pinned="false" current-in-tab="false">
+        <entry file="file://D:/Go/src/bytes/buffer.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="115">
+              <caret line="46" column="17" lean-forward="false" selection-start-line="46" selection-start-column="17" selection-end-line="46" selection-end-column="17" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="deflate.go" pinned="false" current-in-tab="false">
+        <entry file="file://D:/Go/src/compress/flate/deflate.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="12559">
+              <caret line="665" column="5" lean-forward="false" selection-start-line="665" selection-start-column="5" selection-end-line="665" selection-end-column="5" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="connector.conf" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/test/connector.conf">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="57">
+              <caret line="3" column="51" lean-forward="false" selection-start-line="3" selection-start-column="51" selection-end-line="3" selection-end-column="51" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="async_producer.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/async_producer.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1463">
+              <caret line="85" column="4" lean-forward="false" selection-start-line="85" selection-start-column="4" selection-end-line="85" selection-end-column="4" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="functional_producer_test.go" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/functional_producer_test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="19">
+              <caret line="290" column="23" lean-forward="false" selection-start-line="290" selection-start-column="23" selection-end-line="290" selection-end-column="23" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -43,8 +98,8 @@
       <file leaf-file-name="utils.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/utils.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="68">
-              <caret line="32" column="14" lean-forward="false" selection-start-line="32" selection-start-column="14" selection-end-line="32" selection-end-column="14" />
+            <state relative-caret-position="608">
+              <caret line="35" column="27" lean-forward="false" selection-start-line="35" selection-start-column="27" selection-end-line="35" selection-end-column="27" />
               <folding />
             </state>
           </provider>
@@ -53,8 +108,8 @@
       <file leaf-file-name="broker.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/broker.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-609">
-              <caret line="372" column="22" lean-forward="true" selection-start-line="372" selection-start-column="22" selection-end-line="372" selection-end-column="22" />
+            <state relative-caret-position="6840">
+              <caret line="372" column="22" lean-forward="false" selection-start-line="372" selection-start-column="22" selection-end-line="372" selection-end-column="22" />
               <folding />
             </state>
           </provider>
@@ -63,7 +118,7 @@
       <file leaf-file-name="sarama.go" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/sarama.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="114">
+            <state relative-caret-position="1558">
               <caret line="85" column="4" lean-forward="false" selection-start-line="85" selection-start-column="4" selection-end-line="85" selection-end-column="4" />
               <folding />
             </state>
@@ -157,6 +212,7 @@
         <option value="$PROJECT_DIR$/test/connector.conf" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/config/config.go" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/logfactory.go" />
+        <option value="$PROJECT_DIR$/test/logs/connector.err.txt" />
         <option value="$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go" />
       </list>
     </option>
@@ -167,7 +223,7 @@
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="-4" />
     <option name="width" value="1382" />
     <option name="height" value="754" />
@@ -373,25 +429,25 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1382" height="754" extended-state="6" />
+    <frame x="-8" y="-8" width="1382" height="754" extended-state="7" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2632375" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2344932" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.5045386" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32206118" sideWeight="0.49707174" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30595812" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32850242" sideWeight="0.49546143" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4009662" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.44283414" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.34460548" sideWeight="0.49707174" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -403,42 +459,11 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="415" />
+      <option name="time" value="431" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/partitioner.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="134">
-          <caret line="67" column="5" lean-forward="false" selection-start-line="67" selection-start-column="5" selection-end-line="67" selection-end-column="5" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/config.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="116">
-          <caret line="78" column="41" lean-forward="false" selection-start-line="78" selection-start-column="35" selection-end-line="78" selection-end-column="41" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/message.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-330">
-          <caret line="21" column="4" lean-forward="false" selection-start-line="21" selection-start-column="4" selection-end-line="21" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/emirpasic/gods/lists/singlylinkedlist/singlylinkedlist.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2736">
-          <caret line="23" column="5" lean-forward="false" selection-start-line="23" selection-start-column="5" selection-end-line="23" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/emirpasic/gods/containers/containers.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-342">
@@ -542,7 +567,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="198">
           <caret line="120" column="0" lean-forward="false" selection-start-line="120" selection-start-column="0" selection-end-line="120" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -550,42 +574,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="149">
           <caret line="15" column="5" lean-forward="false" selection-start-line="15" selection-start-column="5" selection-end-line="15" selection-end-column="5" />
-          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://D:/Go/src/builtin/builtin.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="145">
-          <caret line="145" column="5" lean-forward="false" selection-start-line="145" selection-start-column="5" selection-end-line="145" selection-end-column="5" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/com/mycompany/im/compute/domain/RoomMsgToCompute.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
-          <caret line="5" column="37" lean-forward="true" selection-start-line="5" selection-start-column="37" selection-end-line="5" selection-end-column="37" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/RoomMsgToCompute.proto">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="227">
-          <caret line="17" column="37" lean-forward="false" selection-start-line="17" selection-start-column="37" selection-end-line="17" selection-end-column="37" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="57">
-          <caret line="3" column="5" lean-forward="false" selection-start-line="3" selection-start-column="5" selection-end-line="3" selection-end-column="5" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/com/mycompany/im/compute/domain/RoomMsgToCompute.java" />
+    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/RoomMsgToCompute.proto" />
+    <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/persistence.go" />
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/client.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
@@ -598,7 +592,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-5">
           <caret line="30" column="0" lean-forward="true" selection-start-line="30" selection-start-column="0" selection-end-line="30" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -606,7 +599,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="152">
           <caret line="333" column="36" lean-forward="false" selection-start-line="333" selection-start-column="36" selection-end-line="333" selection-end-column="36" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -624,7 +616,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-127">
           <caret line="31" column="21" lean-forward="false" selection-start-line="31" selection-start-column="21" selection-end-line="31" selection-end-column="21" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -632,7 +623,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="132">
           <caret line="40" column="5" lean-forward="false" selection-start-line="40" selection-start-column="5" selection-end-line="40" selection-end-column="5" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -640,31 +630,14 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="107">
           <caret line="461" column="4" lean-forward="false" selection-start-line="461" selection-start-column="4" selection-end-line="461" selection-end-column="4" />
-          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test/logs/connector.err">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="8" lean-forward="false" selection-start-line="0" selection-start-column="8" selection-end-line="0" selection-end-column="8" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/test/logs/connector.err" />
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/RoomMsgToCompute.pb.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="151">
           <caret line="30" column="5" lean-forward="false" selection-start-line="30" selection-start-column="5" selection-end-line="30" selection-end-column="5" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test/connector.conf">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-171">
-          <caret line="3" column="51" lean-forward="false" selection-start-line="3" selection-start-column="51" selection-end-line="3" selection-end-column="51" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -672,7 +645,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="167">
           <caret line="567" column="0" lean-forward="false" selection-start-line="567" selection-start-column="0" selection-end-line="567" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -696,7 +668,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="114">
           <caret line="109" column="0" lean-forward="false" selection-start-line="109" selection-start-column="0" selection-end-line="109" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -704,7 +675,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-228">
           <caret line="58" column="44" lean-forward="true" selection-start-line="58" selection-start-column="44" selection-end-line="58" selection-end-column="44" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -712,21 +682,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1406">
           <caret line="82" column="1" lean-forward="true" selection-start-line="82" selection-start-column="1" selection-end-line="82" selection-end-column="1" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/async_producer.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1064">
-          <caret line="63" column="5" lean-forward="false" selection-start-line="63" selection-start-column="5" selection-end-line="63" selection-end-column="5" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/sarama.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="114">
+        <state relative-caret-position="1558">
           <caret line="85" column="4" lean-forward="false" selection-start-line="85" selection-start-column="4" selection-end-line="85" selection-end-column="4" />
           <folding />
         </state>
@@ -734,27 +695,80 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/broker.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-609">
-          <caret line="372" column="22" lean-forward="true" selection-start-line="372" selection-start-column="22" selection-end-line="372" selection-end-column="22" />
+        <state relative-caret-position="6840">
+          <caret line="372" column="22" lean-forward="false" selection-start-line="372" selection-start-column="22" selection-end-line="372" selection-end-column="22" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/utils.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="32" column="14" lean-forward="false" selection-start-line="32" selection-start-column="14" selection-end-line="32" selection-end-column="14" />
+        <state relative-caret-position="608">
+          <caret line="35" column="27" lean-forward="false" selection-start-line="35" selection-start-column="27" selection-end-line="35" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/connector.conf">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="57">
+          <caret line="3" column="51" lean-forward="false" selection-start-line="3" selection-start-column="51" selection-end-line="3" selection-end-column="51" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test/logs/connector.err.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-10530">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/Go/src/compress/flate/deflate.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="12559">
+          <caret line="665" column="5" lean-forward="false" selection-start-line="665" selection-start-column="5" selection-end-line="665" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/Go/src/bytes/buffer.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="115">
+          <caret line="46" column="17" lean-forward="false" selection-start-line="46" selection-start-column="17" selection-end-line="46" selection-end-column="17" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/Go/src/builtin/builtin.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="115">
+          <caret line="154" column="5" lean-forward="false" selection-start-line="154" selection-start-column="5" selection-end-line="154" selection-end-column="5" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/functional_producer_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="19">
+          <caret line="290" column="23" lean-forward="false" selection-start-line="290" selection-start-column="23" selection-end-line="290" selection-end-column="23" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/Shopify/sarama/async_producer.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1463">
+          <caret line="85" column="4" lean-forward="false" selection-start-line="85" selection-start-column="4" selection-end-line="85" selection-end-column="4" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/server/connector/internal/service/connectsvc/connectsvc.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="141">
-          <caret line="235" column="1" lean-forward="true" selection-start-line="235" selection-start-column="1" selection-end-line="235" selection-end-column="1" />
-          <folding>
-            <element signature="e#175#495#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="-3114">
+          <caret line="22" column="8" lean-forward="false" selection-start-line="22" selection-start-column="8" selection-end-line="22" selection-end-column="8" />
+          <folding />
         </state>
       </provider>
     </entry>

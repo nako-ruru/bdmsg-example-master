@@ -16,11 +16,12 @@ import (
 	"github.com/go-redis/redis"
 	"sync/atomic"
 	"github.com/Shopify/sarama"
-	. "server/connector/internal/config"
 	"sync"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"strconv"
+	"io"
+	"compress/gzip"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -29,7 +30,7 @@ var client = redis.NewClient(&redis.Options{
 	DB:       0,  // use default DB
 })
 
-var producer sarama.SyncProducer
+var producer sarama.AsyncProducer
 var producerInited = false
 
 type service struct {
@@ -282,47 +283,41 @@ func deliver(list []*FromConnectorMessage, totalRestSize int, i uint64, start in
 	}
 }
 
+var conn, _ = net.Dial("tcp", "localhost:22222")
+
 // asyncProducer 异步生产者
 // 并发量大时，必须采用这种方式
-func asyncProducer(bytes []byte) {
-	config := sarama.NewConfig()
-
-	config.Producer.MaxMessageBytes = 1024 * 1024 * 1024;
-	config.Producer.RequiredAcks = sarama.NoResponse
-	config.Producer.Partitioner = sarama.NewRandomPartitioner
-
-	config.Producer.Timeout = 5 * time.Second
-	//必须有这个选项
-	config.Producer.Return.Successes = true
-	config.Producer.Compression = sarama.CompressionGZIP
-	producer, err := sarama.NewAsyncProducer(Config.Mq.KafkaBrokers, config)
-	defer producer.Close()
+func asyncProducer(uncompressedBytes []byte) {
+	if conn == nil {
+		conn, _ = net.Dial("tcp", "localhost:22222")
+	}
+	//compressedData := new(bytes.Buffer)
+	//compress(uncompressedBytes, compressedData, 9)
+	//compressedBytes := compressedData.Bytes()
+	length := len(uncompressedBytes)
+	lengthBytes := []byte{
+		byte(length >> 24 & 0xFF),
+		byte(length >> 16 & 0xFF),
+		byte(length >> 8 & 0xFF),
+		byte(length & 0xFF),
+	}
+	var err error
+	_, err = conn.Write(lengthBytes)
 	if err != nil {
+		conn = nil
 		log.Error("%s", err)
-		return
 	}
-
-	/*
-	//必须有这个匿名函数内容
-	go func(p sarama.AsyncProducer) {
-		errors := p.Errors()
-		success := p.Successes()
-		for {
-			select {
-			case err := <-errors:
-				if err != nil {
-					log.Error("%s", err)
-				}
-			case <-success:
-			}
-		}
-	}(producer)*/
-
-	msg := &sarama.ProducerMessage{
-		Topic: Config.Mq.Topic,
-		Value: sarama.ByteEncoder(bytes),
+	_, err = conn.Write(uncompressedBytes)
+	if err != nil {
+		conn = nil
+		log.Error("%s", err)
 	}
-	producer.Input() <- msg
+}
+
+func compress(src []byte, dest io.Writer, level int) {
+	compressor := gzip.NewWriter(dest)
+	compressor.Write(src)
+	compressor.Close()
 }
 
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bdmsg.Server, error) {
