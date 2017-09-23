@@ -55,16 +55,16 @@ func (c *ManagerConfT) Check() bool {
 }
 
 type ConfigT struct {
-	Pidfile  string        	`json:"pidfile"`
-	Logfile  string        	`json:"logfile"`
-	LogErrorFile string		`json:"logerrorfile"`
-	ServiceS ServiceSConfT 	`json:"service"`
-	Manager  ManagerConfT  	`json:"manager"`
-	Mq Mq					`json:"mq"`
+	Pidfile   string        `json:"pidfile"`
+	InfoFile  string        `json:"logfile"`
+	ErrorFile string        `json:"logerrorfile"`
+	ServiceS  ServiceSConfT `json:"service"`
+	Manager   ManagerConfT  `json:"manager"`
+	Mq        Mq            `json:"mq"`
 }
 
 func (c *ConfigT) Check() bool {
-	return len(c.Pidfile) > 0 && len(c.Logfile) > 0 && c.ServiceS.Check() && c.Manager.Check()
+	return len(c.Pidfile) > 0 && len(c.InfoFile) > 0 && c.ServiceS.Check() && c.Manager.Check()
 }
 
 var Config *ConfigT = &ConfigT{}

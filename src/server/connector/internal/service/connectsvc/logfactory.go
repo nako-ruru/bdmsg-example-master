@@ -6,6 +6,8 @@ import (
 	"github.com/someonegg/goutil/gologf"
 	"github.com/someonegg/golog"
 	"fmt"
+	"os"
+	"strings"
 )
 
 var log *lumber.MultiLogger
@@ -19,7 +21,25 @@ func init()  {
 		return
 	}
 
-	err = gologf.SetOutput(Config.Logfile)
+	infoDirectory := getParentDirectory(Config.InfoFile)
+	if _, err := os.Stat(infoDirectory); err != nil {
+		err := os.MkdirAll(infoDirectory, 0711)
+		if err != nil {
+			fmt.Printf("Error creating directory, error=%s\n", err)
+			return
+		}
+	}
+
+	errorDirectory := getParentDirectory(Config.ErrorFile)
+	if _, err := os.Stat(errorDirectory); err != nil {
+		err := os.MkdirAll(errorDirectory, 0711)
+		if err != nil {
+			fmt.Printf("Error creating directory, error=%s\n", err)
+			return
+		}
+	}
+
+	err = gologf.SetOutput(Config.InfoFile)
 	if err != nil {
 		fmt.Printf("ParseConfig, error=%s\n", err)
 		return
@@ -30,14 +50,14 @@ func init()  {
 	consoleLog := lumber.NewConsoleLogger(lumber.INFO)
 	log.AddLoggers(consoleLog)
 
-	fileLog, err1 := lumber.NewFileLogger(Config.Logfile, lumber.INFO, lumber.ROTATE, 50000, 9, 100)
+	fileLog, err1 := lumber.NewFileLogger(Config.InfoFile, lumber.INFO, lumber.ROTATE, 50000, 9, 100)
 	if err1 == nil {
 		log.AddLoggers(fileLog)
 	} else {
 		log.Error("createLogger, err=%s", err1)
 	}
 
-	fileError, err2 := lumber.NewFileLogger(Config.LogErrorFile, lumber.WARN, lumber.ROTATE, 50000, 9, 100)
+	fileError, err2 := lumber.NewFileLogger(Config.ErrorFile, lumber.WARN, lumber.ROTATE, 50000, 9, 100)
 	if err2 == nil {
 		log.AddLoggers(fileError)
 	} else {
@@ -47,4 +67,17 @@ func init()  {
 
 func GetLogger() (l *lumber.MultiLogger) {
 	return log
+}
+
+func substr(s string, pos, length int) string {
+	runes := []rune(s)
+	l := pos + length
+	if l > len(runes) {
+		l = len(runes)
+	}
+	return string(runes[pos:l])
+}
+
+func getParentDirectory(dir string) string {
+	return substr(dir, 0, strings.LastIndex(dir, "/"))
 }

@@ -29,6 +29,9 @@ var client = redis.NewClient(&redis.Options{
 	DB:       0,  // use default DB
 })
 
+var producer sarama.SyncProducer
+var producerInited = false
+
 type service struct {
 	*bdmsg.Server
 	clientM *ClientManager
@@ -133,9 +136,12 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	for i:=0; i < 16; i++ {
-		go consume(i)
-	}
+	ticker := time.NewTicker(time.Millisecond * 10)
+	go func() {
+		for range ticker.C {
+			consume(0)
+		}
+	}()
 
 	return s
 }
@@ -227,31 +233,14 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	}
 	msgs[roomId].Add(redisMsg)
 	locker.Unlock()
-
-	produce()
 }
 
-var produceEvt = make(chan uint64, 1)
 var msgs = make(map[string]*RoomMsgToCompute)
 var locker sync.RWMutex
 
-func produce()  {
-	i := atomic.AddUint64(&ops2, 1)
-	select {
-	case produceEvt <- i:
-		log.Debug("produce: produceEvt <- true, cap=%d, len=%d, i=%d", cap(produceEvt), len(produceEvt), i)
-		log.Debug("produce, i=%d",  i)
-	default:
-		log.Debug("produce: default")
-	}
-}
-
 func consume(id int) {
-	for {
-		i :=<- produceEvt
-		consumeEvent(i, id)
-	}
-	log.Error("consume error")
+	i := atomic.AddUint64(&ops2, 1)
+	consumeEvent(i, id)
 }
 func consumeEvent(i uint64, id int) {
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
@@ -287,32 +276,52 @@ func deliver(list []*FromConnectorMessage, totalRestSize int, i uint64, start in
 		}
 		bytes, _ := proto.Marshal(&msgs)
 		start = time.Now().UnixNano() / 1000000
-		deliverOnce(bytes)
+		asyncProducer(bytes)
 		end := time.Now().UnixNano() / 1000000
 		log.Warn("finish consume, i=%d, time=%d, cost=%d, msgsLength=%d, textSize=%d, restSize=%d", i, end, end- start, len(list), len(bytes), totalRestSize)
 	}
 }
 
-func deliverOnce(bytes []byte)  {
+// asyncProducer 异步生产者
+// 并发量大时，必须采用这种方式
+func asyncProducer(bytes []byte) {
 	config := sarama.NewConfig()
+
 	config.Producer.MaxMessageBytes = 1024 * 1024 * 1024;
 	config.Producer.RequiredAcks = sarama.NoResponse
 	config.Producer.Partitioner = sarama.NewRandomPartitioner
+
+	config.Producer.Timeout = 5 * time.Second
+	//必须有这个选项
 	config.Producer.Return.Successes = true
 	config.Producer.Compression = sarama.CompressionGZIP
 	producer, err := sarama.NewAsyncProducer(Config.Mq.KafkaBrokers, config)
+	defer producer.Close()
 	if err != nil {
 		log.Error("%s", err)
-		panic(err)
+		return
 	}
 
-	msg := &sarama.ProducerMessage {
-		Topic:     Config.Mq.Topic,
-		Partition: int32(-1),
-		Key:       sarama.StringEncoder("key"),
-		Value:     sarama.ByteEncoder(bytes),
-	}
+	/*
+	//必须有这个匿名函数内容
+	go func(p sarama.AsyncProducer) {
+		errors := p.Errors()
+		success := p.Successes()
+		for {
+			select {
+			case err := <-errors:
+				if err != nil {
+					log.Error("%s", err)
+				}
+			case <-success:
+			}
+		}
+	}(producer)*/
 
+	msg := &sarama.ProducerMessage{
+		Topic: Config.Mq.Topic,
+		Value: sarama.ByteEncoder(bytes),
+	}
 	producer.Input() <- msg
 }
 
