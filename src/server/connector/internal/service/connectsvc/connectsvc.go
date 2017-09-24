@@ -78,16 +78,17 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 				}
 				if fromRouterMessage.ToRoomId != "" {
 					s.roomM.locker.Lock()
-					treeSet, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
+					userIdsWrapper, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
 					s.roomM.locker.Unlock()
 
 					if ok {
 						userIds := []string{}
 
 						s.roomM.locker.Lock()
-						treeSet.Each(func(index int, value interface{}) {
-							userIds = append(userIds, value.(string))
-						})
+						for userId, _ := range userIdsWrapper {
+							userIds = append(userIds, userId)
+						}
+
 						s.roomM.locker.Unlock()
 
 						more := ""
