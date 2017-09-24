@@ -15,7 +15,6 @@ import (
 	. "protodef/pconnector"
 	"github.com/go-redis/redis"
 	"sync/atomic"
-	"github.com/Shopify/sarama"
 	"sync"
 	"fmt"
 	"github.com/golang/protobuf/proto"
@@ -29,9 +28,6 @@ var client = redis.NewClient(&redis.Options{
 	Password: "BrightHe0", // no password set
 	DB:       0,  // use default DB
 })
-
-var producer sarama.AsyncProducer
-var producerInited = false
 
 type service struct {
 	*bdmsg.Server
@@ -284,16 +280,27 @@ func deliver(list []*FromConnectorMessage, totalRestSize int, i uint64, start in
 }
 
 var conn, _ = net.Dial("tcp", "localhost:22222")
+var connLocker sync.RWMutex
 
-// asyncProducer 异步生产者
-// 并发量大时，必须采用这种方式
 func asyncProducer(uncompressedBytes []byte) {
+	connLocker.Lock()
+	defer connLocker.Unlock()
 	if conn == nil {
-		conn, _ = net.Dial("tcp", "localhost:22222")
+		var err error
+		conn, err = net.Dial("tcp", "localhost:22222")
+		if err != nil {
+			if conn != nil {
+				conn.Close()
+				conn = nil
+			}
+			log.Error("%s", err)
+			return
+		}
 	}
-	//compressedData := new(bytes.Buffer)
-	//compress(uncompressedBytes, compressedData, 9)
-	//compressedBytes := compressedData.Bytes()
+	/*
+	compressedData := new(bytes.Buffer)
+	compress(uncompressedBytes, compressedData, 9)
+	compressedBytes := compressedData.Bytes()*/
 	length := len(uncompressedBytes)
 	lengthBytes := []byte{
 		byte(length >> 24 & 0xFF),
@@ -304,12 +311,18 @@ func asyncProducer(uncompressedBytes []byte) {
 	var err error
 	_, err = conn.Write(lengthBytes)
 	if err != nil {
-		conn = nil
-		log.Error("%s", err)
+		if conn != nil {
+			conn.Close()
+			conn = nil
+		}
+		return
 	}
 	_, err = conn.Write(uncompressedBytes)
 	if err != nil {
-		conn = nil
+		if conn != nil {
+			conn.Close()
+			conn = nil
+		}
 		log.Error("%s", err)
 	}
 }
