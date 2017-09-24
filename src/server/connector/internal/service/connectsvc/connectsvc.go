@@ -134,12 +134,9 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	ticker := time.NewTicker(time.Millisecond * 10)
-	go func() {
-		for range ticker.C {
-			consume(0)
-		}
-	}()
+	for i:=0; i < 16; i++ {
+		go consume(i)
+	}
 
 	return s
 }
@@ -231,14 +228,31 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	}
 	msgs[roomId].Add(redisMsg)
 	locker.Unlock()
+
+	produce()
 }
 
+var produceEvt = make(chan uint64, 1)
 var msgs = make(map[string]*RoomMsgToCompute)
 var locker sync.RWMutex
 
-func consume(id int) {
+func produce()  {
 	i := atomic.AddUint64(&ops2, 1)
-	consumeEvent(i, id)
+	select {
+	case produceEvt <- i:
+		log.Debug("produce: produceEvt <- true, cap=%d, len=%d, i=%d", cap(produceEvt), len(produceEvt), i)
+		log.Debug("produce, i=%d",  i)
+	default:
+		log.Debug("produce: default")
+	}
+}
+
+func consume(id int) {
+	for {
+		i :=<- produceEvt
+		consumeEvent(i, id)
+	}
+	log.Error("consume error")
 }
 func consumeEvent(i uint64, id int) {
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
