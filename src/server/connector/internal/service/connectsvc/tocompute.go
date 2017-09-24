@@ -2,18 +2,17 @@ package connectsvc
 
 import (
 	"sync"
-	"github.com/emirpasic/gods/lists/singlylinkedlist"
+	"container/list"
 )
 
 type RoomMsgToCompute struct {
-	queue *singlylinkedlist.List
+	queue list.List
 	locker  sync.RWMutex
 	size int
 }
 
 func NewRoomMsgToCompute() *RoomMsgToCompute {
 	return &RoomMsgToCompute{
-		queue:	singlylinkedlist.New(),
 		size: 	100,
 	}
 }
@@ -23,9 +22,12 @@ func (m *RoomMsgToCompute) Add(msg FromConnectorMessage) {
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
-	m.queue.Add(msg)
-	for ; m.queue.Size() > m.size; {
-		m.queue.Remove(0)
+	m.queue.PushBack(msg)
+	for ; m.queue.Len() > m.size; {
+		for e := m.queue.Front(); e != nil; e = e.Next() {
+			m.queue.Remove(e)
+			break
+		}
 	}
 }
 
@@ -35,15 +37,20 @@ func (m *RoomMsgToCompute) DrainTo(roomId string, msgs []*FromConnectorMessage, 
 
 	oldLen := len(msgs)
 
-	m.queue.Each(func(index int, value interface{}) {
+	for e := m.queue.Front(); e != nil; e = e.Next() {
 		if len(msgs) < maxLength {
-			message := value.(FromConnectorMessage)
+			message := e.Value.(FromConnectorMessage)
 			msgs = append(msgs, &message)
+		} else {
+			break
 		}
-	})
+	}
 	for i,n := oldLen, len(msgs); i < n; i++ {
-		m.queue.Remove(0)
+		for e := m.queue.Front(); e != nil; e = e.Next() {
+			m.queue.Remove(e)
+			break
+		}
 	}
 
-	return msgs, m.queue.Size()
+	return msgs, m.queue.Len()
 }
