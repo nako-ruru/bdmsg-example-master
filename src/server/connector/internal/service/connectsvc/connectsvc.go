@@ -225,16 +225,10 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		params,
 	}
 
-	locker.Lock()
-	if msgs[roomId] == nil {
-		msgs[roomId] = NewRoomMsgToCompute()
-	}
-	msgs[roomId].Add(redisMsg)
-	locker.Unlock()
+	messageQueueGroup.Add(redisMsg)
 }
 
-var msgs = make(map[string]*RoomMsgToCompute)
-var locker sync.RWMutex
+var messageQueueGroup MessageQueueGroup
 
 func consume(id int) {
 	i := atomic.AddUint64(&ops2, 1)
@@ -250,20 +244,11 @@ func consumeEvent(i uint64, id int) {
 
 	log.Debug("consume: <- produceEvt")
 	readyToDeliver := []*FromConnectorMessage{}
-	totalRestSize := 0
 	start := time.Now().UnixNano() / 1000000
 	log.Debug("consume, id=%d, event=%d, time=%d", id, i, start)
-	func() {
-		locker.RLock()
-		defer locker.RUnlock()
-		maxLength := 10000
-		for k, v := range msgs {
-			var  restSize int
-			readyToDeliver, restSize = v.DrainTo(k, readyToDeliver, maxLength)
-			totalRestSize += restSize
-			log.Debug("size: %d", len(readyToDeliver))
-		}
-	}()
+	maxLength := 10000
+	var totalRestSize int
+	readyToDeliver, totalRestSize = messageQueueGroup.DrainTo(readyToDeliver, maxLength)
 	deliver(readyToDeliver, totalRestSize, i, start)
 }
 
