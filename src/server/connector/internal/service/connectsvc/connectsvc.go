@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"strconv"
-	"io"
-	"compress/gzip"
+	"bytes"
+	"compress/zlib"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -134,9 +134,12 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	for i:=0; i < 16; i++ {
-		go consume(i)
-	}
+	ticker := time.NewTicker(time.Millisecond * 50)
+	go func() {
+		for range ticker.C {
+			consume(0)
+		}
+	}()
 
 	return s
 }
@@ -228,31 +231,14 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	}
 	msgs[roomId].Add(redisMsg)
 	locker.Unlock()
-
-	produce()
 }
 
-var produceEvt = make(chan uint64, 1)
 var msgs = make(map[string]*RoomMsgToCompute)
 var locker sync.RWMutex
 
-func produce()  {
-	i := atomic.AddUint64(&ops2, 1)
-	select {
-	case produceEvt <- i:
-		log.Debug("produce: produceEvt <- true, cap=%d, len=%d, i=%d", cap(produceEvt), len(produceEvt), i)
-		log.Debug("produce, i=%d",  i)
-	default:
-		log.Debug("produce: default")
-	}
-}
-
 func consume(id int) {
-	for {
-		i :=<- produceEvt
-		consumeEvent(i, id)
-	}
-	log.Error("consume error")
+	i := atomic.AddUint64(&ops2, 1)
+	consumeEvent(i, id)
 }
 func consumeEvent(i uint64, id int) {
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
@@ -281,23 +267,31 @@ func consumeEvent(i uint64, id int) {
 	deliver(readyToDeliver, totalRestSize, i, start)
 }
 
-func deliver(list []*FromConnectorMessage, totalRestSize int, i uint64, start int64) {
+func deliver(list []*FromConnectorMessage, totalRestLength int, i uint64, start int64) {
 	if len(list) > 0 {
 		msgs := FromConnectorMessages {
 			Messages:list,
 		}
 		bytes, _ := proto.Marshal(&msgs)
 		start = time.Now().UnixNano() / 1000000
-		asyncProducer(bytes)
+
+		var compressedSize int
+		for k := 0; k < 3; k++ {
+			compressedSize = asyncProducer(bytes)
+			if compressedSize > 0 {
+				break;
+			}
+		}
 		end := time.Now().UnixNano() / 1000000
-		log.Warn("finish consume, i=%d, time=%d, cost=%d, msgsLength=%d, textSize=%d, restSize=%d", i, end, end- start, len(list), len(bytes), totalRestSize)
+		log.Warn("finish consume, i=%d, time=%d, cost=%d, msgsLength=%d, restLength=%d, uncompressedSize=%d, compressedSize=%d",
+			i, end, end- start, len(list), totalRestLength, len(bytes), compressedSize)
 	}
 }
 
 var conn, _ = net.Dial("tcp", "localhost:22222")
 var connLocker sync.RWMutex
 
-func asyncProducer(uncompressedBytes []byte) {
+func asyncProducer(uncompressedBytes []byte) int {
 	connLocker.Lock()
 	defer connLocker.Unlock()
 	if conn == nil {
@@ -309,14 +303,11 @@ func asyncProducer(uncompressedBytes []byte) {
 				conn = nil
 			}
 			log.Error("%s", err)
-			return
+			return 0
 		}
 	}
-	/*
-	compressedData := new(bytes.Buffer)
-	compress(uncompressedBytes, compressedData, 9)
-	compressedBytes := compressedData.Bytes()*/
-	length := len(uncompressedBytes)
+	compressedBytes := DoZlibCompress(uncompressedBytes)
+	length := len(compressedBytes)
 	lengthBytes := []byte{
 		byte(length >> 24 & 0xFF),
 		byte(length >> 16 & 0xFF),
@@ -330,24 +321,30 @@ func asyncProducer(uncompressedBytes []byte) {
 			conn.Close()
 			conn = nil
 		}
-		return
+		log.Error("%s", err)
+		return 0
 	}
-	_, err = conn.Write(uncompressedBytes)
+	_, err = conn.Write(compressedBytes)
 	if err != nil {
 		if conn != nil {
 			conn.Close()
 			conn = nil
 		}
 		log.Error("%s", err)
+		return 0
 	}
+	return len(compressedBytes)
 }
 
-func compress(src []byte, dest io.Writer, level int) {
-	compressor := gzip.NewWriter(dest)
-	compressor.Write(src)
-	compressor.Close()
+var in bytes.Buffer
+//进行zlib压缩
+func DoZlibCompress(src []byte) []byte {
+	in.Reset()
+	var w = zlib.NewWriter(&in)
+	w.Write(src)
+	w.Close()
+	return in.Bytes()
 }
-
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bdmsg.Server, error) {
 	l, err := net.ListenTCP("tcp", (*net.TCPAddr)(&conf.ListenAddr))
 	if err != nil {
