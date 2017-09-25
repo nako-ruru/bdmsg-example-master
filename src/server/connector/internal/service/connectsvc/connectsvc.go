@@ -252,7 +252,7 @@ func consumeEvent(i uint64, id int) {
 	deliver(readyToDeliver, totalRestSize, i, start)
 }
 
-func deliver(list []*FromConnectorMessage, totalRestLength int, i uint64, start int64) {
+func deliver(list []*FromConnectorMessage, totalRestCount int, packedMessageId uint64, start int64) {
 	if len(list) > 0 {
 		msgs := FromConnectorMessages {
 			Messages:list,
@@ -260,65 +260,67 @@ func deliver(list []*FromConnectorMessage, totalRestLength int, i uint64, start 
 		bytes, _ := proto.Marshal(&msgs)
 		start = time.Now().UnixNano() / 1000000
 
-		var compressedSize int
-		for k := 0; k < 3; k++ {
-			compressedSize = asyncProducer(bytes)
-			if compressedSize > 0 {
-				break;
-			}
-		}
+		compressedBytes := DoZlibCompress(bytes)
+		trySend(compressedBytes, 3, packedMessageId)
 		end := time.Now().UnixNano() / 1000000
-		log.Warn("finish consume, i=%d, time=%d, cost=%d, msgsLength=%d, restLength=%d, uncompressedSize=%d, compressedSize=%d",
-			i, end, end- start, len(list), totalRestLength, len(bytes), compressedSize)
+		log.Warn("finish consume, packedMessageId=%d, time=%d, cost=%d, msgsCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
+			packedMessageId, end, end-start, len(list), totalRestCount, len(bytes), len(compressedBytes))
+	}
+}
+func trySend(compressedBytes []byte, n int, i uint64) {
+	for k := 0; k < n; k++ {
+		err := send(compressedBytes)
+		if err == nil {
+			break;
+		} else {
+			log.Error("deliver: i=%d, %s", i, err)
+		}
 	}
 }
 
 var conn, _ = net.Dial("tcp", "localhost:22222")
 var connLocker sync.RWMutex
 
-func asyncProducer(uncompressedBytes []byte) int {
+func send(bytes []byte) error {
 	connLocker.Lock()
 	defer connLocker.Unlock()
+
+	var err error
 	if conn == nil {
-		var err error
 		conn, err = net.Dial("tcp", "localhost:22222")
 		if err != nil {
 			if conn != nil {
 				conn.Close()
 				conn = nil
 			}
-			log.Error("%s", err)
-			return 0
+			return err
 		}
 	}
-	compressedBytes := DoZlibCompress(uncompressedBytes)
-	length := len(compressedBytes)
+
+	length := len(bytes)
 	lengthBytes := []byte{
 		byte(length >> 24 & 0xFF),
 		byte(length >> 16 & 0xFF),
 		byte(length >> 8 & 0xFF),
 		byte(length & 0xFF),
 	}
-	var err error
 	_, err = conn.Write(lengthBytes)
 	if err != nil {
 		if conn != nil {
 			conn.Close()
 			conn = nil
 		}
-		log.Error("%s", err)
-		return 0
+		return err
 	}
-	_, err = conn.Write(compressedBytes)
+	_, err = conn.Write(bytes)
 	if err != nil {
 		if conn != nil {
 			conn.Close()
 			conn = nil
 		}
-		log.Error("%s", err)
-		return 0
+		return err
 	}
-	return len(compressedBytes)
+	return err
 }
 
 var in bytes.Buffer
@@ -330,6 +332,7 @@ func DoZlibCompress(src []byte) []byte {
 	w.Close()
 	return in.Bytes()
 }
+
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bdmsg.Server, error) {
 	l, err := net.ListenTCP("tcp", (*net.TCPAddr)(&conf.ListenAddr))
 	if err != nil {
