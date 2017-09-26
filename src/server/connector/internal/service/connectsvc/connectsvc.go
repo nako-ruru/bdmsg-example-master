@@ -246,39 +246,47 @@ func consumeEvent(i uint64, id int) {
 	readyToDeliver := []*FromConnectorMessage{}
 	start := time.Now().UnixNano() / 1000000
 	log.Debug("consume, id=%d, event=%d, time=%d", id, i, start)
-	maxLength := 10000
-	var totalRestSize int
-	readyToDeliver, totalRestSize = messageQueueGroup.DrainTo(readyToDeliver, maxLength)
-	deliver(readyToDeliver, totalRestSize, i, start)
+	maxCount := 10000
+	var restCount int
+	readyToDeliver, restCount = messageQueueGroup.DrainTo(readyToDeliver, maxCount)
+	deliver(readyToDeliver, restCount, i, start)
 }
 
-func deliver(list []*FromConnectorMessage, totalRestCount int, packedMessageId uint64, start int64) {
+func deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64, start int64) {
 	if len(list) > 0 {
 		msgs := FromConnectorMessages {
 			Messages:list,
 		}
 		bytes, _ := proto.Marshal(&msgs)
+
 		start = time.Now().UnixNano() / 1000000
 
 		compressedBytes := DoZlibCompress(bytes)
-		trySend(compressedBytes, 3, packedMessageId)
+		succeed := trySend(compressedBytes, 3, packedMessageId)
+
 		end := time.Now().UnixNano() / 1000000
-		log.Warn("finish consume, packedMessageId=%d, time=%d, cost=%d, msgsCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
-			packedMessageId, end, end-start, len(list), totalRestCount, len(bytes), len(compressedBytes))
+
+		failText := ""
+		if !succeed {
+			failText = "fail "
+		}
+		log.Warn("finish consume, %spackedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
+			failText, packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes))
 	}
 }
-func trySend(compressedBytes []byte, n int, i uint64) {
+func trySend(compressedBytes []byte, n int, packedMessageId uint64) bool {
 	for k := 0; k < n; k++ {
 		err := send(compressedBytes)
 		if err == nil {
-			break;
+			return true
 		} else {
-			log.Error("deliver: i=%d, %s", i, err)
+			log.Error("deliver: n=%d, packedId=%d, %s", k, packedMessageId, err)
 		}
 	}
+	return false
 }
 
-var conn, _ = net.Dial("tcp", "localhost:22222")
+var conn net.Conn
 var connLocker sync.RWMutex
 
 func send(bytes []byte) error {
