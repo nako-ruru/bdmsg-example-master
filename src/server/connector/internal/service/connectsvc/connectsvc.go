@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"bytes"
 	"compress/zlib"
+	"server/connector/internal/config"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -266,12 +267,15 @@ func deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64
 
 		end := time.Now().UnixNano() / 1000000
 
-		failText := ""
-		if !succeed {
-			failText = "fail "
+		if succeed {
+			log.Warn("finish consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
+				packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes))
+		} else {
+			log.Error("fail consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
+				packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes))
 		}
-		log.Warn("finish consume, %spackedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
-			failText, packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes))
+	} else {
+		log.Debug("finish consume(no messages), packedId=%d", packedMessageId)
 	}
 }
 func trySend(compressedBytes []byte, n int, packedMessageId uint64) bool {
@@ -295,7 +299,7 @@ func send(bytes []byte) error {
 
 	var err error
 	if conn == nil {
-		conn, err = net.Dial("tcp", "localhost:22222")
+		conn, err = net.Dial("tcp", config.Config.Mq.ComputeBrokers[0])
 		if err != nil {
 			if conn != nil {
 				conn.Close()

@@ -40,6 +40,7 @@ type ServiceSConfT struct {
 type Mq struct {
 	KafkaBrokers[] string 	`json:"kafkabrokers"`
 	Topic string			`json:"topic"`
+	ComputeBrokers[] string `json:computebrokers`
 }
 
 func (c *ServiceSConfT) Check() bool {
