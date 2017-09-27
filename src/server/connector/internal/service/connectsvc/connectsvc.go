@@ -43,6 +43,27 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s := &service{clientM: clientM, roomM: roomM}
 
+	subscribe(s)
+
+	mux := bdmsg.NewPumpMux(nil)
+	mux.HandleFunc(MsgTypeRegister, s.handleRegister)
+	mux.HandleFunc(MsgTypeEnterRoom, s.handleEnterRoom)
+	mux.HandleFunc(MsgTypeChat, s.handleMsg)
+
+	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
+
+	ticker := time.NewTicker(time.Millisecond * 50)
+	go func() {
+		for range ticker.C {
+			consume(0)
+		}
+	}()
+
+	return s
+}
+
+//订阅
+func subscribe(s *service) {
 	channelName1 := "router"
 	//Deprecated
 	channelName2 := "mychannel"
@@ -65,7 +86,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 					s.clientM.locker.Unlock()
 					if ok {
 						log.Info("found client, userId=%s", fromRouterMessage.ToUserId)
-						toClientMessage := ToClientMessage {
+						toClientMessage := ToClientMessage{
 							ToRoomId: fromRouterMessage.ToRoomId,
 							ToUserId: fromRouterMessage.ToUserId,
 							Params:   fromRouterMessage.Params,
@@ -127,22 +148,6 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 			}
 		}
 	}()
-
-	mux := bdmsg.NewPumpMux(nil)
-	mux.HandleFunc(MsgTypeRegister, s.handleRegister)
-	mux.HandleFunc(MsgTypeEnterRoom, s.handleEnterRoom)
-	mux.HandleFunc(MsgTypeChat, s.handleMsg)
-
-	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
-
-	ticker := time.NewTicker(time.Millisecond * 50)
-	go func() {
-		for range ticker.C {
-			consume(0)
-		}
-	}()
-
-	return s
 }
 
 /*
