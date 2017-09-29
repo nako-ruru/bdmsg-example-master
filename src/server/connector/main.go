@@ -36,6 +36,8 @@ func main() {
 		return
 	}
 
+	connectsvc.Register2()
+
 	var debugS *netx.HTTPService
 	if Config.ServiceS.Debug.Check() {
 		debugS, err = debugsvc.Start(&Config.ServiceS.Debug)
