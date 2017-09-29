@@ -13,22 +13,18 @@ import (
 	. "common/config"
 	. "common/errdef"
 	. "protodef/pconnector"
-	"github.com/go-redis/redis"
 	"sync/atomic"
 	"sync"
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	"strconv"
 	"bytes"
 	"compress/zlib"
 	"server/connector/internal/config"
+	"github.com/Shopify/sarama"
+	"github.com/bsm/sarama-cluster"
+	"github.com/satori/go.uuid"
+	"fmt"
 )
-
-var client = redis.NewClient(&redis.Options{
-	Addr:     "localhost:9921",
-	Password: "BrightHe0", // no password set
-	DB:       0,  // use default DB
-})
 
 type service struct {
 	*bdmsg.Server
@@ -36,14 +32,14 @@ type service struct {
 	roomM *RoomManager
 }
 
-var ops uint64 = 0
-var ops2 uint64 = 0
+var chatMessageCounter uint64 = 0
+var packedMessageCounter uint64 = 0
 
 func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN int, clientM *ClientManager, roomM *RoomManager) *service {
 
 	s := &service{clientM: clientM, roomM: roomM}
 
-	subscribe(s)
+	go subscribe(s)
 
 	mux := bdmsg.NewPumpMux(nil)
 	mux.HandleFunc(MsgTypeRegister, s.handleRegister)
@@ -64,90 +60,108 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 //订阅
 func subscribe(s *service) {
-	channelName1 := "router"
-	//Deprecated
-	channelName2 := "mychannel"
-	pubsub := client.Subscribe(channelName1, channelName2)
+	groupID := uuid.NewV4().String()
+	kConfig := cluster.NewConfig()
+	kConfig.Consumer.Return.Errors = true
+	kConfig.Group.Return.Notifications = true
+	kConfig.Consumer.Offsets.CommitInterval = 1 * time.Second
+	kConfig.Consumer.Offsets.Initial = sarama.OffsetNewest //初始从最新的offset开始
+
+	c, err := cluster.NewConsumer(config.Config.Mq.KafkaBrokers, groupID, []string{config.Config.Mq.Topic}, kConfig)
+	if err != nil {
+		log.Error("Failed open consumer: %v", err)
+		return
+	}
+
+	//defer c.Close()
+
 	go func() {
-		for {
-			msg, err := pubsub.ReceiveMessage()
-			if err != nil {
-				log.Error("Receive from channel, err=%s", err)
-				break
-			}
-			log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
-
-			if msg.Channel == channelName1 || msg.Channel == channelName2 {
-				var fromRouterMessage FromRouterMessage
-				fromRouterMessage.Unmarshal([]byte(msg.Payload))
-				if fromRouterMessage.ToUserId != "" {
-					s.clientM.locker.Lock()
-					client, ok := s.clientM.clients[fromRouterMessage.ToUserId]
-					s.clientM.locker.Unlock()
-					if ok {
-						log.Info("found client, userId=%s", fromRouterMessage.ToUserId)
-						toClientMessage := ToClientMessage{
-							ToRoomId: fromRouterMessage.ToRoomId,
-							ToUserId: fromRouterMessage.ToUserId,
-							Params:   fromRouterMessage.Params,
-
-							RoomId:  fromRouterMessage.ToRoomId,
-							UserId:  fromRouterMessage.ToUserId,
-							Content: fromRouterMessage.Params["content"],
-						}
-						client.ServerHello(toClientMessage)
-					}
-				}
-				if fromRouterMessage.ToRoomId != "" {
-					s.roomM.locker.Lock()
-					userIdsWrapper, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
-					s.roomM.locker.Unlock()
-
-					if ok {
-						userIds := []string{}
-
-						s.roomM.locker.Lock()
-						for userId, _ := range userIdsWrapper {
-							userIds = append(userIds, userId)
-						}
-
-						s.roomM.locker.Unlock()
-
-						more := ""
-						totalSize := len(userIds)
-						if totalSize > 20 {
-							more = "..."
-						}
-						var userIdsText string
-						if totalSize == 0 {
-							userIdsText = "[]"
-						} else if totalSize <= 20 {
-							userIdsText = fmt.Sprintf("%s", userIds)
-						} else {
-							userIdsText = fmt.Sprintf("%s", userIds[:20])
-						}
-						log.Info("found client, roomId=%s, totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIdsText, more)
-
-						toClientMessage := ToClientMessage{
-							ToRoomId: fromRouterMessage.ToRoomId,
-							ToUserId: fromRouterMessage.ToUserId,
-							Params:   fromRouterMessage.Params,
-
-							RoomId:  fromRouterMessage.ToRoomId,
-							UserId:  fromRouterMessage.ToUserId,
-							Content: fromRouterMessage.Params["content"],
-						}
-						for _, value := range userIds {
-							s.clientM.locker.Lock()
-							client := s.clientM.clients[value]
-							s.clientM.locker.Unlock()
-							client.ServerHello(toClientMessage)
-						}
-					}
-				}
-			}
+		for err := range c.Errors() {
+			log.Error("Error: %s\n", err.Error())
 		}
 	}()
+
+	go func() {
+		for note := range c.Notifications() {
+			log.Info("Rebalanced: %+v\n", note)
+		}
+	}()
+
+	for msg := range c.Messages() {
+		log.Info("%s/%d/%d\t%s\n", msg.Topic, msg.Partition, msg.Offset, msg.Value)
+		c.MarkOffset(msg, "") //MarkOffset 并不是实时写入kafka，有可能在程序crash时丢掉未提交的offset
+		handleSubscription(fmt.Sprintf("%s", msg.Value), s)
+	}
+}
+
+func handleSubscription(payload string, s *service)  {
+	var fromRouterMessage FromRouterMessage
+	fromRouterMessage.Unmarshal([]byte(payload))
+	if fromRouterMessage.ToUserId != "" {
+		s.clientM.locker.Lock()
+		client, ok := s.clientM.clients[fromRouterMessage.ToUserId]
+		s.clientM.locker.Unlock()
+		if ok {
+			log.Info("found client, userId=%s", fromRouterMessage.ToUserId)
+			toClientMessage := ToClientMessage {
+				ToRoomId: fromRouterMessage.ToRoomId,
+				ToUserId: fromRouterMessage.ToUserId,
+				Params:   fromRouterMessage.Params,
+
+				RoomId:  fromRouterMessage.ToRoomId,
+				UserId:  fromRouterMessage.ToUserId,
+				Content: fromRouterMessage.Params["content"],
+			}
+			client.ServerHello(toClientMessage)
+		}
+	}
+	if fromRouterMessage.ToRoomId != "" {
+		s.roomM.locker.Lock()
+		userIdsWrapper, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
+		s.roomM.locker.Unlock()
+
+		if ok {
+			userIds := []string{}
+
+			s.roomM.locker.Lock()
+			for userId, _ := range userIdsWrapper {
+				userIds = append(userIds, userId)
+			}
+
+			s.roomM.locker.Unlock()
+
+			more := ""
+			totalSize := len(userIds)
+			if totalSize > 20 {
+				more = "..."
+			}
+			var userIdsText string
+			if totalSize == 0 {
+				userIdsText = "[]"
+			} else if totalSize <= 20 {
+				userIdsText = fmt.Sprintf("%s", userIds)
+			} else {
+				userIdsText = fmt.Sprintf("%s", userIds[:20])
+			}
+			log.Info("found client, roomId=%s, totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIdsText, more)
+
+			toClientMessage := ToClientMessage{
+				ToRoomId: fromRouterMessage.ToRoomId,
+				ToUserId: fromRouterMessage.ToUserId,
+				Params:   fromRouterMessage.Params,
+
+				RoomId:  fromRouterMessage.ToRoomId,
+				UserId:  fromRouterMessage.ToUserId,
+				Content: fromRouterMessage.Params["content"],
+			}
+			for _, value := range userIds {
+				s.clientM.locker.Lock()
+				client := s.clientM.clients[value]
+				s.clientM.locker.Unlock()
+				client.ServerHello(toClientMessage)
+			}
+		}
+	}
 }
 
 /*
@@ -220,8 +234,8 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		break
 	}
 
-	var redisMsg = FromConnectorMessage{
-		strconv.FormatUint(atomic.AddUint64(&ops, 1), 10),
+	var fromConnectorMessage = FromConnectorMessage{
+		strconv.FormatUint(atomic.AddUint64(&chatMessageCounter, 1), 10),
 		roomId,
 		c.ID,
 		nickname,
@@ -231,13 +245,13 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		params,
 	}
 
-	messageQueueGroup.Add(redisMsg)
+	messageQueueGroup.Add(fromConnectorMessage)
 }
 
 var messageQueueGroup MessageQueueGroup
 
 func consume(id int) {
-	i := atomic.AddUint64(&ops2, 1)
+	i := atomic.AddUint64(&packedMessageCounter, 1)
 	consumeEvent(i, id)
 }
 func consumeEvent(i uint64, id int) {
@@ -273,7 +287,7 @@ func deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64
 		end := time.Now().UnixNano() / 1000000
 
 		if succeed {
-			log.Warn("finish consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
+			log.Debug("finish consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
 				packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes))
 		} else {
 			log.Error("fail consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
