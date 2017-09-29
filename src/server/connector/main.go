@@ -36,7 +36,8 @@ func main() {
 		return
 	}
 
-	connectsvc.Register2()
+	connectsvc.Register2(clientM)
+	defer connectsvc.Unregister2()
 
 	var debugS *netx.HTTPService
 	if Config.ServiceS.Debug.Check() {

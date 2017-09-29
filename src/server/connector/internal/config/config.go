@@ -43,6 +43,12 @@ type Mq struct {
 	ComputeBrokers[] string `json:computebrokers`
 }
 
+type Redis struct {
+	Addr string 		`json:"addr"`
+	Password string		`json:"password"`
+	Db int 				`json:"db"`
+}
+
 func (c *ServiceSConfT) Check() bool {
 	// debug maybe unset.
 	return c.Connect.Check()
@@ -62,6 +68,7 @@ type ConfigT struct {
 	ServiceS  ServiceSConfT `json:"service"`
 	Manager   ManagerConfT  `json:"manager"`
 	Mq        Mq            `json:"mq"`
+	Redis	  Redis			`json:"redis"`
 }
 
 func (c *ConfigT) Check() bool {
