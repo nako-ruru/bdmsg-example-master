@@ -36,8 +36,8 @@ func main() {
 		return
 	}
 
-	connectsvc.Register2(clientM)
-	defer connectsvc.Unregister2()
+	connectsvc.RegisterNamingService(clientM)
+	defer connectsvc.UnregisterNamingService()
 
 	var debugS *netx.HTTPService
 	if Config.ServiceS.Debug.Check() {

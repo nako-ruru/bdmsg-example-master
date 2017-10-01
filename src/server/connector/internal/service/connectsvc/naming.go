@@ -18,12 +18,12 @@ type NamingInfo struct {
 	ConnectedClients int   `json:"connectedClients"`
 }
 
-func Register2(clientManager *ClientManager)  {
+func RegisterNamingService(clientManager *ClientManager)  {
 	host := getHost()
 	log.Info("register %s to %s periodically", host, config.Config.Redis.Addr)
 
 	var f = func() {
-		var client = newClient()
+		var client = newNamingRedisClient()
 		defer client.Close()
 
 
@@ -50,13 +50,13 @@ func Register2(clientManager *ClientManager)  {
 	}()
 }
 
-func Unregister2()  {
-	var client = newClient()
+func UnregisterNamingService()  {
+	var client = newNamingRedisClient()
 	defer client.Close()
 	client.HDel("go-servers", getHost())
 }
 
-func newClient() *redis.Client {
+func newNamingRedisClient() *redis.Client {
 	return redis.NewClient(&redis.Options{
 		Addr:     config.Config.Redis.Addr,
 		Password: config.Config.Redis.Password, // no password set

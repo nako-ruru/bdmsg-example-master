@@ -9,19 +9,13 @@ import (
 	"golang.org/x/net/context"
 	"net"
 	"time"
-
 	. "common/config"
 	. "common/errdef"
 	. "protodef/pconnector"
 	"github.com/go-redis/redis"
 	"sync/atomic"
-	"sync"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"strconv"
-	"bytes"
-	"compress/zlib"
-	"server/connector/internal/config"
 )
 
 var client = redis.NewClient(&redis.Options{
@@ -39,6 +33,19 @@ type service struct {
 var chatMessageCounter uint64 = 0
 var packedMessageCounter uint64 = 0
 
+func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bdmsg.Server, error) {
+	l, err := net.ListenTCP("tcp", (*net.TCPAddr)(&conf.ListenAddr))
+	if err != nil {
+		log.Error("Start$net.ListenTCP, err=%s", err)
+		return nil, ErrAddress
+	}
+
+	s := newService(l, time.Duration(conf.HandshakeTO), conf.InqueueN, conf.OutqueueN, clientM, roomM)
+	s.Start()
+
+	return s.Server, nil
+}
+
 func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN int, clientM *ClientManager, roomM *RoomManager) *service {
 
 	s := &service{clientM: clientM, roomM: roomM}
@@ -52,12 +59,9 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	ticker := time.NewTicker(time.Millisecond * 50)
-	go func() {
-		for range ticker.C {
-			consume(0)
-		}
-	}()
+	initMessageConsumer()
+
+	initRpcServerDiscovery()
 
 	return s
 }
@@ -239,10 +243,20 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 
 var messageQueueGroup MessageQueueGroup
 
+func initMessageConsumer() {
+	ticker := time.NewTicker(time.Millisecond * 50)
+	go func() {
+		for range ticker.C {
+			consume(0)
+		}
+	}()
+}
+
 func consume(id int) {
 	i := atomic.AddUint64(&packedMessageCounter, 1)
 	consumeEvent(i, id)
 }
+
 func consumeEvent(i uint64, id int) {
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
 		if err:=recover();err!=nil{
@@ -259,109 +273,4 @@ func consumeEvent(i uint64, id int) {
 	var restCount int
 	readyToDeliver, restCount = messageQueueGroup.DrainTo(readyToDeliver, maxCount)
 	deliver(readyToDeliver, restCount, i, start)
-}
-
-func deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64, start int64) {
-	if len(list) > 0 {
-		msgs := FromConnectorMessages {
-			Messages:list,
-		}
-		bytes, _ := proto.Marshal(&msgs)
-
-		start = time.Now().UnixNano() / 1000000
-
-		compressedBytes := DoZlibCompress(bytes)
-		succeed := trySend(compressedBytes, 3, packedMessageId)
-
-		end := time.Now().UnixNano() / 1000000
-
-		if succeed {
-			log.Debug("finish consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
-				packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes))
-		} else {
-			log.Error("fail consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
-				packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes))
-		}
-	} else {
-		log.Debug("finish consume(no messages), packedId=%d", packedMessageId)
-	}
-}
-func trySend(compressedBytes []byte, n int, packedMessageId uint64) bool {
-	for k := 0; k < n; k++ {
-		err := send(compressedBytes)
-		if err == nil {
-			return true
-		} else {
-			log.Error("deliver: n=%d, packedId=%d, %s", k, packedMessageId, err)
-		}
-	}
-	return false
-}
-
-var conn net.Conn
-var connLocker sync.RWMutex
-
-func send(bytes []byte) error {
-	connLocker.Lock()
-	defer connLocker.Unlock()
-
-	var err error
-	if conn == nil {
-		conn, err = net.Dial("tcp", config.Config.Mq.ComputeBrokers[0])
-		if err != nil {
-			if conn != nil {
-				conn.Close()
-				conn = nil
-			}
-			return err
-		}
-	}
-
-	length := len(bytes)
-	lengthBytes := []byte{
-		byte(length >> 24 & 0xFF),
-		byte(length >> 16 & 0xFF),
-		byte(length >> 8 & 0xFF),
-		byte(length & 0xFF),
-	}
-	_, err = conn.Write(lengthBytes)
-	if err != nil {
-		if conn != nil {
-			conn.Close()
-			conn = nil
-		}
-		return err
-	}
-	_, err = conn.Write(bytes)
-	if err != nil {
-		if conn != nil {
-			conn.Close()
-			conn = nil
-		}
-		return err
-	}
-	return err
-}
-
-var in bytes.Buffer
-//进行zlib压缩
-func DoZlibCompress(src []byte) []byte {
-	in.Reset()
-	var w = zlib.NewWriter(&in)
-	w.Write(src)
-	w.Close()
-	return in.Bytes()
-}
-
-func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bdmsg.Server, error) {
-	l, err := net.ListenTCP("tcp", (*net.TCPAddr)(&conf.ListenAddr))
-	if err != nil {
-		log.Error("Start$net.ListenTCP, err=%s", err)
-		return nil, ErrAddress
-	}
-
-	s := newService(l, time.Duration(conf.HandshakeTO), conf.InqueueN, conf.OutqueueN, clientM, roomM)
-	s.Start()
-
-	return s.Server, nil
 }
