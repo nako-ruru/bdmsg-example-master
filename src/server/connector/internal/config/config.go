@@ -69,6 +69,7 @@ type ConfigT struct {
 	Manager   ManagerConfT  `json:"manager"`
 	Mq        Mq            `json:"mq"`
 	Redis	  Redis			`json:"redis"`
+	IpResolver []string		`json:"ipResolver"`
 }
 
 func (c *ConfigT) Check() bool {

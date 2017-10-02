@@ -18,9 +18,10 @@ type NamingInfo struct {
 	ConnectedClients int   `json:"connectedClients"`
 }
 
+var cachedInternetAddress string
+
 func RegisterNamingService(clientManager *ClientManager)  {
-	host := getHost()
-	log.Info("register %s to %s periodically", host, config.Config.Redis.Addr)
+	log.Debug("register %s to %s periodically", getInternetAddress(), config.Config.Redis.Addr)
 
 	var f = func() {
 		var client = newNamingRedisClient()
@@ -36,7 +37,7 @@ func RegisterNamingService(clientManager *ClientManager)  {
 		}
 		jsonText, err := info.Marshal()
 		if err == nil {
-			client.HSet("go-servers", host, jsonText)
+			client.HSet("go-servers", getInternetAddress(), jsonText)
 		} else {
 
 		}
@@ -53,7 +54,7 @@ func RegisterNamingService(clientManager *ClientManager)  {
 func UnregisterNamingService()  {
 	var client = newNamingRedisClient()
 	defer client.Close()
-	client.HDel("go-servers", getHost())
+	client.HDel("go-servers", getInternetAddress())
 }
 
 func newNamingRedisClient() *redis.Client {
@@ -64,18 +65,42 @@ func newNamingRedisClient() *redis.Client {
 	})
 }
 
-func getHost() string {
-	return fmt.Sprintf("%s:%d", getIp(), getPort())
+func resolveInternetAddress() string {
+	return fmt.Sprintf("%s:%d", resolveIp(), getPort())
 }
 
-func getIp() string {
-	dns := [] string{"http://2017.ip138.com/ic.asp", "http://members.3322.org/dyndns/getip"}
-	for i := 0; i < len(dns); i++ {
-		if ip, err := extractIp(dns[i]); err == nil {
-			return ip
+func getInternetAddress() string {
+	if cachedInternetAddress == "" {
+		cachedInternetAddress = resolveInternetAddress()
+	}
+	return cachedInternetAddress
+}
+
+func resolveIp() string {
+	dns := config.Config.IpResolver
+	ipVotes := map[string]int{}
+	for _, dns := range dns{
+		if ip, err := extractIp(dns); err == nil {
+			count, ok := ipVotes[ip]
+			if !ok {
+				count, ipVotes[ip] = 0, 0
+			}
+			ipVotes[ip] = count + 1
 		}
 	}
-	panic("no available dns")
+
+	topVote, topIp := 0, ""
+	for ip, vote := range ipVotes {
+		if topVote < vote {
+			topVote, topIp = vote, ip
+		}
+	}
+	if topIp == "" {
+		panic("no available dns")
+	} else {
+		log.Info("vote internet ip: %v, %s wins", ipVotes, topIp)
+		return topIp
+	}
 }
 
 func extractIp(url string) (string, error) {
