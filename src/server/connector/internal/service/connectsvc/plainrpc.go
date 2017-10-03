@@ -54,7 +54,7 @@ func initRpcServerDiscovery()  {
 						}
 					}
 					sort.Strings(availableAddresses)
-					log.Debug("found compute brokers: %s", availableAddresses)
+					log.Info("found compute brokers: %s", availableAddresses)
 					for address, c := range connectionMap {
 						if _, ok := result[address]; !ok {
 							c.Close()
