@@ -155,6 +155,8 @@ type ToClientMessage struct {
 	ToUserId string 				`json:"toUserId"`
 	ToRoomId string					`json:"toRoomId"`
 	Params   map[string]string		`json:"params"`
+	Time	 int64					`json:"time"`
+	TimeText string					`json:"timeText"`
 	//Deprecated
 	UserId string					`json:"userId"`
 	//Deprecated

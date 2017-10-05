@@ -12,17 +12,14 @@ import (
 	. "common/config"
 	. "common/errdef"
 	. "protodef/pconnector"
-	"github.com/go-redis/redis"
 	"sync/atomic"
 	"fmt"
 	"strconv"
+	"server/connector/internal/config"
+	"github.com/Shopify/sarama"
+	"github.com/bsm/sarama-cluster"
+	"github.com/satori/go.uuid"
 )
-
-var client = redis.NewClient(&redis.Options{
-	Addr:     "localhost:9921",
-	Password: "BrightHe0", // no password set
-	DB:       0,  // use default DB
-})
 
 type service struct {
 	*bdmsg.Server
@@ -68,22 +65,37 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 //订阅
 func subscribe(s *service) {
-	channelName1 := "router"
-	//Deprecated
-	channelName2 := "mychannel"
-	pubsub := client.Subscribe(channelName1, channelName2)
+	groupID := uuid.NewV4().String()
+	kConfig := cluster.NewConfig()
+	kConfig.Consumer.Return.Errors = true
+	kConfig.Group.Return.Notifications = true
+	kConfig.Consumer.Offsets.CommitInterval = 1 * time.Second
+	kConfig.Consumer.Offsets.Initial = sarama.OffsetNewest //初始从最新的offset开始
 
-	for {
-		msg, err := pubsub.ReceiveMessage()
-		if err != nil {
-			log.Error("Receive from channel, err=%s", err)
-			break
-		}
-		log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
+	c, err := cluster.NewConsumer(config.Config.Mq.KafkaBrokers, groupID, []string{config.Config.Mq.Topic}, kConfig)
+	if err != nil {
+		log.Error("Failed open consumer: %v", err)
+		return
+	}
 
-		if msg.Channel == channelName1 || msg.Channel == channelName2 {
-			handleSubscription(msg.Payload, s)
+	//defer c.Close()
+
+	go func() {
+		for err := range c.Errors() {
+			log.Error("Error: %s\n", err.Error())
 		}
+	}()
+
+	go func() {
+		for note := range c.Notifications() {
+			log.Info("Rebalanced: %+v\n", note)
+		}
+	}()
+
+	for msg := range c.Messages() {
+		log.Info("%s/%d/%d\t%s\n", msg.Topic, msg.Partition, msg.Offset, msg.Value)
+		c.MarkOffset(msg, "") //MarkOffset 并不是实时写入kafka，有可能在程序crash时丢掉未提交的offset
+		handleSubscription(fmt.Sprintf("%s", msg.Value), s)
 	}
 }
 
