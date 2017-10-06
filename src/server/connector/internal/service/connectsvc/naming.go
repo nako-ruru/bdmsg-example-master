@@ -21,7 +21,7 @@ type NamingInfo struct {
 var cachedInternetAddress string
 
 func RegisterNamingService(clientManager *ClientManager)  {
-	log.Debug("register %s to %s periodically", getInternetAddress(), config.Config.Redis.Addr)
+	log.Debug("register %s to %s periodically", getInternetAddress(), config.Config.Redis.Addresses)
 
 	var f = func() {
 		var client = newNamingRedisClient()
@@ -57,11 +57,11 @@ func UnregisterNamingService()  {
 	client.HDel("go-servers", getInternetAddress())
 }
 
-func newNamingRedisClient() *redis.Client {
-	return redis.NewClient(&redis.Options{
-		Addr:     config.Config.Redis.Addr,
-		Password: config.Config.Redis.Password, // no password set
-		DB:       config.Config.Redis.Db,           // use default DB
+func newNamingRedisClient() redis.UniversalClient {
+	return redis.NewUniversalClient(&redis.UniversalOptions{
+		MasterName: config.Config.Redis.MasterName,
+		Addrs:      config.Config.Redis.Addresses,
+		Password:			config.Config.Redis.Password,
 	})
 }
 

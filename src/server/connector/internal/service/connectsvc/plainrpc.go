@@ -24,7 +24,7 @@ type computeServerInfo struct {
 }
 
 func initRpcServerDiscovery()  {
-	ticker := time.NewTicker(time.Second * 5)
+	ticker := time.NewTicker(time.Second * 1)
 	go func() {
 		for range ticker.C {
 			func() {
@@ -41,7 +41,7 @@ func initRpcServerDiscovery()  {
 				} else {
 					availableAddresses = []string{}
 
-					from := time.Now().UnixNano() / 1000000 - 5 * 1000;
+					from := time.Now().UnixNano() / 1000000 - 1 * 1000;
 
 					for address, serverInfoText := range result {
 						serverInfo := computeServerInfo{}
@@ -121,15 +121,15 @@ func send(bytes []byte) error {
 		if conn != nil {
 			conn.Close()
 		}
-		conn = nil
+		delete(connectionMap, address)
 	}
 	if conn == nil {
 		conn, err = net.Dial("tcp", address)
 		if err != nil {
 			if conn != nil {
 				conn.Close()
-				conn = nil
 			}
+			delete(connectionMap, address)
 			return err
 		} else {
 			connectionMap[address] = conn
@@ -147,16 +147,16 @@ func send(bytes []byte) error {
 	if err != nil {
 		if conn != nil {
 			conn.Close()
-			conn = nil
 		}
+		delete(connectionMap, address)
 		return err
 	}
 	_, err = conn.Write(bytes)
 	if err != nil {
 		if conn != nil {
 			conn.Close()
-			conn = nil
 		}
+		delete(connectionMap, address)
 		return err
 	}
 	return err
@@ -172,11 +172,10 @@ func DoZlibCompress(src []byte) []byte {
 	return in.Bytes()
 }
 
-
-func newComputeServiceRedisClient() *redis.Client {
-	return redis.NewClient(&redis.Options{
-		Addr:     config.Config.Redis.Addr,
-		Password: config.Config.Redis.Password, // no password set
-		DB:       config.Config.Redis.Db,           // use default DB
+func newComputeServiceRedisClient() redis.UniversalClient {
+	return redis.NewUniversalClient(&redis.UniversalOptions{
+		MasterName: 		config.Config.Redis.MasterName,
+		Addrs:     			config.Config.Redis.Addresses,
+		Password:			config.Config.Redis.Password,
 	})
 }

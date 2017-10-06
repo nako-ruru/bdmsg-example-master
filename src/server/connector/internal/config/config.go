@@ -44,9 +44,10 @@ type Mq struct {
 }
 
 type Redis struct {
-	Addr string 		`json:"addr"`
-	Password string		`json:"password"`
-	Db int 				`json:"db"`
+	MasterName string	`json:"masterName"`
+	Addresses []string `json:"addresses"`
+	Password  string   `json:"password"`
+	Db        int      `json:"db"`
 }
 
 func (c *ServiceSConfT) Check() bool {
