@@ -17,9 +17,8 @@ import (
 	"strconv"
 	"server/connector/internal/config"
 	"github.com/Shopify/sarama"
-	"github.com/bsm/sarama-cluster"
-	"github.com/satori/go.uuid"
 	"runtime/debug"
+	"os"
 )
 
 type service struct {
@@ -48,7 +47,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s := &service{clientM: clientM, roomM: roomM}
 
-	go subscribe(s)
+	go mainConsumer(s, 0)
 
 	mux := bdmsg.NewPumpMux(nil)
 	mux.HandleFunc(MsgTypeRegister, s.handleRegister)
@@ -65,38 +64,71 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 }
 
 //订阅
-func subscribe(s *service) {
-	groupID := uuid.NewV4().String()
-	kConfig := cluster.NewConfig()
-	kConfig.Consumer.Return.Errors = true
-	kConfig.Group.Return.Notifications = true
-	kConfig.Consumer.Offsets.CommitInterval = 1 * time.Second
-	kConfig.Consumer.Offsets.Initial = sarama.OffsetNewest //初始从最新的offset开始
+var (
+	brokers   = []string{"47.92.68.14:9092"}
+	topic     = "test-t1"
+)
 
-	c, err := cluster.NewConsumer(config.Config.Mq.KafkaBrokers, groupID, []string{config.Config.Mq.Topic}, kConfig)
+func newKafkaConfiguration() *sarama.Config {
+	conf := sarama.NewConfig()
+	conf.Producer.RequiredAcks = sarama.WaitForAll
+	conf.Producer.Return.Successes = true
+	conf.ChannelBufferSize = 1
+	conf.Consumer.Retry.Backoff = 200 * time.Millisecond
+	conf.Consumer.Return.Errors = true
+	conf.Consumer.Offsets.Initial = sarama.OffsetNewest
+	//conf.Group.Return.Notifications = true
+	//conf.Group.Topics.Whitelist
+	conf.Version = sarama.V0_10_1_0
+	return conf
+}
+
+func newKafkaConsumer() sarama.Consumer {
+	consumer, err := sarama.NewConsumer(brokers, newKafkaConfiguration())
+
 	if err != nil {
-		log.Error("Failed open consumer: %v\r\n%s", err, debug.Stack())
-		return
+		log.Error("Kafka error: %s\n%s", err, debug.Stack())
+		os.Exit(-1)
 	}
 
-	//defer c.Close()
+	return consumer
+}
 
-	go func() {
-		for err := range c.Errors() {
-			log.Error("Error: %s\r\n%s", err.Error(), debug.Stack())
+func mainConsumer(s *service, partition int32) {
+	kafka := newKafkaConsumer()
+	//defer kafka.Close()
+	//注：开发环境中我们使用sarama.OffsetOldest，Kafka将从创建以来第一条消息开始发送。
+	//在生产环境中切换为sarama.OffsetNewest,只会将最新生成的消息发送给我们。
+	consumer, err := kafka.ConsumePartition(config.Config.Mq.Topic, partition, sarama.OffsetNewest)
+	if err != nil {
+		log.Error("Kafka error: %s\n%s", err, debug.Stack())
+		os.Exit(-1)
+	}
+	startTime := time.Now()
+	consume2(s, consumer)
+
+	endTime := time.Now()
+	log.Info("The program end time is : %s", endTime.Sub(startTime))
+	consumer.Close()
+	kafka.Close()
+
+}
+
+func consume2(s *service, consumer sarama.PartitionConsumer) {
+	//var msgVal []byte
+
+	log.Info("Start consume.....")
+
+	for {
+		//goruntine exec
+		select {
+		// blocking <- channel operator
+		case err := <-consumer.Errors():
+			log.Info("Kafka error: %s", err)
+		case msg := <-consumer.Messages():
+			log.Info("Kafka value: %s", msg.Value)
+			handleSubscription(fmt.Sprintf("%s", msg.Value), s)
 		}
-	}()
-
-	go func() {
-		for note := range c.Notifications() {
-			log.Info("Rebalanced: %+v", note)
-		}
-	}()
-
-	for msg := range c.Messages() {
-		log.Info("%s/%d/%d\t%s", msg.Topic, msg.Partition, msg.Offset, msg.Value)
-		c.MarkOffset(msg, "") //MarkOffset 并不是实时写入kafka，有可能在程序crash时丢掉未提交的offset
-		handleSubscription(fmt.Sprintf("%s", msg.Value), s)
 	}
 }
 
