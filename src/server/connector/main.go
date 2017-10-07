@@ -17,6 +17,7 @@ import (
 	. "server/connector/internal/config"
 	"server/connector/internal/manager"
 	"server/connector/internal/service/connectsvc"
+	"runtime/debug"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 
 	connectS, err := connectsvc.Start(&Config.ServiceS.Connect.BDMsgSvcConfT, clientM, roomM)
 	if err != nil {
-		log.Error("main$connectsvc.Startt, err=%s", err)
+		log.Error("main$connectsvc.Startt, err=%s\r\n%s", err, debug.Stack())
 		return
 	}
 
@@ -43,7 +44,7 @@ func main() {
 	if Config.ServiceS.Debug.Check() {
 		debugS, err = debugsvc.Start(&Config.ServiceS.Debug)
 		if err != nil {
-			log.Error("main$debugsvc.Startt, err=%s", err)
+			log.Error("main$debugsvc.Startt, err=%s\r\n%s", err, debug.Stack())
 		}
 	}
 

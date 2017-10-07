@@ -19,6 +19,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/bsm/sarama-cluster"
 	"github.com/satori/go.uuid"
+	"runtime/debug"
 )
 
 type service struct {
@@ -33,7 +34,7 @@ var packedMessageCounter uint64 = 0
 func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bdmsg.Server, error) {
 	l, err := net.ListenTCP("tcp", (*net.TCPAddr)(&conf.ListenAddr))
 	if err != nil {
-		log.Error("Start$net.ListenTCP, err=%s", err)
+		log.Error("Start$net.ListenTCP, err=%s\r\n%s", err, debug.Stack())
 		return nil, ErrAddress
 	}
 
@@ -74,7 +75,7 @@ func subscribe(s *service) {
 
 	c, err := cluster.NewConsumer(config.Config.Mq.KafkaBrokers, groupID, []string{config.Config.Mq.Topic}, kConfig)
 	if err != nil {
-		log.Error("Failed open consumer: %v", err)
+		log.Error("Failed open consumer: %v\r\n%s", err, debug.Stack())
 		return
 	}
 
@@ -82,18 +83,18 @@ func subscribe(s *service) {
 
 	go func() {
 		for err := range c.Errors() {
-			log.Error("Error: %s\n", err.Error())
+			log.Error("Error: %s\r\n%s", err.Error(), debug.Stack())
 		}
 	}()
 
 	go func() {
 		for note := range c.Notifications() {
-			log.Info("Rebalanced: %+v\n", note)
+			log.Info("Rebalanced: %+v", note)
 		}
 	}()
 
 	for msg := range c.Messages() {
-		log.Info("%s/%d/%d\t%s\n", msg.Topic, msg.Partition, msg.Offset, msg.Value)
+		log.Info("%s/%d/%d\t%s", msg.Topic, msg.Partition, msg.Offset, msg.Value)
 		c.MarkOffset(msg, "") //MarkOffset 并不是实时写入kafka，有可能在程序crash时丢掉未提交的offset
 		handleSubscription(fmt.Sprintf("%s", msg.Value), s)
 	}
@@ -186,7 +187,7 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 
 	_, err = s.clientM.clientIn(register.UserId, register.Pass, msc, s.roomM)
 	if err != nil {
-		log.Error("handleRegister, err=%s", err)
+		log.Error("handleRegister, err=%s\r\n%s", err, debug.Stack())
 		panic(ErrUnexpected)
 	} else {
 		log.Info("handleRegister, id=%s, remoteaddr=%s", register.UserId, msc.Conn().RemoteAddr())
@@ -272,7 +273,7 @@ func consume(id int) {
 func consumeEvent(i uint64, id int) {
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
 		if err:=recover();err!=nil{
-			log.Error("err, %s", err) // 这里的err其实就是panic传入的内容，55
+			log.Error("err, %s\r\n%s", err, debug.Stack()) // 这里的err其实就是panic传入的内容，55
 			print(err)
 		}
 	}()

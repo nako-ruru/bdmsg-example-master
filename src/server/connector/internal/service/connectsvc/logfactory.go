@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"runtime/debug"
 )
 
 var log *lumber.MultiLogger
@@ -54,14 +55,14 @@ func init()  {
 	if err1 == nil {
 		log.AddLoggers(fileLog)
 	} else {
-		log.Error("createLogger, err=%s", err1)
+		log.Error("createLogger, err=%s,\r\n%s", err1, debug.Stack())
 	}
 
 	fileError, err2 := lumber.NewFileLogger(Config.ErrorFile, lumber.WARN, lumber.ROTATE, 50000, 9, 100)
 	if err2 == nil {
 		log.AddLoggers(fileError)
 	} else {
-		log.Error("createLogger, err=%s", err2)
+		log.Error("createLogger, err=%s\r\n%s", err2, debug.Stack())
 	}
 }
 

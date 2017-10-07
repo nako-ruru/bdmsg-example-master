@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"encoding/json"
  	"sort"
+	"runtime/debug"
 )
 
 var connLocker sync.RWMutex
@@ -37,24 +38,28 @@ func initRpcServerDiscovery()  {
 				var command *redis.StringStringMapCmd = client.HGetAll("compute-servers")
 				result, err := command.Result()
 				if err != nil {
-					log.Error("query compute-servers: %s", err)
+					log.Error("query compute-servers: %s\r\n%s", err, debug.Stack())
 				} else {
 					availableAddresses = []string{}
 
-					from := time.Now().UnixNano() / 1000000 - 1 * 1000;
+					from := time.Now().UnixNano() / 1000000 - 1 * 2000;
 
 					for address, serverInfoText := range result {
 						serverInfo := computeServerInfo{}
 						bytes := []byte(serverInfoText)
 						err := json.Unmarshal(bytes, &serverInfo)
 						if err != nil {
-							log.Error("json.Unmarshal(bytes, &serverInfo): %s", err)
+							log.Error("json.Unmarshal(bytes, &serverInfo): %s\r\n%s", err, debug.Stack())
 						} else if serverInfo.RegisterTime >= from {
 							availableAddresses = append(availableAddresses, address)
 						}
 					}
-					sort.Strings(availableAddresses)
-					log.Info("found compute brokers: %s", availableAddresses)
+					if len(availableAddresses) == 0 {
+						log.Error("not found compute brokers")
+					} else {
+						sort.Strings(availableAddresses)
+						log.Info("found compute brokers: %s", availableAddresses)
+					}
 					for address, c := range connectionMap {
 						if _, ok := result[address]; !ok {
 							c.Close()
@@ -85,8 +90,8 @@ func deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64
 			log.Debug("finish consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
 				packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes))
 		} else {
-			log.Error("fail consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d",
-				packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes))
+			log.Error("fail consume, packedId=%d, time=%d, cost=%d, msgCount=%d, restCount=%d, uncompressedSize=%d, compressedSize=%d\r\n%s",
+				packedMessageId, end, end-start, len(list), restCount, len(bytes), len(compressedBytes), debug.Stack())
 		}
 	} else {
 		log.Debug("finish consume(no messages), packedId=%d", packedMessageId)
@@ -99,7 +104,7 @@ func trySend(compressedBytes []byte, n int, packedMessageId uint64) bool {
 		if err == nil {
 			return true
 		} else {
-			log.Error("deliver: n=%d, packedId=%d, %s", k, packedMessageId, err)
+			log.Error("deliver: n=%d, packedId=%d, %s\r\n%s", k, packedMessageId, err, debug.Stack())
 		}
 	}
 	return false

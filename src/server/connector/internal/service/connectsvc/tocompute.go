@@ -3,6 +3,7 @@ package connectsvc
 import (
 	"sync"
 	"container/list"
+	"encoding/json"
 )
 
 type MessageQueueGroup struct {
@@ -57,6 +58,8 @@ func (m *MessageQueue) Add(msg FromConnectorMessage) {
 	for ; m.queue.Len() > m.size; {
 		for e := m.queue.Front(); e != nil; e = e.Next() {
 			m.queue.Remove(e)
+			var jsonText, _ = json.Marshal(e.Value.(FromConnectorMessage))
+			log.Warn("discard: %s", jsonText)
 			break
 		}
 	}
