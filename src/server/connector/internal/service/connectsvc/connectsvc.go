@@ -18,8 +18,8 @@ import (
 	"server/connector/internal/config"
 	"github.com/Shopify/sarama"
 	"runtime/debug"
-	"os"
 	"github.com/bsm/sarama-cluster"
+	"github.com/satori/go.uuid"
 )
 
 type service struct {
@@ -48,7 +48,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s := &service{clientM: clientM, roomM: roomM}
 
-	go mainConsumer(s)
+	go subscribe(s)
 
 	mux := bdmsg.NewPumpMux(nil)
 	mux.HandleFunc(MsgTypeRegister, s.handleRegister)
@@ -64,75 +64,42 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	return s
 }
 
-func newKafkaConfiguration() *cluster.Config {
+//订阅
+func subscribe(s *service) {
+	groupID := uuid.NewV4().String()
 	conf := cluster.NewConfig()
-	conf.Producer.RequiredAcks = sarama.WaitForAll
-	conf.Producer.Return.Successes = true
-	conf.ChannelBufferSize = 1
-	conf.Consumer.Retry.Backoff = 200 * time.Millisecond
+
 	conf.Consumer.Return.Errors = true
-	conf.Consumer.Offsets.Initial = sarama.OffsetOldest
-	conf.Group.Mode = cluster.ConsumerModePartitions
+	conf.Consumer.Offsets.Initial = sarama.OffsetNewest //初始从最新的offset开始
 	conf.Group.Return.Notifications = true
-	//conf.Group.Topics.Whitelist
-	conf.Version = sarama.V0_10_1_0
-	return conf
-}
+	conf.Consumer.Offsets.CommitInterval = 1 * time.Second
+	conf.Version = sarama.V0_10_2_0
 
-func newKafkaConsumer() *cluster.Consumer {
-	consumer, err := cluster.NewConsumer(config.Config.Mq.KafkaBrokers, "1", []string{config.Config.Mq.Topic}, newKafkaConfiguration())
-
+	c, err := cluster.NewConsumer(config.Config.Mq.KafkaBrokers, groupID, []string{config.Config.Mq.Topic}, conf)
 	if err != nil {
-		log.Error("Kafka error: %s\n%s", err, debug.Stack())
-		os.Exit(-1)
+		log.Error("Failed open consumer: %v\r\n%s", err, debug.Stack())
+		return
 	}
-	return consumer
-}
 
-func mainConsumer(s *service) {
-	kafka := newKafkaConsumer()
-	defer kafka.Close()
+	//defer c.Close()
 
-	consume2(s, kafka)
-}
-func consume2(s *service, consumer *cluster.Consumer) {
-	//var msgVal []byte
-
-	// consume errors
 	go func() {
-		for err := range consumer.Errors() {
-			log.Error("Error: %s\n%s", err.Error(), debug.Stack())
+		for err := range c.Errors() {
+			log.Error("Error: %s\r\n%s", err.Error(), debug.Stack())
 		}
 	}()
 
-	// consume notifications
+	go func() {
+		for note := range c.Notifications() {
+			log.Info("Rebalanced: %+v", note)
+		}
+	}()
 
-	log.Info("Start consume.....")
-
-	// consume partitions
-	for pc := range consumer.Partitions() {
-
-		log.Info("Start partition consume..... \n")
-		go func(pc cluster.PartitionConsumer) {
-			defer pc.Close()
-
-			log.Info("Topic is : " + pc.Topic())
-
-			log.Info("Topic is : %d \n", pc.Partition())
-
-			log.Info("Start real consume..... \n")
-
-			for msg := range pc.Messages() {
-				log.Info("Message Value: %s\n", msg.Value)
-				consumer.MarkOffset(msg, "")
-				handleSubscription(fmt.Sprintf("%s", msg.Value), s)
-			}
-			log.Error("cao222oooooooooooooooooooooooooooooo")
-		}(pc)
-				log.Error("cao333oooooooooooooooooooooooooooooo")
+	for msg := range c.Messages() {
+		log.Info("%s/%d/%d\t%s", msg.Topic, msg.Partition, msg.Offset, msg.Value)
+		c.MarkOffset(msg, "") //MarkOffset 并不是实时写入kafka，有可能在程序crash时丢掉未提交的offset
+		handleSubscription(fmt.Sprintf("%s", msg.Value), s)
 	}
-
-	log.Error("caooooooooooooooooooooooooooooooo")
 }
 
 func handleSubscription(payload string, s *service)  {
