@@ -2,20 +2,25 @@ package connectsvc
 
 import (
 	"fmt"
-	"server/connector/internal/config"
 	. "protodef/pconnector"
 	"github.com/go-redis/redis"
+	"server/connector/internal/config"
 )
 
-var redisSubClient = redis.NewClient(&redis.Options {
-	Addr:				config.Config.Redis.Addresses[0],
-	Password:			config.Config.Redis.Password,
-})
-
+var redisSubClient *redis.Client
 //订阅
-func subscribe(s *service) {channelName1 := "router"
+func subscribe(s *service) {
+	channelName1 := "router"
 	//Deprecated
 	channelName2 := "mychannel"
+
+	if redisSubClient == nil {
+		redisSubClient = redis.NewClient(&redis.Options {
+			Addr:				config.Config.RedisPubSub.Address,
+			Password:			config.Config.RedisPubSub.Password,
+		})
+	}
+
 	pubsub := redisSubClient.Subscribe(channelName1, channelName2)
 
 	for {

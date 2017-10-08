@@ -33,21 +33,26 @@ func (c *ConnectSvcConfT) Check() bool {
 }
 
 type ServiceSConfT struct {
-	Debug   ServiceConfT    `json:"debug"`
-	Connect ConnectSvcConfT `json:"connect"`
+	Debug   ServiceConfT    	`json:"debug"`
+	Connect ConnectSvcConfT 	`json:"connect"`
 }
 
 type Mq struct {
-	KafkaBrokers[] string 	`json:"kafkabrokers"`
-	Topic string			`json:"topic"`
-	ComputeBrokers[] string `json:computebrokers`
+	KafkaBrokers[] string 		`json:"kafkabrokers"`
+	Topic string				`json:"topic"`
+	ComputeBrokers[] string 	`json:computebrokers`
 }
 
 type Redis struct {
-	MasterName string	`json:"masterName"`
-	Addresses []string `json:"addresses"`
-	Password  string   `json:"password"`
-	Db        int      `json:"db"`
+	MasterName string			`json:"masterName"`
+	Addresses []string  		`json:"addresses"`
+	Password  string    		`json:"password"`
+	Db        int       		`json:"db"`
+}
+
+type RedisPubSub struct {
+	Address string 				`json:"address"`
+	Password string   			`json:"password"`
 }
 
 func (c *ServiceSConfT) Check() bool {
@@ -63,14 +68,15 @@ func (c *ManagerConfT) Check() bool {
 }
 
 type ConfigT struct {
-	Pidfile   string        `json:"pidfile"`
-	InfoFile  string        `json:"logfile"`
-	ErrorFile string        `json:"logerrorfile"`
-	ServiceS  ServiceSConfT `json:"service"`
-	Manager   ManagerConfT  `json:"manager"`
-	Mq        Mq            `json:"mq"`
-	Redis	  Redis			`json:"redis"`
-	IpResolver []string		`json:"ipResolver"`
+	Pidfile   string        	`json:"pidfile"`
+	InfoFile  string        	`json:"logfile"`
+	ErrorFile string        	`json:"logerrorfile"`
+	ServiceS  ServiceSConfT 	`json:"service"`
+	Manager   ManagerConfT  	`json:"manager"`
+	Mq        Mq            	`json:"mq"`
+	Redis	  Redis				`json:"redis"`
+	RedisPubSub RedisPubSub		`jons:"redisPubSub"`
+	IpResolver []string			`json:"ipResolver"`
 }
 
 func (c *ConfigT) Check() bool {
