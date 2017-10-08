@@ -1,54 +1,35 @@
 package connectsvc
 
 import (
-	"github.com/satori/go.uuid"
-	"github.com/bsm/sarama-cluster"
-	"github.com/Shopify/sarama"
-	"time"
-	"runtime/debug"
 	"fmt"
 	"server/connector/internal/config"
 	. "protodef/pconnector"
+	"github.com/go-redis/redis"
 )
 
+var redisSubClient = redis.NewClient(&redis.Options {
+	Addr:				config.Config.Redis.Addresses[0],
+	Password:			config.Config.Redis.Password,
+})
+
 //订阅
-func subscribe(s *service) {
-	groupID := uuid.NewV4().String()
-	conf := cluster.NewConfig()
+func subscribe(s *service) {channelName1 := "router"
+	//Deprecated
+	channelName2 := "mychannel"
+	pubsub := redisSubClient.Subscribe(channelName1, channelName2)
 
-	conf.Consumer.Return.Errors = true
-	conf.Consumer.Offsets.Initial = sarama.OffsetNewest //初始从最新的offset开始
-	conf.Group.Return.Notifications = true
-	conf.Consumer.Offsets.CommitInterval = 1 * time.Second
-	conf.Version = sarama.V0_10_2_0
-
-	c, err := cluster.NewConsumer(config.Config.Mq.KafkaBrokers, groupID, []string{config.Config.Mq.Topic}, conf)
-	if err != nil {
-		log.Error("Failed open consumer: %v\r\n%s", err, debug.Stack())
-		return
-	}
-
-	//defer c.Close()
-
-	go func() {
-		for err := range c.Errors() {
-			log.Error("Error: %s\r\n%s", err.Error(), debug.Stack())
+	for {
+		msg, err := pubsub.ReceiveMessage()
+		if err != nil {
+			log.Error("Receive from channel, err=%s", err)
+			break
 		}
-	}()
+		log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
 
-	go func() {
-		for note := range c.Notifications() {
-			log.Info("Rebalanced: %+v", note)
+		if msg.Channel == channelName1 || msg.Channel == channelName2 {
+			handleSubscription(msg.Payload, s)
 		}
-	}()
-
-	for msg := range c.Messages() {
-		log.Info("%s/%d/%d\t%s", msg.Topic, msg.Partition, msg.Offset, msg.Value)
-		c.MarkOffset(msg, "") //MarkOffset 并不是实时写入kafka，有可能在程序crash时丢掉未提交的offset
-		handleSubscription(fmt.Sprintf("%s", msg.Value), s)
 	}
-
-	log.Error("heheheheheheheheheheh, %s", debug.Stack())
 }
 
 func handleSubscription(payload string, s *service)  {
