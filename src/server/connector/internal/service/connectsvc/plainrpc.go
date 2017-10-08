@@ -55,7 +55,7 @@ func initRpcServerDiscovery()  {
 						}
 					}
 					if len(availableAddresses) == 0 {
-						log.Error("not found compute brokers")
+						//log.Error("not found compute brokers")
 					} else {
 						sort.Strings(availableAddresses)
 						log.Info("found compute brokers: %s", availableAddresses)
