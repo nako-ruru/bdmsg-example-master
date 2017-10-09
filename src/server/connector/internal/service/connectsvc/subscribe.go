@@ -152,13 +152,13 @@ func deliver2(userId string, toClientMessage ToClientMessage) {
 	defer pollLock.Unlock()
 	elements, ok := readyToPush[userId]
 	if !ok {
-		elements = list.List{}
+		elements = list.New()
 		readyToPush[userId] = elements
 		elements.PushBack(toClientMessage)
 	}
 }
 
-var readyToPush map[string]list.List
+var readyToPush = make(map[string]*list.List)
 var pollLock sync.RWMutex
 
 
@@ -172,7 +172,7 @@ func initSubscribeConsumer(s *service) {
 }
 
 func consume2(s *service) {
-	var temp = map[string]list.List{}
+	var temp = make(map[string]*list.List)
 	totalCount := 0
 	func() {
 		pollLock.Lock()
@@ -187,14 +187,15 @@ func consume2(s *service) {
 	}()
 
 	for userId, messages := range temp {
-		for e := messages.Front(); e != nil; e = e.Next() {
-			s.clientM.locker.Lock()
-			client, ok := s.clientM.clients[userId]
-			s.clientM.locker.Unlock()
-			var array = make([]ToClientMessage, messages.Len())
-			if ok {
-				client.ServerHello(array)
+		s.clientM.locker.Lock()
+		client, ok := s.clientM.clients[userId]
+		s.clientM.locker.Unlock()
+		if ok {
+			var array = []ToClientMessage{}
+			for e := messages.Front(); e != nil; e = e.Next() {
+				array = append(array, e.Value.(ToClientMessage))
 			}
+			client.ServerHello(array)
 		}
 	}
 }
