@@ -43,6 +43,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s := &service{clientM: clientM, roomM: roomM}
 
+	go initSubscribeConsumer(s)
 	go subscribe(s)
 
 	mux := bdmsg.NewPumpMux(nil)
