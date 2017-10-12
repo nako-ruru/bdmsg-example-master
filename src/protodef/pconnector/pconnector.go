@@ -122,6 +122,10 @@ func (p *LevelUp) Unmarshal(b []byte) error {
 
 
 type FromRouterMessage struct {
+	MessageId string				`json:messageId`
+	Time int64						`json:"time"`
+	TimeText string					`json:"timeText"`
+
 	ToUserId string 				`json:"toUserId"`
 	ToRoomId string					`json:"toRoomId"`
 	Params   map[string]string		`json:"params"`
@@ -152,6 +156,7 @@ func (p *FromRouterMessage) Unmarshal(b []byte) error {
 
 
 type ToClientMessage struct {
+	MessageId string				`json:messageId`
 	ToUserId string 				`json:"toUserId"`
 	ToRoomId string					`json:"toRoomId"`
 	Params   map[string]string		`json:"params"`

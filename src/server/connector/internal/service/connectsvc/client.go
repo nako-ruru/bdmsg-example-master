@@ -14,7 +14,6 @@ import (
 	_ "protodef/pconnector"
 	"server/connector/internal/manager"
 	"protodef/pconnector"
-	"encoding/json"
 )
 
 type Client struct {
@@ -78,15 +77,13 @@ func (c *Client) MSC() *bdmsg.SClient {
 	return c.msc
 }
 
-func (c *Client) ServerHello(hello []pconnector.ToClientMessage) {
-	mr, _ := json.Marshal(hello)
-	compressed := DoZlibCompress(mr)
+func (c *Client) ServerHello(hello []byte) {
 	if c == nil {
 		log.Warn("ServerHello, c == nil")
 	} else if c.msc == nil {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
-		c.msc.Output(pconnector.MsgTypePush, compressed)
+		c.msc.Output(pconnector.MsgTypePush, hello)
 	}
 }
 
