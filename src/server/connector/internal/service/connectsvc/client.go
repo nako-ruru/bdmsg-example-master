@@ -99,6 +99,14 @@ func (c *Client) ServerHello(hello pconnector.ToClientMessage) {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
 		c.queue.PushBack(hello)
+		for ; c.queue.Len() > 100; {
+			for e := c.queue.Front(); e != nil; e = e.Next() {
+				c.queue.Remove(e)
+				var jsonText, _ = json.Marshal(e.Value.(pconnector.ToClientMessage))
+				log.Warn("discard: %s", jsonText)
+				break
+			}
+		}
 	}
 }
 
@@ -108,10 +116,24 @@ func (c *Client)a()  {
 	} else if c.msc == nil {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
-		for e := c.queue.Front(); e != nil; e = e.Next() {
-			m := e.Value.(pconnector.ToClientMessage)
-			jsonText, e := json.Marshal(m);
+		if c.queue.Len() > 0 {
+			list := []pconnector.ToClientMessage{}
+			for e := c.queue.Front(); e != nil; e = e.Next() {
+				m := e.Value.(pconnector.ToClientMessage)
+				list = append(list, m)
+				c.queue.Remove(e)
+			}
+			jsonText, e := json.Marshal(list);
 			if e == nil {
+				var latest int64 = 0
+				var latestTimeText = ""
+				for _, m := range list {
+					if m.Time > latest {
+						latest = m.Time
+						latestTimeText = m.TimeText
+					}
+				}
+				log.Error("hehehehehe, payload=%s", latestTimeText)
 				//bytes := append([]byte{0, 0, 0, 0}, jsonText[:]...)
 				c.msc.Output(pconnector.MsgTypePush, jsonText)
 			} else {
