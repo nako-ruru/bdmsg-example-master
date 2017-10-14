@@ -2,7 +2,6 @@ package connectsvc
 
 import (
 	"github.com/go-redis/redis"
-	"time"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -12,44 +11,9 @@ import (
 )
 
 
-type NamingInfo struct {
-	RegisterTime     int64 `json:"registerTime"`
-	LoginUsers       int   `json:"loginUsers"`
-	ConnectedClients int   `json:"connectedClients"`
-}
 
 var cachedInternetAddress string
 
-func RegisterNamingService(clientManager *ClientManager)  {
-	log.Debug("register %s to %s periodically", getInternetAddress(), config.Config.Redis.Addresses)
-
-	var f = func() {
-		var client = newNamingRedisClient()
-		defer client.Close()
-
-
-		clientManager.locker.Lock()
-		defer clientManager.locker.Unlock()
-		info := NamingInfo{
-			RegisterTime:     time.Now().UnixNano() / 1000000,
-			LoginUsers:       len(clientManager.clients),
-			ConnectedClients: len(clientManager.clients),
-		}
-		jsonText, err := info.Marshal()
-		if err == nil {
-			client.HSet("go-servers", getInternetAddress(), jsonText)
-		} else {
-
-		}
-	}
-
-	ticker := time.NewTicker(time.Second * 1)
-	go func() {
-		for range ticker.C {
-			f()
-		}
-	}()
-}
 
 func UnregisterNamingService()  {
 	var client = newNamingRedisClient()

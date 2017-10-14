@@ -14,6 +14,10 @@ import (
 	_ "protodef/pconnector"
 	"server/connector/internal/manager"
 	"protodef/pconnector"
+	"container/list"
+	"time"
+	"encoding/json"
+	"runtime/debug"
 )
 
 type Client struct {
@@ -21,7 +25,9 @@ type Client struct {
 	roomId string
 	msc     *bdmsg.SClient
 	clientM *ClientManager
+	queue  *list.List
 	room	*RoomManager
+	ticker *time.Ticker
 }
 
 func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, room *RoomManager) (*Client, error) {
@@ -30,7 +36,15 @@ func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, r
 		msc:     msc,
 		clientM: clientM,
 		room: 	room,
+		queue:    list.New(),
+		ticker: time.NewTicker(time.Millisecond * 50),
 	}
+
+	go func() {
+		for range t.ticker.C {
+			t.a()
+		}
+	}()
 
 	t.msc.SetUserData(t)
 	return t, nil
@@ -64,6 +78,7 @@ func (c *Client) ending() {
 	c.msc.SetUserData(nil)
 	c.room.ending(c.roomId, c.ID)
 	c.clientM.removeClient(c.ID)
+	c.ticker.Stop()
 }
 
 // Never fail.
@@ -77,13 +92,32 @@ func (c *Client) MSC() *bdmsg.SClient {
 	return c.msc
 }
 
-func (c *Client) ServerHello(hello []byte) {
+func (c *Client) ServerHello(hello pconnector.ToClientMessage) {
 	if c == nil {
 		log.Warn("ServerHello, c == nil")
 	} else if c.msc == nil {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
-		c.msc.Output(pconnector.MsgTypePush, hello)
+		c.queue.PushBack(hello)
+	}
+}
+
+func (c *Client)a()  {
+	if c == nil {
+		log.Warn("ServerHello, c == nil")
+	} else if c.msc == nil {
+		log.Warn("ServerHello, c.msc == nil")
+	} else {
+		for e := c.queue.Front(); e != nil; e = e.Next() {
+			m := e.Value.(pconnector.ToClientMessage)
+			jsonText, e := json.Marshal(m);
+			if e == nil {
+				//bytes := append([]byte{0, 0, 0, 0}, jsonText[:]...)
+				c.msc.Output(pconnector.MsgTypePush, jsonText)
+			} else {
+				log.Error("%s: %s", e, debug.Stack())
+			}
+		}
 	}
 }
 

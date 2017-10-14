@@ -43,7 +43,6 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s := &service{clientM: clientM, roomM: roomM}
 
-	go initSubscribeConsumer(s)
 	go subscribe(s)
 
 	mux := bdmsg.NewPumpMux(nil)
@@ -104,6 +103,8 @@ func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.
 
 func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
+
+	atomic.AddInt64(&info.InData, int64(len(m)))
 
 	var roomId string = c.roomId
 	var level int
