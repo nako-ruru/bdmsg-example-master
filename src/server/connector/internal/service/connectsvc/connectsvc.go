@@ -21,6 +21,7 @@ type service struct {
 	*bdmsg.Server
 	clientM *ClientManager
 	roomM *RoomManager
+	listener *listener
 }
 
 var chatMessageCounter uint64 = 0
@@ -40,8 +41,9 @@ func Start(conf *BDMsgSvcConfT, clientM *ClientManager, roomM* RoomManager) (*bd
 }
 
 func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN int, clientM *ClientManager, roomM *RoomManager) *service {
+	listener := NewListener(l)
 
-	s := &service{clientM: clientM, roomM: roomM}
+	s := &service{clientM: clientM, roomM: roomM, listener: listener}
 
 	go subscribe(s)
 
@@ -50,7 +52,10 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	mux.HandleFunc(MsgTypeEnterRoom, s.handleEnterRoom)
 	mux.HandleFunc(MsgTypeChat, s.handleMsg)
 
-	s.Server = bdmsg.NewServerF(l, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
+	s.Server = bdmsg.NewServerF(listener, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
+
+	RegisterNamingService(s, clientM)
+	defer UnregisterNamingService()
 
 	initMessageConsumer()
 
@@ -142,7 +147,8 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		params,
 	}
 
-	messageQueueGroup.Add(fromConnectorMessage)
+	totalSize := messageQueueGroup.Add(fromConnectorMessage)
+	info.InQueue = int32(totalSize)
 }
 
 var messageQueueGroup MessageQueueGroup

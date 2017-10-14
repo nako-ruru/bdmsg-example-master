@@ -103,14 +103,31 @@ func (subscriber subscriber)deliverToRoom(s *service, fromRouterMessage FromRout
 }
 
 func (subscriber subscriber) deliverToSingleClient(service *service, userId string, m ToClientMessage)  {
-	service.clientM.locker.Lock()
-	client, ok := service.clientM.clients[userId]
-	service.clientM.locker.Unlock()
+	var client *Client
+	var ok bool
+	func() {
+		service.clientM.locker.Lock()
+		defer service.clientM.locker.Unlock()
+		client, ok = service.clientM.clients[userId]
+	}()
+
 	if ok {
 		client.ServerHello(m)
+		subscriber.stat(service)
 	} else {
 		log.Warn("not found client: %s", userId)
 	}
+}
+
+func (subscriber subscriber) stat(service *service) {
+	service.clientM.locker.Lock()
+	defer service.clientM.locker.Unlock()
+	
+	var outQueue int32 = 0
+	for _, client := range service.clientM.clients {
+		outQueue += int32(client.queue.Len())
+	}
+	info.OutQueue = outQueue
 }
 
 func (subscriber subscriber)convert(fromRouterMessage FromRouterMessage) ToClientMessage {

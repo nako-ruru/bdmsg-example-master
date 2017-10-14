@@ -12,12 +12,12 @@ type MessageQueueGroup struct {
 }
 
 type MessageQueue struct {
-	queue list.List
+	queue   list.List
 	locker  sync.RWMutex
-	size int
+	maxSize int
 }
 
-func (mqg *MessageQueueGroup)Add(msg FromConnectorMessage)  {
+func (mqg *MessageQueueGroup)Add(msg FromConnectorMessage)  int {
 	mqg.locker.Lock()
 	defer mqg.locker.Unlock()
 
@@ -28,6 +28,12 @@ func (mqg *MessageQueueGroup)Add(msg FromConnectorMessage)  {
 		mqg.group[msg.RoomId] = NewMessageQueue()
 	}
 	mqg.group[msg.RoomId].Add(msg)
+
+	totalRestSize := 0
+	for _, v := range mqg.group {
+		totalRestSize += v.queue.Len()
+	}
+	return totalRestSize
 }
 
 func (mqg *MessageQueueGroup) DrainTo(msgs []*FromConnectorMessage, maxLength int) ([]*FromConnectorMessage, int)  {
@@ -46,7 +52,7 @@ func (mqg *MessageQueueGroup) DrainTo(msgs []*FromConnectorMessage, maxLength in
 
 func NewMessageQueue() *MessageQueue {
 	return &MessageQueue{
-		size: 	100,
+		maxSize: 100,
 	}
 }
 
@@ -55,7 +61,7 @@ func (m *MessageQueue) Add(msg FromConnectorMessage) {
 	defer m.locker.Unlock()
 
 	m.queue.PushBack(msg)
-	for ; m.queue.Len() > m.size; {
+	for ; m.queue.Len() > m.maxSize; {
 		for e := m.queue.Front(); e != nil; e = e.Next() {
 			m.queue.Remove(e)
 			var jsonText, _ = json.Marshal(e.Value.(FromConnectorMessage))

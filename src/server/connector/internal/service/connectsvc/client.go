@@ -18,6 +18,7 @@ import (
 	"time"
 	"encoding/json"
 	"runtime/debug"
+	"sync/atomic"
 )
 
 type Client struct {
@@ -39,6 +40,8 @@ func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, r
 		queue:    list.New(),
 		ticker: time.NewTicker(time.Millisecond * 50),
 	}
+
+	atomic.AddInt32(&info.LoginUsers, 1)
 
 	go func() {
 		for range t.ticker.C {
@@ -79,6 +82,7 @@ func (c *Client) ending() {
 	c.room.ending(c.roomId, c.ID)
 	c.clientM.removeClient(c.ID)
 	c.ticker.Stop()
+	atomic.AddInt32(&info.LoginUsers, -1)
 }
 
 // Never fail.
@@ -136,6 +140,7 @@ func (c *Client)a()  {
 				log.Error("hehehehehe, payload=%s", latestTimeText)
 				//bytes := append([]byte{0, 0, 0, 0}, jsonText[:]...)
 				c.msc.Output(pconnector.MsgTypePush, jsonText)
+				atomic.AddInt64(&info.OutData, int64(len(jsonText)))
 			} else {
 				log.Error("%s: %s", e, debug.Stack())
 			}
