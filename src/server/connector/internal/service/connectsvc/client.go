@@ -16,19 +16,21 @@ import (
 	"protodef/pconnector"
 	"container/list"
 	"time"
-	"encoding/json"
 	"runtime/debug"
 	"sync/atomic"
+	"bytes"
 )
 
 type Client struct {
-	ID      string
-	roomId string
-	msc     *bdmsg.SClient
-	clientM *ClientManager
-	queue  *list.List
-	room	*RoomManager
-	ticker *time.Ticker
+	ID        	string
+	roomId    	string
+	msc       	*bdmsg.SClient
+	clientM   	*ClientManager
+	queue     	*list.List
+	room      	*RoomManager
+	timer     	*time.Timer
+	queueLock 	sync.RWMutex
+	in 		  	bytes.Buffer
 }
 
 func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, room *RoomManager) (*Client, error) {
@@ -36,16 +38,18 @@ func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, r
 		ID:      id,
 		msc:     msc,
 		clientM: clientM,
-		room: 	room,
-		queue:    list.New(),
-		ticker: time.NewTicker(time.Millisecond * 50),
+		room:    room,
+		queue:   list.New(),
+		timer:   time.NewTimer(time.Millisecond * 50),
 	}
 
 	atomic.AddInt32(&info.LoginUsers, 1)
 
 	go func() {
-		for range t.ticker.C {
+		for {
+			<- t.timer.C
 			t.a()
+			t.timer.Reset(time.Millisecond * 50)
 		}
 	}()
 
@@ -81,7 +85,7 @@ func (c *Client) ending() {
 	c.msc.SetUserData(nil)
 	c.room.ending(c.roomId, c.ID)
 	c.clientM.removeClient(c.ID)
-	c.ticker.Stop()
+	c.timer.Stop()
 	atomic.AddInt32(&info.LoginUsers, -1)
 }
 
@@ -96,21 +100,25 @@ func (c *Client) MSC() *bdmsg.SClient {
 	return c.msc
 }
 
-func (c *Client) ServerHello(hello pconnector.ToClientMessage) {
+func (c *Client) ServerHello(hello *pconnector.ToClientMessage) {
 	if c == nil {
 		log.Warn("ServerHello, c == nil")
 	} else if c.msc == nil {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
+		c.queueLock.Lock()
+		defer c.queueLock.Unlock()
+		log.Trace("90000:%s", hello.TimeText)
 		c.queue.PushBack(hello)
 		for ; c.queue.Len() > 100; {
 			for e := c.queue.Front(); e != nil; e = e.Next() {
 				c.queue.Remove(e)
-				var jsonText, _ = json.Marshal(e.Value.(pconnector.ToClientMessage))
+				var jsonText, _ = e.Value.(*pconnector.ToClientMessage).Marshal()
 				log.Warn("discard: %s", jsonText)
 				break
 			}
 		}
+		log.Trace("100000: %s", hello.TimeText)
 	}
 }
 
@@ -120,29 +128,25 @@ func (c *Client)a()  {
 	} else if c.msc == nil {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
-		if c.queue.Len() > 0 {
-			list := []pconnector.ToClientMessage{}
-			for e := c.queue.Front(); e != nil; e = e.Next() {
-				m := e.Value.(pconnector.ToClientMessage)
+		list := []*pconnector.ToClientMessage{}
+		func() {
+			c.queueLock.Lock()
+			defer c.queueLock.Unlock()
+			for e, i, n := c.queue.Front(), 0, 10; e != nil && i < n; e, i = e.Next(), i + 1 {
+				m := e.Value.(*pconnector.ToClientMessage)
 				list = append(list, m)
 				c.queue.Remove(e)
 			}
-			jsonText, e := json.Marshal(list);
-			if e == nil {
-				var latest int64 = 0
-				var latestTimeText = ""
-				for _, m := range list {
-					if m.Time > latest {
-						latest = m.Time
-						latestTimeText = m.TimeText
-					}
-				}
-				log.Error("hehehehehe, payload=%s", latestTimeText)
-				//bytes := append([]byte{0, 0, 0, 0}, jsonText[:]...)
-				c.msc.Output(pconnector.MsgTypePush, jsonText)
-				atomic.AddInt64(&info.OutData, int64(len(jsonText)))
+		}()
+
+		for _, m := range list {
+			bytes, err := m.Marshal()
+			if err == nil {
+				c.msc.Output(pconnector.MsgTypePush, bytes)
+				atomic.AddInt64(&info.OutData, int64(len(bytes)))
+				log.Trace("hehehehehe, payload=%s", m.TimeText)
 			} else {
-				log.Error("%s: %s", e, debug.Stack())
+				log.Error("%s", debug.Stack())
 			}
 		}
 	}

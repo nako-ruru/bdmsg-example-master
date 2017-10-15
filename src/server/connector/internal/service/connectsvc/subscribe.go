@@ -49,6 +49,8 @@ func handleSubscription(payload string, s *service)  {
 	var fromRouterMessage FromRouterMessage
 	fromRouterMessage.Unmarshal([]byte(payload))
 
+	log.Trace("10000: %s", fromRouterMessage.TimeText)
+
 	if fromRouterMessage.ToUserId != "" {
 		subscriberClient.deliverToUser(s, fromRouterMessage)
 	}
@@ -60,7 +62,7 @@ func handleSubscription(payload string, s *service)  {
 func (subscriber subscriber)deliverToUser(s *service, fromRouterMessage FromRouterMessage) {
 	log.Info("deliver to user: %s", fromRouterMessage.ToUserId)
 	toClientMessage := subscriberClient.convert(fromRouterMessage)
-	subscriberClient.deliverToSingleClient(s, fromRouterMessage.ToUserId, toClientMessage)
+	subscriberClient.deliverToSingleClient(s, fromRouterMessage.ToUserId, &toClientMessage)
 }
 
 func (subscriber subscriber)deliverToRoom(s *service, fromRouterMessage FromRouterMessage)  {
@@ -70,6 +72,7 @@ func (subscriber subscriber)deliverToRoom(s *service, fromRouterMessage FromRout
 	userIdsWrapper, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
 	s.roomM.locker.Unlock()
 
+	log.Trace("20000: %s", fromRouterMessage.TimeText)
 	if ok {
 		userIds := []string{}
 
@@ -78,6 +81,7 @@ func (subscriber subscriber)deliverToRoom(s *service, fromRouterMessage FromRout
 			userIds = append(userIds, userId)
 		}
 
+		log.Trace("30000: %s", fromRouterMessage.TimeText)
 		s.roomM.locker.Unlock()
 
 		more := ""
@@ -85,6 +89,7 @@ func (subscriber subscriber)deliverToRoom(s *service, fromRouterMessage FromRout
 		if totalSize > 20 {
 			more = "..."
 		}
+		log.Trace("40000: %s", fromRouterMessage.TimeText)
 		var userIdsText string
 		if totalSize == 0 {
 			userIdsText = "[]"
@@ -93,16 +98,19 @@ func (subscriber subscriber)deliverToRoom(s *service, fromRouterMessage FromRout
 		} else {
 			userIdsText = fmt.Sprintf("%s", userIds[:20])
 		}
+		log.Trace("50000: %s", fromRouterMessage.TimeText)
 		log.Info("found following users in room(%s), totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIdsText, more)
 
 		toClientMessage := subscriber.convert(fromRouterMessage)
+		log.Trace("60000: %s", fromRouterMessage.TimeText)
 		for _, value := range userIds {
-			subscriber.deliverToSingleClient(s, value, toClientMessage)
+			log.Trace("70000: %s", fromRouterMessage.TimeText)
+			subscriber.deliverToSingleClient(s, value, &toClientMessage)
 		}
 	}
 }
 
-func (subscriber subscriber) deliverToSingleClient(service *service, userId string, m ToClientMessage)  {
+func (subscriber subscriber) deliverToSingleClient(service *service, userId string, m *ToClientMessage)  {
 	var client *Client
 	var ok bool
 	func() {
@@ -110,24 +118,28 @@ func (subscriber subscriber) deliverToSingleClient(service *service, userId stri
 		defer service.clientM.locker.Unlock()
 		client, ok = service.clientM.clients[userId]
 	}()
+	log.Trace("80000: %s", m.TimeText)
 
 	if ok {
 		client.ServerHello(m)
-		subscriber.stat(service)
 	} else {
 		log.Warn("not found client: %s", userId)
 	}
 }
 
-func (subscriber subscriber) stat(service *service) {
-	service.clientM.locker.Lock()
-	defer service.clientM.locker.Unlock()
-	
+func (subscriber subscriber) stat(service *service) int32 {
+	service.clientM.locker.RLock()
+	defer service.clientM.locker.RUnlock()
+
 	var outQueue int32 = 0
 	for _, client := range service.clientM.clients {
-		outQueue += int32(client.queue.Len())
+		func() {
+			client.queueLock.Lock()
+			defer client.queueLock.Unlock()
+			outQueue += int32(client.queue.Len())
+		}()
 	}
-	info.OutQueue = outQueue
+	return outQueue
 }
 
 func (subscriber subscriber)convert(fromRouterMessage FromRouterMessage) ToClientMessage {

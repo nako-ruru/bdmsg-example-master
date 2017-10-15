@@ -10,6 +10,9 @@ package pconnector
 
 import (
 	"encoding/json"
+	"sync"
+	"compress/zlib"
+	"bytes"
 )
 
 const (
@@ -156,7 +159,7 @@ func (p *FromRouterMessage) Unmarshal(b []byte) error {
 
 
 type ToClientMessage struct {
-	MessageId string				`json:messageId`
+	MessageId string				`json:"messageId"`
 	ToUserId string 				`json:"toUserId"`
 	ToRoomId string					`json:"toRoomId"`
 	Params   map[string]string		`json:"params"`
@@ -168,8 +171,40 @@ type ToClientMessage struct {
 	RoomId string					`json:"roomId"`
 	//Deprecated
 	Content  string					`json:"content"`
+
+	serializedBytes []byte
+	lock sync.RWMutex
 }
 
 func (p *ToClientMessage) Marshal() ([]byte, error) {
-	return json.Marshal(p)
+	p.lock.RLock()
+	byteArray := p.serializedBytes
+	p.lock.RUnlock()
+	if byteArray != nil {
+		return byteArray, nil
+	}
+
+	p.lock.Lock()
+	defer p.lock.Unlock()
+	byteArray = p.serializedBytes
+	var err error
+	if byteArray == nil {
+		var rawBytes []byte
+		rawBytes, err = json.Marshal(p)
+		if err == nil {
+			compressed := p.doZlibCompress(rawBytes)
+			p.serializedBytes = append([]byte{1}, compressed...)
+			byteArray = p.serializedBytes
+		}
+	}
+	return byteArray, err
+}
+
+
+func (s *ToClientMessage) doZlibCompress(src []byte) []byte {
+	in := bytes.Buffer{}
+	var w = zlib.NewWriter(&in)
+	w.Write(src)
+	w.Close()
+	return in.Bytes()
 }

@@ -26,9 +26,6 @@ func RegisterNamingService(service *service, clientManager *ClientManager)  {
 		var client = newNamingRedisClient()
 		defer client.Close()
 
-		clientManager.locker.Lock()
-		defer clientManager.locker.Unlock()
-
 		tempInfo := NamingInfo{
 			RegisterTime : 		time.Now().UnixNano() / 1000000,
 			LoginUsers : 		info.LoginUsers,
@@ -36,7 +33,7 @@ func RegisterNamingService(service *service, clientManager *ClientManager)  {
 			InData	 :		 	info.InData,
 			OutData	 :		 	info.OutData,
 			InQueue	 :		 	info.InQueue,
-			OutQueue :	     	info.OutQueue,
+			OutQueue :	     	subscriberClient.stat(service),
 		}
 
 		atomic.StoreInt64(&info.OutData, 0)

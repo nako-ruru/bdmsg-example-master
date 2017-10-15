@@ -23,6 +23,10 @@ var connectionMap map[string]net.Conn = map[string]net.Conn{}
 type computeServerInfo struct {
 	RegisterTime int64 			`json:"registerTime"`
 }
+type rpc struct {
+	in bytes.Buffer
+}
+var rpcClient rpc = rpc{}
 
 func initRpcServerDiscovery()  {
 	ticker := time.NewTicker(time.Second * 1)
@@ -81,7 +85,7 @@ func deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64
 
 		start = time.Now().UnixNano() / 1000000
 
-		compressedBytes := DoZlibCompress(bytes)
+		compressedBytes := rpcClient.DoZlibCompress(bytes)
 		succeed := trySend(compressedBytes, 3, packedMessageId)
 
 		end := time.Now().UnixNano() / 1000000
@@ -167,14 +171,13 @@ func send(bytes []byte) error {
 	return err
 }
 
-var in bytes.Buffer
 //进行zlib压缩
-func DoZlibCompress(src []byte) []byte {
-	in.Reset()
-	var w = zlib.NewWriter(&in)
+func (rpc rpc) DoZlibCompress(src []byte) []byte {
+	rpc.in.Reset()
+	var w = zlib.NewWriter(&rpc.in)
 	w.Write(src)
 	w.Close()
-	return in.Bytes()
+	return rpc.in.Bytes()
 }
 
 func newComputeServiceRedisClient() redis.UniversalClient {
