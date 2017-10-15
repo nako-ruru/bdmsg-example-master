@@ -34,6 +34,8 @@ type Client struct {
 	queueLock sync.RWMutex
 	in        bytes.Buffer
 	q         bool
+	e		  *list.Element
+	seq       int64
 }
 
 func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, room *RoomManager) (*Client, error) {
@@ -123,57 +125,35 @@ func (c *Client)a()  {
 	} else if c.msc == nil {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
-		/*
-		func() {
-			c.queueLock.Lock()
-			defer c.queueLock.Unlock()
-			length := c.queue.Len()
-			var latest, earliest *pconnector.ToClientMessage
-			for e := c.queue.Front(); e != nil; e = e.Next() {
-				m := e.Value.(*pconnector.ToClientMessage)
-				if latest == nil || m.Time > latest.Time {
-					latest = m
-				}
-				if earliest == nil || m.Time < earliest.Time {
-					earliest = m
-				}
-			}
-			if length > 0 {
-				log.Error("110000, %d, %s, %s", length, earliest.TimeText, latest.TimeText)
-			}
-		}()*/
-
 		for ;!c.q; {
 			var m *pconnector.ToClientMessage
 			func() {
-				c.queueLock.Lock()
-				defer c.queueLock.Unlock()
-				for ;c.queue.Len() > 100; {
-					if e := c.queue.Front(); e != nil {
-						c.queue.Remove(e)
+				subscriberClient.lock.RLock()
+				defer subscriberClient.lock.RUnlock()
+
+				queue, ok := subscriberClient.roomQueues[c.roomId]
+				if ok {
+					node, found := queue.Ceiling(c.seq)
+					if found {
+						m = node.Value.(*pconnector.ToClientMessage)
+						c.seq = node.Key.(int64) + 1
 					}
-				}
-				if e := c.queue.Front(); e != nil {
-					m = e.Value.(*pconnector.ToClientMessage)
-					c.queue.Remove(e)
 				}
 			}()
-			if m != nil {
-				bytes, err := m.Marshal()
-				if err == nil {
-					start := time.Now()
-					if start.UnixNano() / 1000000 - m.Time > 5000 {
-						log.Trace("discard2: %s, %s", m.MessageId, m.TimeText)
-						continue
-					}
-					c.msc.Output(pconnector.MsgTypePush, bytes)
-					atomic.AddInt64(&info.OutData, int64(len(bytes)))
-					log.Trace("hehehehehe, payload=%s", m.TimeText)
-				} else {
-					log.Error("%s", debug.Stack())
-				}
-			} else {
+			if m == nil {
 				break
+			}
+			log.Trace("seq: %d, now: %s; message: %s", c.seq, time.Now().Format("2006-01-02 15:04:05"), m.TimeText)
+			if time.Now().UnixNano() / 1000000 - m.Time > 2000 {
+				continue
+			}
+			bytes, err := m.Marshal()
+			if err == nil {
+				c.msc.Output(pconnector.MsgTypePush, bytes)
+				atomic.AddInt64(&info.OutData, int64(len(bytes)))
+				log.Trace("hehehehehe, payload=%s", m.TimeText)
+			} else {
+				log.Error("%s", debug.Stack())
 			}
 		}
 	}
