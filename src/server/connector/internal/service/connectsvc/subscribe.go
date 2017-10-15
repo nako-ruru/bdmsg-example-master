@@ -5,13 +5,17 @@ import (
 	. "protodef/pconnector"
 	"github.com/go-redis/redis"
 	"server/connector/internal/config"
+	"time"
+	"github.com/emirpasic/gods/trees/binaryheap"
 )
 
 type subscriber struct {
 	redisSubClient *redis.Client
+	timer *time.Timer
 }
 
 var subscriberClient = subscriber{
+	timer : time.NewTimer(time.Second * 2),
 }
 
 //订阅
@@ -29,6 +33,14 @@ func subscribe(s *service) {
 
 	pubsub := subscriberClient.redisSubClient.Subscribe(channelName1, channelName2)
 
+	go func() {
+		for {
+			<- subscriberClient.timer.C
+			subscriberClient.purge(s)
+			subscriberClient.timer.Reset(time.Second * 2)
+		}
+	}()
+
 	for {
 		msg, err := pubsub.ReceiveMessage()
 		if err != nil {
@@ -40,12 +52,90 @@ func subscribe(s *service) {
 		log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
 
 		if msg.Channel == channelName1 || msg.Channel == channelName2 {
-			handleSubscription(msg.Payload, s)
+			subscriberClient.handleSubscription(msg.Payload, s)
 		}
 	}
 }
 
-func handleSubscription(payload string, s *service)  {
+func (subscriber subscriber)purge(service *service)  {
+	start := time.Now().UnixNano() / 1000000
+	log.Error("100000 %d", time.Now().UnixNano() / 1000000 - start)
+
+	var outQueue int32 = 0
+	func() {
+		service.clientM.locker.RLock()
+		defer service.clientM.locker.RUnlock()
+		for _, client := range service.clientM.clients {
+			func() {
+				client.queueLock.RLock()
+				defer client.queueLock.RUnlock()
+				outQueue += int32(client.queue.Len())
+			}()
+		}
+	}()
+
+	log.Error("200000 %d", time.Now().UnixNano() / 1000000 - start)
+
+	if outQueue > 10000 {
+		inverseIntComparator := func(a, b interface{}) int {
+			c1 := a.(*Client)
+			c2 := b.(*Client)
+			var m1, m2 *ToClientMessage
+			if e := c1.queue.Front(); e != nil {
+				m1 = e.Value.(*ToClientMessage)
+			}
+			if e := c2.queue.Front(); e != nil {
+				m2 = e.Value.(*ToClientMessage)
+			}
+			return int(m1.Time - m2.Time)
+		}
+		var purgeHeap *binaryheap.Heap = binaryheap.NewWith(inverseIntComparator)
+
+		service.clientM.locker.RLock()
+		defer service.clientM.locker.RUnlock()
+
+		for _, client := range service.clientM.clients {
+			client.queueLock.Lock()
+		}
+		log.Error("300000 %d", time.Now().UnixNano() / 1000000 - start)
+
+		for _, client := range service.clientM.clients {
+			if client.queue.Len() > 0 {
+				purgeHeap.Push(client)
+			}
+		}
+		log.Error("400000 %d", time.Now().UnixNano() / 1000000 - start)
+
+		first := true
+
+		for ; outQueue > 10000; outQueue-- {
+			c, ok := purgeHeap.Pop()
+			if !ok {
+				break
+			}
+			client := c.(*Client)
+			if e := client.queue.Front(); e != nil {
+				m := e.Value.(*ToClientMessage)
+				client.queue.Remove(e)
+				if first {
+					log.Error("discard: %s, %s, %s", client.ID, m.MessageId, m.TimeText)
+					first = false
+				}
+			}
+			if client.queue.Len() > 0 {
+				purgeHeap.Push(client)
+			}
+		}
+		log.Error("500000 %d", time.Now().UnixNano() / 1000000 - start)
+
+		for _, client := range service.clientM.clients {
+			client.queueLock.Unlock()
+		}
+		log.Error("600000 %d", time.Now().UnixNano() / 1000000 - start)
+	}
+}
+
+func (subscriber subscriber)handleSubscription(payload string, s *service)  {
 	var fromRouterMessage FromRouterMessage
 	fromRouterMessage.Unmarshal([]byte(payload))
 
@@ -134,8 +224,8 @@ func (subscriber subscriber) stat(service *service) int32 {
 	var outQueue int32 = 0
 	for _, client := range service.clientM.clients {
 		func() {
-			client.queueLock.Lock()
-			defer client.queueLock.Unlock()
+			client.queueLock.RLock()
+			defer client.queueLock.RUnlock()
 			outQueue += int32(client.queue.Len())
 		}()
 	}

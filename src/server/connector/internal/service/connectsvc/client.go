@@ -26,11 +26,14 @@ type Client struct {
 	roomId    	string
 	msc       	*bdmsg.SClient
 	clientM   	*ClientManager
-	queue     	*list.List
 	room      	*RoomManager
-	timer     	*time.Timer
-	queueLock 	sync.RWMutex
-	in 		  	bytes.Buffer
+
+	queue     *list.List
+	timer     *time.Timer
+	ticker 	  *time.Ticker
+	queueLock sync.RWMutex
+	in        bytes.Buffer
+	q         bool
 }
 
 func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, room *RoomManager) (*Client, error) {
@@ -46,7 +49,7 @@ func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, r
 	atomic.AddInt32(&info.LoginUsers, 1)
 
 	go func() {
-		for {
+		for ;!t.q; {
 			<- t.timer.C
 			t.a()
 			t.timer.Reset(time.Millisecond * 50)
@@ -86,6 +89,7 @@ func (c *Client) ending() {
 	c.room.ending(c.roomId, c.ID)
 	c.clientM.removeClient(c.ID)
 	c.timer.Stop()
+	c.q = true
 	atomic.AddInt32(&info.LoginUsers, -1)
 }
 
@@ -110,15 +114,6 @@ func (c *Client) ServerHello(hello *pconnector.ToClientMessage) {
 		defer c.queueLock.Unlock()
 		log.Trace("90000:%s", hello.TimeText)
 		c.queue.PushBack(hello)
-		for ; c.queue.Len() > 100; {
-			for e := c.queue.Front(); e != nil; e = e.Next() {
-				c.queue.Remove(e)
-				var jsonText, _ = e.Value.(*pconnector.ToClientMessage).Marshal()
-				log.Warn("discard: %s", jsonText)
-				break
-			}
-		}
-		log.Trace("100000: %s", hello.TimeText)
 	}
 }
 
@@ -128,25 +123,57 @@ func (c *Client)a()  {
 	} else if c.msc == nil {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
-		list := []*pconnector.ToClientMessage{}
+		/*
 		func() {
 			c.queueLock.Lock()
 			defer c.queueLock.Unlock()
-			for e, i, n := c.queue.Front(), 0, 10; e != nil && i < n; e, i = e.Next(), i + 1 {
+			length := c.queue.Len()
+			var latest, earliest *pconnector.ToClientMessage
+			for e := c.queue.Front(); e != nil; e = e.Next() {
 				m := e.Value.(*pconnector.ToClientMessage)
-				list = append(list, m)
-				c.queue.Remove(e)
+				if latest == nil || m.Time > latest.Time {
+					latest = m
+				}
+				if earliest == nil || m.Time < earliest.Time {
+					earliest = m
+				}
 			}
-		}()
+			if length > 0 {
+				log.Error("110000, %d, %s, %s", length, earliest.TimeText, latest.TimeText)
+			}
+		}()*/
 
-		for _, m := range list {
-			bytes, err := m.Marshal()
-			if err == nil {
-				c.msc.Output(pconnector.MsgTypePush, bytes)
-				atomic.AddInt64(&info.OutData, int64(len(bytes)))
-				log.Trace("hehehehehe, payload=%s", m.TimeText)
+		for ;!c.q; {
+			var m *pconnector.ToClientMessage
+			func() {
+				c.queueLock.Lock()
+				defer c.queueLock.Unlock()
+				for ;c.queue.Len() > 100; {
+					if e := c.queue.Front(); e != nil {
+						c.queue.Remove(e)
+					}
+				}
+				if e := c.queue.Front(); e != nil {
+					m = e.Value.(*pconnector.ToClientMessage)
+					c.queue.Remove(e)
+				}
+			}()
+			if m != nil {
+				bytes, err := m.Marshal()
+				if err == nil {
+					start := time.Now()
+					if start.UnixNano() / 1000000 - m.Time > 5000 {
+						log.Trace("discard2: %s, %s", m.MessageId, m.TimeText)
+						continue
+					}
+					c.msc.Output(pconnector.MsgTypePush, bytes)
+					atomic.AddInt64(&info.OutData, int64(len(bytes)))
+					log.Trace("hehehehehe, payload=%s", m.TimeText)
+				} else {
+					log.Error("%s", debug.Stack())
+				}
 			} else {
-				log.Error("%s", debug.Stack())
+				break
 			}
 		}
 	}
