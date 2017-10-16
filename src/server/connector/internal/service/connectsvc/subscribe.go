@@ -27,7 +27,7 @@ type subscriberQueue struct {
 	lock sync.RWMutex
 }
 
-var subscriberClient = subscriber{
+var subscriberClient = &subscriber{
 	timer : time.NewTimer(time.Second * 2),
 	roomQueues: make(map[string]*redblacktree.Tree),
 	userQueues: make(map[string]*list.List),
@@ -60,9 +60,7 @@ func subscribe(s *service) {
 		msg, err := pubsub.ReceiveMessage()
 		if err != nil {
 			log.Error("Receive from channel, err=%s", err)
-			pubsub.Close()
-			go subscribe(s)
-			break
+			continue
 		}
 		log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
 
@@ -72,37 +70,59 @@ func subscribe(s *service) {
 	}
 }
 
-func (subscriber subscriber)purge(service *service)  {
+func (subscriber *subscriber)purge(service *service)  {
 	start := time.Now().UnixNano() / 1000000
 	log.Error("100000 %d", time.Now().UnixNano() / 1000000 - start)
 
+	func() {
+		log.Error("150000 %d", time.Now().UnixNano() / 1000000 - start)
+		subscriber.lock.Lock()
+		log.Error("170000 %d", time.Now().UnixNano() / 1000000 - start)
+		defer subscriber.lock.Unlock()
+
+		log.Error("200000 %d", time.Now().UnixNano() / 1000000 - start)
+
+		now := time.Now().UnixNano() / 1000000
+		for _, queue := range subscriber.roomQueues {
+			for quit := false; !queue.Empty() && !quit; {
+				for it := queue.Iterator(); it.Next(); {
+					m := it.Value().(*ToClientMessage)
+					if now - m.Time > 2000 {
+						queue.Remove(it.Key())
+					} else {
+						quit = true
+					}
+					break
+				}
+			}
+		}
+	}()
+
+	log.Error("240000 %d", time.Now().UnixNano() / 1000000 - start)
 	var outQueue int32 = subscriberClient.stat(service)
 
-	log.Error("200000 %d, %d", time.Now().UnixNano() / 1000000 - start, outQueue)
+	log.Error("250000 %d, %d", time.Now().UnixNano() / 1000000 - start, outQueue)
 
 	if outQueue > 10000 {
-		log.Error("250000 %d", time.Now().UnixNano() / 1000000 - start)
+		subscriber.lock.Lock()
+		defer subscriber.lock.Unlock()
+		log.Error("270000 %d", time.Now().UnixNano() / 1000000 - start)
+
+		log.Error("350000 %d", time.Now().UnixNano() / 1000000 - start)
 		inverseIntComparator := func(a, b interface{}) int {
 			q1 := a.(*redblacktree.Tree)
 			q2 := b.(*redblacktree.Tree)
-			m1, m2 := q1.Left().Value.(*ToClientMessage), q2.Left().Value.(*ToClientMessage)
-			return int(m1.Time - m2.Time)
+			return -(q1.Size() - q2.Size())
 		}
-		log.Error("260000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Error("360000 %d", time.Now().UnixNano() / 1000000 - start)
 		var purgeHeap *binaryheap.Heap = binaryheap.NewWith(inverseIntComparator)
 
-		log.Error("270000 %d", time.Now().UnixNano() / 1000000 - start)
-		subscriber.lock.Lock()
-		defer subscriber.lock.Unlock()
-
-		log.Error("300000 %d", time.Now().UnixNano() / 1000000 - start)
-
+		log.Error("400000 %d", time.Now().UnixNano() / 1000000 - start)
 		for _, queue := range subscriber.roomQueues {
 			if queue.Size() > 0 {
 				purgeHeap.Push(queue)
 			}
 		}
-		log.Error("400000 %d", time.Now().UnixNano() / 1000000 - start)
 
 		first := true
 
@@ -143,37 +163,37 @@ func (subscriber subscriber)handleSubscription(payload string, s *service)  {
 	}
 }
 
-func (subscriber subscriber)deliverToUser(s *service, fromRouterMessage FromRouterMessage) {
+func (subscriber *subscriber)deliverToUser(s *service, fromRouterMessage FromRouterMessage) {
 	log.Info("deliver to user: %s", fromRouterMessage.ToUserId)
 
-	subscriberClient.lock.Lock()
-	defer subscriberClient.lock.Unlock()
-	var queue, ok = subscriberClient.userQueues[fromRouterMessage.ToUserId]
+	subscriber.lock.Lock()
+	defer subscriber.lock.Unlock()
+	var queue, ok = subscriber.userQueues[fromRouterMessage.ToUserId]
 	if !ok {
 		queue = list.New()
-		subscriberClient.userQueues[fromRouterMessage.ToUserId] = queue
+		subscriber.userQueues[fromRouterMessage.ToUserId] = queue
 	}
-	toClientMessage := subscriberClient.convert(fromRouterMessage)
+	toClientMessage := subscriber.convert(fromRouterMessage)
 	queue.PushBack(&toClientMessage)
 }
 
-func (subscriber subscriber)deliverToRoom(s *service, fromRouterMessage FromRouterMessage)  {
+func (subscriber *subscriber)deliverToRoom(s *service, fromRouterMessage FromRouterMessage)  {
 	log.Info("deliver to room: %s", fromRouterMessage.ToRoomId)
 
-	subscriberClient.lock.Lock()
-	defer subscriberClient.lock.Unlock()
-	var queue, ok = subscriberClient.roomQueues[fromRouterMessage.ToRoomId]
+	subscriber.lock.Lock()
+	defer subscriber.lock.Unlock()
+	var queue, ok = subscriber.roomQueues[fromRouterMessage.ToRoomId]
 	if !ok {
 		queue = redblacktree.NewWith(utils.Int64Comparator)
-		subscriberClient.roomQueues[fromRouterMessage.ToRoomId] = queue
+		subscriber.roomQueues[fromRouterMessage.ToRoomId] = queue
 	}
-	toClientMessage := subscriberClient.convert(fromRouterMessage)
+	toClientMessage := subscriber.convert(fromRouterMessage)
 	queue.Put(atomic.AddInt64(&subscriber.seq, 1), &toClientMessage)
 }
 
-func (subscriber subscriber) stat(service *service) int32 {
-	subscriberClient.lock.RLock()
-	defer subscriberClient.lock.RUnlock()
+func (subscriber *subscriber) stat(service *service) int32 {
+	subscriber.lock.RLock()
+	defer subscriber.lock.RUnlock()
 
 	var outQueue int32 = 0
 	for _, queue := range subscriberClient.roomQueues {
