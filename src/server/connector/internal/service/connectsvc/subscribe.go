@@ -86,15 +86,15 @@ func (subscriber *subscriber)purge(service *service)  {
 
 func (subscriber *subscriber)purge0(service *service, trees map[string]*redblacktree.Tree)  {
 	start := time.Now().UnixNano() / 1000000
-	log.Error("100000 %d", time.Now().UnixNano() / 1000000 - start)
+	log.Trace("100000 %d", time.Now().UnixNano() / 1000000 - start)
 
 	func() {
-		log.Error("150000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("150000 %d", time.Now().UnixNano() / 1000000 - start)
 		subscriber.lock.Lock()
-		log.Error("170000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("170000 %d", time.Now().UnixNano() / 1000000 - start)
 		defer subscriber.lock.Unlock()
 
-		log.Error("200000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("200000 %d", time.Now().UnixNano() / 1000000 - start)
 
 		now := time.Now().UnixNano() / 1000000
 		for _, queue := range trees {
@@ -112,26 +112,26 @@ func (subscriber *subscriber)purge0(service *service, trees map[string]*redblack
 		}
 	}()
 
-	log.Error("240000 %d", time.Now().UnixNano() / 1000000 - start)
+	log.Trace("240000 %d", time.Now().UnixNano() / 1000000 - start)
 	var outQueue int32 = subscriberClient.stat(service)
 
-	log.Error("250000 %d, %d", time.Now().UnixNano() / 1000000 - start, outQueue)
+	log.Trace("250000 %d, %d", time.Now().UnixNano() / 1000000 - start, outQueue)
 
 	if outQueue > 10000 {
 		subscriber.lock.Lock()
 		defer subscriber.lock.Unlock()
-		log.Error("270000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("270000 %d", time.Now().UnixNano() / 1000000 - start)
 
-		log.Error("350000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("350000 %d", time.Now().UnixNano() / 1000000 - start)
 		inverseIntComparator := func(a, b interface{}) int {
 			q1 := a.(*redblacktree.Tree)
 			q2 := b.(*redblacktree.Tree)
 			return -(q1.Size() - q2.Size())
 		}
-		log.Error("360000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("360000 %d", time.Now().UnixNano() / 1000000 - start)
 		var purgeHeap *binaryheap.Heap = binaryheap.NewWith(inverseIntComparator)
 
-		log.Error("400000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("400000 %d", time.Now().UnixNano() / 1000000 - start)
 		for _, queue := range trees {
 			if queue.Size() > 0 {
 				purgeHeap.Push(queue)
@@ -159,7 +159,7 @@ func (subscriber *subscriber)purge0(service *service, trees map[string]*redblack
 				purgeHeap.Push(queue)
 			}
 		}
-		log.Error("500000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("500000 %d", time.Now().UnixNano() / 1000000 - start)
 	}
 }
 

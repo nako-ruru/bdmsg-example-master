@@ -19,7 +19,7 @@ const (
 	MsgTypeRegister = 0
 	MsgTypeChat 		= 1
 	MsgTypeEnterRoom = 4
-	MsgTypePush = 30000
+	MsgTypePush = 30001
 )
 
 type Register struct {
