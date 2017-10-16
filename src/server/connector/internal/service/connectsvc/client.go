@@ -19,6 +19,7 @@ import (
 	"runtime/debug"
 	"sync/atomic"
 	"bytes"
+	"github.com/emirpasic/gods/trees/redblacktree"
 )
 
 type Client struct {
@@ -131,13 +132,30 @@ func (c *Client)a()  {
 				subscriberClient.lock.RLock()
 				defer subscriberClient.lock.RUnlock()
 
-				queue, ok := subscriberClient.roomQueues[c.roomId]
-				if ok {
+				queues := []*redblacktree.Tree{}
+				if q1, o1 := subscriberClient.userQueues[c.ID]; o1 {
+					queues = append(queues, q1)
+				}
+				if q2, o2 := subscriberClient.roomQueues[c.roomId]; o2 {
+					queues = append(queues, q2)
+				}
+				if q3, o3 := subscriberClient.roomQueues["world"]; o3 {
+					queues = append(queues, q3)
+				}
+
+				var minNode *redblacktree.Node
+				for _, queue := range queues{
 					node, found := queue.Ceiling(c.seq)
 					if found {
-						m = node.Value.(*pconnector.ToClientMessage)
-						c.seq = node.Key.(int64) + 1
+						if minNode == nil || node.Key.(int64) < minNode.Key.(int64) {
+							minNode = node
+						}
 					}
+				}
+
+				if minNode != nil {
+					m = minNode.Value.(*pconnector.ToClientMessage)
+					c.seq = minNode.Key.(int64) + 1
 				}
 			}()
 			if m == nil {

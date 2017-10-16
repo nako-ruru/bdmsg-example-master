@@ -11,26 +11,27 @@ import (
 	"sync/atomic"
 	"github.com/emirpasic/gods/trees/redblacktree"
 	"github.com/emirpasic/gods/utils"
+	"runtime/debug"
 )
 
 type subscriber struct {
 	redisSubClient *redis.Client
 	timer *time.Timer
 	roomQueues map[string]*redblacktree.Tree
-	userQueues map[string]*list.List
+	userQueues map[string]*redblacktree.Tree
 	lock sync.RWMutex
 	seq int64
 }
 
 type subscriberQueue struct {
 	queue *list.List
-	lock sync.RWMutex
+	lock  sync.RWMutex
 }
 
 var subscriberClient = &subscriber{
 	timer : time.NewTimer(time.Second * 2),
 	roomQueues: make(map[string]*redblacktree.Tree),
-	userQueues: make(map[string]*list.List),
+	userQueues: make(map[string]*redblacktree.Tree),
 }
 
 //订阅
@@ -70,7 +71,20 @@ func subscribe(s *service) {
 	}
 }
 
+
 func (subscriber *subscriber)purge(service *service)  {
+	defer func(){
+		if err:=recover();err!=nil{
+			log.Error("err, %s\r\n%s", err, debug.Stack()) // 这里的err其实就是panic传入的内容，55
+			print(err)
+		}
+	}()
+	subscriber.purge0(service, subscriber.roomQueues)
+	subscriber.purge0(service, subscriber.userQueues)
+}
+
+
+func (subscriber *subscriber)purge0(service *service, trees map[string]*redblacktree.Tree)  {
 	start := time.Now().UnixNano() / 1000000
 	log.Error("100000 %d", time.Now().UnixNano() / 1000000 - start)
 
@@ -83,7 +97,7 @@ func (subscriber *subscriber)purge(service *service)  {
 		log.Error("200000 %d", time.Now().UnixNano() / 1000000 - start)
 
 		now := time.Now().UnixNano() / 1000000
-		for _, queue := range subscriber.roomQueues {
+		for _, queue := range trees {
 			for quit := false; !queue.Empty() && !quit; {
 				for it := queue.Iterator(); it.Next(); {
 					m := it.Value().(*ToClientMessage)
@@ -118,7 +132,7 @@ func (subscriber *subscriber)purge(service *service)  {
 		var purgeHeap *binaryheap.Heap = binaryheap.NewWith(inverseIntComparator)
 
 		log.Error("400000 %d", time.Now().UnixNano() / 1000000 - start)
-		for _, queue := range subscriber.roomQueues {
+		for _, queue := range trees {
 			if queue.Size() > 0 {
 				purgeHeap.Push(queue)
 			}
@@ -170,11 +184,11 @@ func (subscriber *subscriber)deliverToUser(s *service, fromRouterMessage FromRou
 	defer subscriber.lock.Unlock()
 	var queue, ok = subscriber.userQueues[fromRouterMessage.ToUserId]
 	if !ok {
-		queue = list.New()
+		queue = redblacktree.NewWith(utils.Int64Comparator)
 		subscriber.userQueues[fromRouterMessage.ToUserId] = queue
 	}
 	toClientMessage := subscriber.convert(fromRouterMessage)
-	queue.PushBack(&toClientMessage)
+	queue.Put(atomic.AddInt64(&subscriber.seq, 1), &toClientMessage)
 }
 
 func (subscriber *subscriber)deliverToRoom(s *service, fromRouterMessage FromRouterMessage)  {
@@ -206,8 +220,6 @@ func (subscriber *subscriber) stat(service *service) int32 {
 
 func (subscriber *subscriber)convert(fromRouterMessage FromRouterMessage) ToClientMessage {
 	return ToClientMessage{
-		Seq:		atomic.AddInt64(&subscriber.seq, 1),
-
 		MessageId:	fromRouterMessage.MessageId,
 		Time:		fromRouterMessage.Time,
 		TimeText:	fromRouterMessage.TimeText,

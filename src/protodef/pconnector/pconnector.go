@@ -159,8 +159,6 @@ func (p *FromRouterMessage) Unmarshal(b []byte) error {
 
 
 type ToClientMessage struct {
-	Seq	    int64
-
 	MessageId string				`json:"messageId"`
 	ToUserId string 				`json:"toUserId"`
 	ToRoomId string					`json:"toRoomId"`
