@@ -103,6 +103,7 @@ func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.
 
 	c.roomId = enterRoom.RoomId
 	s.roomM.clientIn(c.ID, enterRoom.RoomId)
+	c.level = enterRoom.Level
 	log.Info("handleEnterRoom, id=%s, roomId=%s", c.ID, enterRoom.RoomId)
 }
 

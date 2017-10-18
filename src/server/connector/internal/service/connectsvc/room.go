@@ -6,8 +6,6 @@ import (
 )
 
 type RoomManager struct {
-	mSet *manager.ManagerSet
-
 	locker  sync.RWMutex
 	clients map[string]map[string]bool
 }
@@ -15,7 +13,6 @@ type RoomManager struct {
 
 func NewRoomManager(mSet *manager.ManagerSet) *RoomManager {
 	return &RoomManager{
-		mSet:    mSet,
 		clients: make(map[string]map[string]bool),
 	}
 }

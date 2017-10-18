@@ -24,14 +24,16 @@ import (
 type Client struct {
 	ID        	string
 	roomId    	string
+	level       int
 	msc       	*bdmsg.SClient
 	clientM   	*ClientManager
 	room      	*RoomManager
 
 	queue     *list.List
 	timer     *time.Timer
-	ticker 	  *time.Ticker
-	queueLock sync.RWMutex
+	lock  		*sync.Mutex
+	condition	*sync.Cond
+
 	in        bytes.Buffer
 	q         bool
 }
@@ -44,16 +46,14 @@ func createClient(id, pass string, msc *bdmsg.SClient, clientM *ClientManager, r
 		room:    room,
 		queue:   list.New(),
 		timer:   time.NewTimer(time.Millisecond * 50),
+		lock:    &sync.Mutex{},
 	}
+	t.condition = sync.NewCond(t.lock)
 
 	atomic.AddInt32(&info.LoginUsers, 1)
 
 	go func() {
-		for ;!t.q; {
-			<- t.timer.C
-			t.a()
-			t.timer.Reset(time.Millisecond * 50)
-		}
+		t.a()
 	}()
 
 	t.msc.SetUserData(t)
@@ -110,10 +110,11 @@ func (c *Client) ServerHello(hello *pconnector.ToClientMessage) {
 	} else if c.msc == nil {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
-		c.queueLock.Lock()
-		defer c.queueLock.Unlock()
+		c.lock.Lock()
+		defer c.lock.Unlock()
 		log.Trace("90000:%s", hello.TimeText)
 		c.queue.PushBack(hello)
+		c.condition.Broadcast()
 	}
 }
 
@@ -123,31 +124,11 @@ func (c *Client)a()  {
 	} else if c.msc == nil {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
-		/*
-		func() {
-			c.queueLock.Lock()
-			defer c.queueLock.Unlock()
-			length := c.queue.Len()
-			var latest, earliest *pconnector.ToClientMessage
-			for e := c.queue.Front(); e != nil; e = e.Next() {
-				m := e.Value.(*pconnector.ToClientMessage)
-				if latest == nil || m.Time > latest.Time {
-					latest = m
-				}
-				if earliest == nil || m.Time < earliest.Time {
-					earliest = m
-				}
-			}
-			if length > 0 {
-				log.Error("110000, %d, %s, %s", length, earliest.TimeText, latest.TimeText)
-			}
-		}()*/
-
 		for ;!c.q; {
 			var m *pconnector.ToClientMessage
 			func() {
-				c.queueLock.Lock()
-				defer c.queueLock.Unlock()
+				c.lock.Lock()
+				defer c.lock.Unlock()
 				for ;c.queue.Len() > 100; {
 					if e := c.queue.Front(); e != nil {
 						c.queue.Remove(e)
@@ -158,22 +139,29 @@ func (c *Client)a()  {
 					c.queue.Remove(e)
 				}
 			}()
-			if m != nil {
-				bytes, err := m.Marshal()
-				if err == nil {
-					start := time.Now()
-					if start.UnixNano() / 1000000 - m.Time > 5000 {
-						log.Trace("discard2: %s, %s", m.MessageId, m.TimeText)
-						continue
-					}
-					c.msc.Output(pconnector.MsgTypePush, bytes)
-					atomic.AddInt64(&info.OutData, int64(len(bytes)))
-					log.Trace("hehehehehe, payload=%s", m.TimeText)
-				} else {
-					log.Error("%s", debug.Stack())
-				}
+			if m == nil {
+				func() {
+					c.lock.Lock()
+					defer c.lock.Unlock()
+					c.condition.Wait()
+				}()
+				timer := time.NewTimer(time.Millisecond * 50)
+				<- timer.C
+				timer.Stop()
+				continue
+			}
+
+			if time.Now().UnixNano() / 1000000 - m.Time > 2000 {
+				log.Trace("discard2: %s, %s", m.MessageId, m.TimeText)
+				continue
+			}
+			bytes, err := m.Marshal()
+			if err == nil {
+				c.msc.Output(pconnector.MsgTypePush, bytes)
+				atomic.AddInt64(&info.OutData, int64(len(bytes)))
+				log.Trace("hehehehehe, payload=%s", m.TimeText)
 			} else {
-				break
+				log.Error("%s", debug.Stack())
 			}
 		}
 	}

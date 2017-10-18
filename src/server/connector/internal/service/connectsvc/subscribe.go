@@ -45,9 +45,7 @@ func subscribe(s *service) {
 		msg, err := pubsub.ReceiveMessage()
 		if err != nil {
 			log.Error("Receive from channel, err=%s", err)
-			pubsub.Close()
-			go subscribe(s)
-			break
+			continue
 		}
 		log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
 
@@ -57,27 +55,17 @@ func subscribe(s *service) {
 	}
 }
 
-func (subscriber subscriber)purge(service *service)  {
+
+func (subscriber *subscriber)purge(service *service)  {
 	start := time.Now().UnixNano() / 1000000
-	log.Error("100000 %d", time.Now().UnixNano() / 1000000 - start)
+	log.Trace("100000 %d", time.Now().UnixNano() / 1000000 - start)
 
-	var outQueue int32 = 0
-	func() {
-		service.clientM.locker.RLock()
-		defer service.clientM.locker.RUnlock()
-		for _, client := range service.clientM.clients {
-			func() {
-				client.queueLock.RLock()
-				defer client.queueLock.RUnlock()
-				outQueue += int32(client.queue.Len())
-			}()
-		}
-	}()
+	var outQueue int32 = subscriber.stat(service)
 
-	log.Error("200000 %d", time.Now().UnixNano() / 1000000 - start)
+	log.Trace("200000 %d", time.Now().UnixNano() / 1000000 - start)
 
 	if outQueue > 10000 {
-		inverseIntComparator := func(a, b interface{}) int {
+		topComparator := func(a, b interface{}) int {
 			c1 := a.(*Client)
 			c2 := b.(*Client)
 			var m1, m2 *ToClientMessage
@@ -87,24 +75,28 @@ func (subscriber subscriber)purge(service *service)  {
 			if e := c2.queue.Front(); e != nil {
 				m2 = e.Value.(*ToClientMessage)
 			}
-			return int(m1.Time - m2.Time)
+			importanceDiff := -(m1.Importance - m2.Importance)
+			if importanceDiff != 0 {
+				return importanceDiff
+			}
+			return c1.level - c2.level
 		}
-		var purgeHeap *binaryheap.Heap = binaryheap.NewWith(inverseIntComparator)
+		var purgeHeap *binaryheap.Heap = binaryheap.NewWith(topComparator)
 
 		service.clientM.locker.RLock()
 		defer service.clientM.locker.RUnlock()
 
 		for _, client := range service.clientM.clients {
-			client.queueLock.Lock()
+			client.lock.Lock()
 		}
-		log.Error("300000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("300000 %d", time.Now().UnixNano() / 1000000 - start)
 
 		for _, client := range service.clientM.clients {
 			if client.queue.Len() > 0 {
 				purgeHeap.Push(client)
 			}
 		}
-		log.Error("400000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("400000 %d", time.Now().UnixNano() / 1000000 - start)
 
 		first := true
 
@@ -126,12 +118,12 @@ func (subscriber subscriber)purge(service *service)  {
 				purgeHeap.Push(client)
 			}
 		}
-		log.Error("500000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("500000 %d", time.Now().UnixNano() / 1000000 - start)
 
 		for _, client := range service.clientM.clients {
-			client.queueLock.Unlock()
+			client.lock.Unlock()
 		}
-		log.Error("600000 %d", time.Now().UnixNano() / 1000000 - start)
+		log.Trace("600000 %d", time.Now().UnixNano() / 1000000 - start)
 	}
 }
 
@@ -149,13 +141,13 @@ func (subscriber subscriber)handleSubscription(payload string, s *service)  {
 	}
 }
 
-func (subscriber subscriber)deliverToUser(s *service, fromRouterMessage FromRouterMessage) {
+func (subscriber *subscriber)deliverToUser(s *service, fromRouterMessage FromRouterMessage) {
 	log.Info("deliver to user: %s", fromRouterMessage.ToUserId)
 	toClientMessage := subscriberClient.convert(fromRouterMessage)
 	subscriberClient.deliverToSingleClient(s, fromRouterMessage.ToUserId, &toClientMessage)
 }
 
-func (subscriber subscriber)deliverToRoom(s *service, fromRouterMessage FromRouterMessage)  {
+func (subscriber *subscriber)deliverToRoom(s *service, fromRouterMessage FromRouterMessage)  {
 	log.Info("deliver to room: %s", fromRouterMessage.ToRoomId)
 
 	s.roomM.locker.Lock()
@@ -200,7 +192,7 @@ func (subscriber subscriber)deliverToRoom(s *service, fromRouterMessage FromRout
 	}
 }
 
-func (subscriber subscriber) deliverToSingleClient(service *service, userId string, m *ToClientMessage)  {
+func (subscriber *subscriber) deliverToSingleClient(service *service, userId string, m *ToClientMessage)  {
 	var client *Client
 	var ok bool
 	func() {
@@ -217,22 +209,22 @@ func (subscriber subscriber) deliverToSingleClient(service *service, userId stri
 	}
 }
 
-func (subscriber subscriber) stat(service *service) int32 {
+func (subscriber *subscriber) stat(service *service) int32 {
 	service.clientM.locker.RLock()
 	defer service.clientM.locker.RUnlock()
 
 	var outQueue int32 = 0
 	for _, client := range service.clientM.clients {
 		func() {
-			client.queueLock.RLock()
-			defer client.queueLock.RUnlock()
+			client.lock.Lock()
+			defer client.lock.Unlock()
 			outQueue += int32(client.queue.Len())
 		}()
 	}
 	return outQueue
 }
 
-func (subscriber subscriber)convert(fromRouterMessage FromRouterMessage) ToClientMessage {
+func (subscriber *subscriber)convert(fromRouterMessage FromRouterMessage) ToClientMessage {
 	return ToClientMessage{
 		MessageId:	fromRouterMessage.MessageId,
 		Time:		fromRouterMessage.Time,

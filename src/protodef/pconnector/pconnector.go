@@ -19,7 +19,7 @@ const (
 	MsgTypeRegister = 0
 	MsgTypeChat 		= 1
 	MsgTypeEnterRoom = 4
-	MsgTypePush = 30000
+	MsgTypePush = 30001
 )
 
 type Register struct {
@@ -171,6 +171,7 @@ type ToClientMessage struct {
 	RoomId string					`json:"roomId"`
 	//Deprecated
 	Content  string					`json:"content"`
+	Importance int					`json:"content"`
 
 	serializedBytes []byte
 	lock sync.RWMutex
