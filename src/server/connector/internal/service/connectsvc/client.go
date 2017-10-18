@@ -18,7 +18,6 @@ import (
 	"time"
 	"runtime/debug"
 	"sync/atomic"
-	"bytes"
 )
 
 type Client struct {
@@ -34,7 +33,6 @@ type Client struct {
 	lock  		*sync.Mutex
 	condition	*sync.Cond
 
-	in        bytes.Buffer
 	q         bool
 }
 
@@ -125,19 +123,24 @@ func (c *Client)a()  {
 		log.Warn("ServerHello, c.msc == nil")
 	} else {
 		for ;!c.q; {
+			start := time.Now().UnixNano() / 1000000
+			log.Trace("100000 %d", time.Now().UnixNano() / 1000000 - start)
 			var m *pconnector.ToClientMessage
 			func() {
 				c.lock.Lock()
 				defer c.lock.Unlock()
+				log.Trace("200000 %d", time.Now().UnixNano() / 1000000 - start)
 				for ;c.queue.Len() > 100; {
 					if e := c.queue.Front(); e != nil {
 						c.queue.Remove(e)
 					}
 				}
+				log.Trace("300000 %d", time.Now().UnixNano() / 1000000 - start)
 				if e := c.queue.Front(); e != nil {
 					m = e.Value.(*pconnector.ToClientMessage)
 					c.queue.Remove(e)
 				}
+				log.Trace("400000 %d", time.Now().UnixNano() / 1000000 - start)
 			}()
 			if m == nil {
 				func() {
@@ -145,16 +148,19 @@ func (c *Client)a()  {
 					defer c.lock.Unlock()
 					c.condition.Wait()
 				}()
+				log.Trace("500000 %d", time.Now().UnixNano() / 1000000 - start)
 				timer := time.NewTimer(time.Millisecond * 50)
 				<- timer.C
 				timer.Stop()
 				continue
 			}
+			log.Trace("600000 %d", time.Now().UnixNano() / 1000000 - start)
 
 			if time.Now().UnixNano() / 1000000 - m.Time > 2000 {
-				log.Trace("discard2: %s, %s", m.MessageId, m.TimeText)
+				log.Debug("discard2: %s, %s", m.MessageId, m.TimeText)
 				continue
 			}
+			log.Trace("700000 %d", time.Now().UnixNano() / 1000000 - start)
 			bytes, err := m.Marshal()
 			if err == nil {
 				c.msc.Output(pconnector.MsgTypePush, bytes)
@@ -163,6 +169,7 @@ func (c *Client)a()  {
 			} else {
 				log.Error("%s", debug.Stack())
 			}
+			log.Trace("800000 %d", time.Now().UnixNano() / 1000000 - start)
 		}
 	}
 }
