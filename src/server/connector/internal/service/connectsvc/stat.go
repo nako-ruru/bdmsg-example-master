@@ -5,6 +5,7 @@ import (
 	"server/connector/internal/config"
 	"sync/atomic"
 	"net"
+	"fmt"
 )
 
 type NamingInfo struct {
@@ -20,7 +21,7 @@ type NamingInfo struct {
 var info = NamingInfo{}
 
 func RegisterNamingService(service *service, clientManager *ClientManager)  {
-	log.Debug("register %s to %s periodically", getInternetAddress(), config.Config.Redis.Addresses)
+	log.Info("register %s to %s periodically", getInternetAddress(), config.Config.Redis.Addresses)
 
 	var f = func() {
 		var client = newNamingRedisClient()
@@ -42,6 +43,8 @@ func RegisterNamingService(service *service, clientManager *ClientManager)  {
 		jsonText, err := tempInfo.Marshal()
 		if err == nil {
 			client.HSet("go-servers", getInternetAddress(), jsonText)
+
+			timerLog.Info(fmt.Sprintf("%s", jsonText))
 		} else {
 
 		}

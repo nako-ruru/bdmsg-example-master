@@ -45,7 +45,7 @@ func main() {
 		}
 	}
 
-	pidF := pidf.New(Config.Pidfile)
+	pidF := pidf.New(Config.PidFile)
 	defer pidF.Close()
 
 	log.Info("connector started, pid=%d", pidF.Pid)

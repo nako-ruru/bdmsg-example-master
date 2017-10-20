@@ -136,7 +136,9 @@ func (subscriber subscriber)handleSubscription(payload string, s *service)  {
 	if fromRouterMessage.ToUserId != "" {
 		subscriberClient.deliverToUser(s, fromRouterMessage)
 	}
-	if fromRouterMessage.ToRoomId != "" {
+	if fromRouterMessage.ToRoomId == "world" {
+		subscriberClient.deliverToWorld(s, fromRouterMessage)
+	} else if fromRouterMessage.ToRoomId != "" {
 		subscriberClient.deliverToRoom(s, fromRouterMessage)
 	}
 }
@@ -189,6 +191,16 @@ func (subscriber *subscriber)deliverToRoom(s *service, fromRouterMessage FromRou
 			log.Trace("70000: %s", fromRouterMessage.TimeText)
 			subscriber.deliverToSingleClient(s, value, &toClientMessage)
 		}
+	}
+}
+
+func (subscriber *subscriber)deliverToWorld(s *service, fromRouterMessage FromRouterMessage) {
+	toClientMessage := subscriber.convert(fromRouterMessage)
+	s.clientM.locker.RLock()
+	defer s.clientM.locker.RUnlock()
+
+	for _, client := range s.clientM.clients {
+		client.ServerHello(&toClientMessage)
 	}
 }
 

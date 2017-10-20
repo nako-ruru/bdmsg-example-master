@@ -55,6 +55,12 @@ type RedisPubSub struct {
 	Password string   			`json:"password"`
 }
 
+type Log struct {
+	InfoFile    string        	`json:"infoFile"`
+	ErrorFile   string        	`json:"errorFile"`
+	TimerFile	string			`json:"timerFile"`
+}
+
 func (c *ServiceSConfT) Check() bool {
 	// debug maybe unset.
 	return c.Connect.Check()
@@ -68,19 +74,18 @@ func (c *ManagerConfT) Check() bool {
 }
 
 type ConfigT struct {
-	Pidfile   string        	`json:"pidfile"`
-	InfoFile  string        	`json:"logfile"`
-	ErrorFile string        	`json:"logerrorfile"`
-	ServiceS  ServiceSConfT 	`json:"service"`
-	Manager   ManagerConfT  	`json:"manager"`
-	Mq        Mq            	`json:"mq"`
-	Redis	  Redis				`json:"redis"`
-	RedisPubSub RedisPubSub		`jons:"redisPubSub"`
-	IpResolver []string			`json:"ipResolver"`
+	PidFile     string        	`json:"pidFile"`
+	Log			Log				`json:"log"`
+	ServiceS    ServiceSConfT 	`json:"service"`
+	Manager     ManagerConfT  	`json:"manager"`
+	Mq          Mq            	`json:"mq"`
+	Redis       Redis         	`json:"redis"`
+	RedisPubSub RedisPubSub   	`jons:"redisPubSub"`
+	IpResolver  []string      	`json:"ipResolver"`
 }
 
 func (c *ConfigT) Check() bool {
-	return len(c.Pidfile) > 0 && len(c.InfoFile) > 0 && c.ServiceS.Check() && c.Manager.Check()
+	return len(c.PidFile) > 0 && len(c.Log.InfoFile) > 0 && c.ServiceS.Check() && c.Manager.Check()
 }
 
 var Config *ConfigT = &ConfigT{}
