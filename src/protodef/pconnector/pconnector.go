@@ -16,15 +16,16 @@ import (
 )
 
 const (
-	MsgTypeRegister = 0
-	MsgTypeChat 		= 1
-	MsgTypeEnterRoom = 4
-	MsgTypePush = 30001
+	MsgTypeRegister 			= 0
+	MsgTypeChat 				= 1
+	MsgTypeEnterRoom 			= 4
+	MsgTypeRefreshToken 		= 10
+	MsgTypePush 				= 30001
 )
 
 type Register struct {
 	UserId string
-	Pass   string
+	Token  string
 }
 
 func (p *Register) Marshal() ([]byte, error) {
@@ -32,6 +33,18 @@ func (p *Register) Marshal() ([]byte, error) {
 }
 
 func (p *Register) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, p)
+}
+
+type RefreshToken struct {
+	Token string
+}
+
+func (p *RefreshToken) Marshal() ([]byte, error) {
+	return json.Marshal(p)
+}
+
+func (p *RefreshToken) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
 
@@ -125,7 +138,7 @@ func (p *LevelUp) Unmarshal(b []byte) error {
 
 
 type FromRouterMessage struct {
-	MessageId string				`json:messageId`
+	MessageId string				`json:"messageId"`
 	Time int64						`json:"time"`
 	TimeText string					`json:"timeText"`
 

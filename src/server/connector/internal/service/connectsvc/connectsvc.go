@@ -51,6 +51,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	mux.HandleFunc(MsgTypeRegister, s.handleRegister)
 	mux.HandleFunc(MsgTypeEnterRoom, s.handleEnterRoom)
 	mux.HandleFunc(MsgTypeChat, s.handleMsg)
+	mux.HandleFunc(MsgTypeRefreshToken, s.handleRefreshToken)
 
 	s.Server = bdmsg.NewServerF(listener, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
@@ -69,6 +70,14 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
  */
 func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	msc := p.UserData().(*bdmsg.SClient)
+
+	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
+		if err:=recover();err!=nil{
+			log.Error("err, %s\r\n%s", err, debug.Stack()) // 这里的err其实就是panic传入的内容，55
+			msc.Stop()
+		}
+	}()
+
 	if msc.Handshaked() {
 		panic(ErrUnexpected)
 	}
@@ -79,7 +88,7 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 		panic(ErrParameter)
 	}
 
-	_, err = s.clientM.clientIn(register.UserId, register.Pass, msc, s.roomM)
+	_, err = s.clientM.clientIn(register.UserId, register.Token, msc, s.roomM)
 	if err != nil {
 		log.Error("handleRegister, err=%s\r\n%s", err, debug.Stack())
 		panic(ErrUnexpected)
@@ -91,6 +100,24 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 	msc.Handshake()
 }
 
+func (s *service)handleRefreshToken(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
+	c := p.UserData().(*Client)
+
+	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
+		if err:=recover();err!=nil{
+			log.Error("err, %s\r\n%s", err, debug.Stack()) // 这里的err其实就是panic传入的内容，55
+			c.msc.Stop()
+		}
+	}()
+
+	var refreshToken RefreshToken
+	err := refreshToken.Unmarshal(m) // unmarshal refreshToken
+	if err != nil {
+		panic(ErrParameter)
+	}
+	log.Info("handleRefreshToken, id=%s", c.ID)
+	c.refreshToken(refreshToken.Token)
+}
 
 func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)

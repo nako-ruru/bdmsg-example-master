@@ -75,13 +75,14 @@ func (c *ManagerConfT) Check() bool {
 
 type ConfigT struct {
 	PidFile     string        	`json:"pidFile"`
-	Log			Log				`json:"log"`
+	Log         Log           	`json:"log"`
 	ServiceS    ServiceSConfT 	`json:"service"`
 	Manager     ManagerConfT  	`json:"manager"`
 	Mq          Mq            	`json:"mq"`
 	Redis       Redis         	`json:"redis"`
-	RedisPubSub RedisPubSub   	`jons:"redisPubSub"`
+	RedisPubSub RedisPubSub   	`json:"redisPubSub"`
 	IpResolver  []string      	`json:"ipResolver"`
+	AuthKey     string          `json:"authKey"`
 }
 
 func (c *ConfigT) Check() bool {

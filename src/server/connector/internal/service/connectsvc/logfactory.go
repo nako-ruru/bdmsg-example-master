@@ -24,6 +24,15 @@ func init()  {
 		return
 	}
 
+	infoDirectory := getParentDirectory(Config.Log.InfoFile)
+	if _, err := os.Stat(infoDirectory); err != nil {
+		err := os.MkdirAll(infoDirectory, 0711)
+		if err != nil {
+			fmt.Printf("Error creating directory, error=%s\n", err)
+			return
+		}
+	}
+
 	err = gologf.SetOutput(Config.Log.InfoFile)
 	if err != nil {
 		fmt.Printf("ParseConfig, error=%s\n@%s\n", err, debug.Stack())
@@ -41,14 +50,6 @@ func initLogger()  {
 	consoleLog := lumber.NewConsoleLogger(lumber.INFO)
 	log.AddLoggers(consoleLog)
 
-	infoDirectory := getParentDirectory(Config.Log.InfoFile)
-	if _, err := os.Stat(infoDirectory); err != nil {
-		err := os.MkdirAll(infoDirectory, 0711)
-		if err != nil {
-			fmt.Printf("Error creating directory, error=%s\n", err)
-			return
-		}
-	}
 	fileLog, err1 := lumber.NewFileLogger(Config.Log.InfoFile, lumber.INFO, lumber.ROTATE, 50000, 9, 100)
 	if err1 == nil {
 		log.AddLoggers(fileLog)
@@ -74,9 +75,6 @@ func initLogger()  {
 
 func initTimeLogger()  {
 	timerLog = lumber.NewMultiLogger()
-
-	consoleLog := lumber.NewConsoleLogger(lumber.INFO)
-	timerLog.AddLoggers(consoleLog)
 
 	infoDirectory := getParentDirectory(Config.Log.TimerFile)
 	if _, err := os.Stat(infoDirectory); err != nil {
