@@ -217,7 +217,7 @@ func (subscriber *subscriber) deliverToSingleClient(service *service, userId str
 	if ok {
 		client.ServerHello(m)
 	} else {
-		log.Warn("not found client: %s", userId)
+		log.Warn("client not found: %s", userId)
 	}
 }
 

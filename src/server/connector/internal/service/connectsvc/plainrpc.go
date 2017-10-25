@@ -59,10 +59,10 @@ func initRpcServerDiscovery()  {
 						}
 					}
 					if len(availableAddresses) == 0 {
-						//log.Error("not found compute brokers")
+						log.Error("no compute brokers found")
 					} else {
 						sort.Strings(availableAddresses)
-						log.Info("found compute brokers: %s", availableAddresses)
+						timerLog.Info("compute brokers found: %s", availableAddresses)
 					}
 					for address, c := range connectionMap {
 						if _, ok := result[address]; !ok {

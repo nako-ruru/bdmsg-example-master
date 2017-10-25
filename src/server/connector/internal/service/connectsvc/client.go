@@ -41,7 +41,7 @@ type Client struct {
 	q         bool
 }
 
-func createClient(id, token string, msc *bdmsg.SClient, clientM *ClientManager, room *RoomManager) (*Client, error) {
+func createClient(id string, msc *bdmsg.SClient, clientM *ClientManager, room *RoomManager) (*Client, error) {
 	t := &Client{
 		ID:          id,
 		msc:         msc,
@@ -94,8 +94,8 @@ func (c *Client) ending() {
 	defer func() { recover() }()
 
 	c.msc.SetUserData(nil)
-	c.room.ending(c.roomId, c.ID)
-	c.clientM.removeClient(c.ID)
+	c.room.ending(c.roomId, c)
+	c.clientM.removeClient(c)
 	c.q = true
 	c.signalTimer.Stop()
 	c.expireTimer.Stop()
@@ -222,7 +222,7 @@ func (m *ClientManager) clientIn(id, token string, msc *bdmsg.SClient, room *Roo
 		c.msc.Stop()
 	}
 
-	c, err := createClient(id, token, msc, m, room)
+	c, err := createClient(id, msc, m, room)
 	if err != nil {
 		return nil, err
 	}
@@ -299,6 +299,8 @@ func (c *Client) sessionAliveDurationInSeconds(claims jwt.MapClaims) (int64, err
 		}
 		diff := value - now
 		return diff, nil
+	} else if config.Config.AuthKey == "" {
+		return -1, nil
 	}
 	return 0, fmt.Errorf("cannot find exp in claims")
 	/*
@@ -322,17 +324,18 @@ func (c *Client)intValue(o interface{}) (int64, error)  {
 }
 
 func (c *Client) expire(sessionAliveDurationInSeconds int64) {
-	duration := time.Duration(sessionAliveDurationInSeconds) * time.Second
-	if c.expireTimer == nil {
-		c.expireTimer = time.NewTimer(duration)
-		<- c.expireTimer.C
-		log.Error("session to %s expired", c.ID)
-		c.msc.Stop()
+	if sessionAliveDurationInSeconds > 0 {
+		duration := time.Duration(sessionAliveDurationInSeconds) * time.Second
+		if c.expireTimer == nil {
+			c.expireTimer = time.NewTimer(duration)
+			<- c.expireTimer.C
+			log.Error("session to %s expired", c.ID)
+			c.msc.Stop()
+		}
+		if c.expireTimer != nil {
+			c.expireTimer.Reset(duration)
+		}
 	}
-	if c.expireTimer != nil {
-		c.expireTimer.Reset(duration)
-	}
-
 }
 
 func (m *ClientManager) CloseAll() {
@@ -343,8 +346,10 @@ func (m *ClientManager) CloseAll() {
 	}
 }
 
-func (m *ClientManager) removeClient(id string) {
+func (m *ClientManager) removeClient(c *Client) {
 	m.locker.Lock()
 	defer m.locker.Unlock()
-	delete(m.clients, id)
+	if m.clients[c.ID] == c {
+		delete(m.clients, c.ID)
+	}
 }

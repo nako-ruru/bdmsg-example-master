@@ -128,8 +128,7 @@ func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.
 		panic(ErrParameter)
 	}
 
-	c.roomId = enterRoom.RoomId
-	s.roomM.clientIn(c.ID, enterRoom.RoomId)
+	s.roomM.clientIn(c, enterRoom.RoomId)
 	c.level = enterRoom.Level
 	log.Info("handleEnterRoom, id=%s, roomId=%s", c.ID, enterRoom.RoomId)
 }
@@ -154,9 +153,9 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		if err != nil {
 			panic(ErrParameter)
 		}
-		if chat.RoomId != "" {
+		if chat.RoomId != "" && chat.RoomId != roomId {
 			roomId = chat.RoomId
-			s.roomM.clientIn(c.ID, roomId)
+			s.roomM.clientIn(c, roomId)
 		}
 		level = chat.Level
 		nickname = chat.Nickname
