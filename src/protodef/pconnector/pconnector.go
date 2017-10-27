@@ -20,6 +20,7 @@ const (
 	MsgTypeChat 				= 1
 	MsgTypeEnterRoom 			= 4
 	MsgTypeRefreshToken 		= 10
+	MsgTypeHeartBeat			= 11
 	MsgTypePush 				= 30001
 )
 

@@ -121,7 +121,7 @@ func send(bytes []byte) error {
 	atomic.AddUint64(&callCounter, 1)
 	address := availableAddresses[callCounter % uint64(len(availableAddresses))]
 
-	log.Info("callCounter:%d, address: %s", callCounter, address)
+	log.Debug("callCounter:%d, address: %s", callCounter, address)
 
 	var err error
 	var conn, ok = connectionMap[address]

@@ -25,31 +25,33 @@ import (
 )
 
 type Client struct {
-	ID        	string
-	roomId    	string
-	level       int
-	msc       	*bdmsg.SClient
-	clientM   	*ClientManager
-	room      	*RoomManager
+	ID        		string
+	roomId    		string
+	level       	int
+	msc       		*bdmsg.SClient
+	clientM   		*ClientManager
+	room      		*RoomManager
 
-	queue       *list.List
-	signalTimer *time.Timer
-	expireTimer *time.Timer
-	lock        *sync.Mutex
-	condition   *sync.Cond
+	queue       	*list.List
+	signalTimer 	*time.Timer
+	expireTimer 	*time.Timer
+	lock        	*sync.Mutex
+	condition   	*sync.Cond
+	heartBeatTime 	int64
 
-	q         bool
+	q         		bool
 }
 
 func createClient(id string, msc *bdmsg.SClient, clientM *ClientManager, room *RoomManager) (*Client, error) {
 	t := &Client{
-		ID:          id,
-		msc:         msc,
-		clientM:     clientM,
-		room:        room,
-		queue:       list.New(),
-		signalTimer: time.NewTimer(time.Millisecond * 50),
-		lock:        &sync.Mutex{},
+		ID:          	id,
+		msc:         	msc,
+		clientM:     	clientM,
+		room:        	room,
+		queue:       	list.New(),
+		signalTimer: 	time.NewTimer(time.Millisecond * 50),
+		lock:        	&sync.Mutex{},
+		heartBeatTime:	time.Now().UnixNano() / 1e6,
 	}
 	t.condition = sync.NewCond(t.lock)
 
@@ -252,6 +254,11 @@ func (c *Client)refreshToken(token string)  error {
 	go c.expire(duration)
 
 	return nil
+}
+
+func (c *Client)heartBeat() {
+	timerLog.Info("handleHeartBeat, id=%s", c.ID)
+	c.heartBeatTime = time.Now().UnixNano() / 1e6
 }
 
 func refreshToken0(token string, userId string) (jwt.MapClaims, error) {

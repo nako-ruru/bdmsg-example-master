@@ -22,6 +22,7 @@ type service struct {
 	clientM *ClientManager
 	roomM *RoomManager
 	listener *listener
+	heartBeatTimer *time.Timer
 }
 
 var chatMessageCounter uint64 = 0
@@ -52,11 +53,14 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 	mux.HandleFunc(MsgTypeEnterRoom, s.handleEnterRoom)
 	mux.HandleFunc(MsgTypeChat, s.handleMsg)
 	mux.HandleFunc(MsgTypeRefreshToken, s.handleRefreshToken)
+	mux.HandleFunc(MsgTypeHeartBeat, s.handleHeartBeat)
 
 	s.Server = bdmsg.NewServerF(listener, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
 	RegisterNamingService(s, clientM)
 	defer UnregisterNamingService()
+
+	go initHeartBeat(s)
 
 	initMessageConsumer()
 
@@ -102,6 +106,7 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 
 func (s *service)handleRefreshToken(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
+	c.heartBeat()
 
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
 		if err:=recover();err!=nil{
@@ -119,8 +124,15 @@ func (s *service)handleRefreshToken(ctx context.Context, p *bdmsg.Pumper, t bdms
 	c.refreshToken(refreshToken.Token)
 }
 
+
+func (s *service)handleHeartBeat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
+	c := p.UserData().(*Client)
+	c.heartBeat()
+}
+
 func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
+	c.heartBeat()
 
 	var enterRoom EnterRoom
 	err := enterRoom.Unmarshal(m) // unmarshal enterRoom
@@ -135,6 +147,7 @@ func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.
 
 func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
+	c.heartBeat()
 
 	atomic.AddInt64(&info.InData, int64(len(m)))
 
