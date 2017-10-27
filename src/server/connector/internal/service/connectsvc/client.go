@@ -99,8 +99,12 @@ func (c *Client) ending() {
 	c.room.ending(c.roomId, c)
 	c.clientM.removeClient(c)
 	c.q = true
-	c.signalTimer.Stop()
-	c.expireTimer.Stop()
+	if c.signalTimer != nil {
+		c.signalTimer.Stop()
+	}
+	if c.expireTimer != nil {
+		c.expireTimer.Stop()
+	}
 	c.condition.Signal()
 	atomic.AddInt32(&info.LoginUsers, -1)
 }
