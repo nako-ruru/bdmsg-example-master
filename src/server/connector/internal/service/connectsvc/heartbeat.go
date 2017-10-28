@@ -18,6 +18,7 @@ func initHeartBeat(service *service)  {
 
 				for _, client := range service.clientM.clients {
 					if client.heartBeatTime < from {
+						log.Info("heart beat time out, id=%s", client.ID)
 						client.Close()
 					}
 				}

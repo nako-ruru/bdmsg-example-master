@@ -90,7 +90,7 @@ func (c *Client) ending() {
 		const size = 16 << 10
 		buf := make([]byte, size)
 		buf = buf[:runtime.Stack(buf, false)]
-		log.Error("Client$monitor, buf=%s", fmt.Sprintf("\n%s", buf))
+		log.Error("Client$monitor, err=%s\r\n%s", e, fmt.Sprintf("\n%s", buf))
 	}
 
 	defer func() { recover() }()
@@ -225,6 +225,7 @@ func (m *ClientManager) clientIn(id, token string, msc *bdmsg.SClient, room *Roo
 
 	if c != nil {
 		//return c, ErrAlreadyExist
+		log.Info("anothor connection with same id(%s) comes in", id)
 		c.msc.Stop()
 	}
 
