@@ -195,6 +195,7 @@ func (subscriber *subscriber)deliverToRoom(s *service, fromRouterMessage FromRou
 }
 
 func (subscriber *subscriber)deliverToWorld(s *service, fromRouterMessage FromRouterMessage) {
+	log.Info("deliver to world")
 	toClientMessage := subscriber.convert(fromRouterMessage)
 	s.clientM.locker.RLock()
 	defer s.clientM.locker.RUnlock()

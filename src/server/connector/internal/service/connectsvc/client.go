@@ -40,6 +40,8 @@ type Client struct {
 	heartBeatTime 	int64
 
 	q         		bool
+
+	version 		int
 }
 
 func createClient(id string, msc *bdmsg.SClient, clientM *ClientManager, room *RoomManager) (*Client, error) {
@@ -212,8 +214,10 @@ func (m *ClientManager) Client(id string) *Client {
 	return m.clients[id]
 }
 
-func (m *ClientManager) clientIn(id, token string, msc *bdmsg.SClient, room *RoomManager) (*Client, error) {
-	claims, err0 := refreshToken0(token, id)
+func (m *ClientManager) clientIn(register pconnector.Register, msc *bdmsg.SClient, room *RoomManager) (*Client, error) {
+	id := register.UserId
+	claims, err0 := refreshToken0(register.Token, id)
+
 	if err0 != nil {
 		return nil, err0
 	}
@@ -233,6 +237,7 @@ func (m *ClientManager) clientIn(id, token string, msc *bdmsg.SClient, room *Roo
 	if err != nil {
 		return nil, err
 	}
+	c.version = register.ClientToConnectorVersion
 
 	m.clients[id] = c
 	go c.monitor()

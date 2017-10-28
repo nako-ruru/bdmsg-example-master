@@ -92,12 +92,12 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 		panic(ErrParameter)
 	}
 
-	_, err = s.clientM.clientIn(register.UserId, register.Token, msc, s.roomM)
+	_, err = s.clientM.clientIn(register, msc, s.roomM)
 	if err != nil {
 		log.Error("handleRegister, err=%s\r\n%s", err, debug.Stack())
 		panic(ErrUnexpected)
 	} else {
-		log.Info("handleRegister, id=%s, remoteaddr=%s", register.UserId, msc.Conn().RemoteAddr())
+		log.Info("handleRegister, id=%s, version=%d, remoteaddr=%s", register.UserId, register.ClientToConnectorVersion, msc.Conn().RemoteAddr())
 	}
 
 	// tell bdmsg that client is authorized

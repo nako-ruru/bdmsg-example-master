@@ -17,7 +17,7 @@ func initHeartBeat(service *service)  {
 				defer service.clientM.locker.RUnlock()
 
 				for _, client := range service.clientM.clients {
-					if client.heartBeatTime < from {
+					if client.version >= 100  && client.heartBeatTime < from {
 						log.Info("heart beat time out, id=%s", client.ID)
 						client.Close()
 					}

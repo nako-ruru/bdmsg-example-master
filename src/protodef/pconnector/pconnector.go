@@ -25,8 +25,9 @@ const (
 )
 
 type Register struct {
-	UserId string
-	Token  string
+	UserId                   string
+	Token                    string
+	ClientToConnectorVersion int
 }
 
 func (p *Register) Marshal() ([]byte, error) {
