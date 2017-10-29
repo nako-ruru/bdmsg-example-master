@@ -157,7 +157,7 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	var params map[string]string;
 
 
-	log.Info("handleMsg, id=%s, t=%d, time=%d, m=%s", c.ID, t, time.Now().UnixNano() / 1000000, string(m[:]))
+	log.Info("handleMsg, id=%s, roomId=%s, t=%d, time=%d, m=%s", c.ID, roomId, t, time.Now().UnixNano() / 1000000, string(m[:]))
 
 	switch t {
 	case 1:
