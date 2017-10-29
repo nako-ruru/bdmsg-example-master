@@ -7,6 +7,7 @@ import (
 	"server/connector/internal/config"
 	"time"
 	"github.com/emirpasic/gods/trees/binaryheap"
+	"runtime/debug"
 )
 
 type subscriber struct {
@@ -31,7 +32,7 @@ func subscribe(s *service) {
 		})
 	}
 
-	pubsub := subscriberClient.redisSubClient.Subscribe(channelName1, channelName2)
+	pubSub := subscriberClient.redisSubClient.Subscribe(channelName1, channelName2)
 
 	go func() {
 		for {
@@ -42,9 +43,9 @@ func subscribe(s *service) {
 	}()
 
 	for {
-		msg, err := pubsub.ReceiveMessage()
+		msg, err := pubSub.ReceiveMessage()
 		if err != nil {
-			log.Error("Receive from channel, err=%s", err)
+			log.Error("Receive from channel, err=%s\r\n%s", err, debug.Stack())
 			continue
 		}
 		log.Info("Receive from channel, channel=%s, payload=%s", msg.Channel, msg.Payload)
@@ -57,6 +58,13 @@ func subscribe(s *service) {
 
 
 func (subscriber *subscriber)purge(service *service)  {
+	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
+		if err:=recover();err!=nil{
+			log.Error("err, %s\r\n%s", err, debug.Stack()) // 这里的err其实就是panic传入的内容，55
+			println(err)
+		}
+	}()
+
 	start := time.Now().UnixNano() / 1000000
 	log.Trace("100000 %d", time.Now().UnixNano() / 1000000 - start)
 
@@ -128,6 +136,13 @@ func (subscriber *subscriber)purge(service *service)  {
 }
 
 func (subscriber subscriber)handleSubscription(payload string, s *service)  {
+	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
+		if err:=recover();err!=nil{
+			log.Error("err, %s\r\n%s", err, debug.Stack()) // 这里的err其实就是panic传入的内容，55
+			println(err)
+		}
+	}()
+
 	var fromRouterMessage FromRouterMessage
 	fromRouterMessage.Unmarshal([]byte(payload))
 
@@ -153,27 +168,31 @@ func (subscriber *subscriber)deliverToRoom(s *service, fromRouterMessage FromRou
 	log.Info("deliver to room: %s", fromRouterMessage.ToRoomId)
 
 	s.roomM.locker.Lock()
-	userIdsWrapper, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
+	userIdToClientMap, ok := s.roomM.clients[fromRouterMessage.ToRoomId]
 	s.roomM.locker.Unlock()
 
 	log.Trace("20000: %s", fromRouterMessage.TimeText)
 	if ok {
 		userIds := []string{}
 
-		s.roomM.locker.Lock()
-		for userId, _ := range userIdsWrapper {
-			userIds = append(userIds, userId)
-		}
+		func() {
+			s.roomM.locker.Lock()
+			defer s.roomM.locker.Unlock()
 
-		log.Trace("30000: %s", fromRouterMessage.TimeText)
-		s.roomM.locker.Unlock()
+			roomOwnerId := subscriber.roomOwnerIdResolver(fromRouterMessage.ToRoomId)
+			if _, ok := userIdToClientMap[roomOwnerId]; ok {
+				userIds = append(userIds, roomOwnerId)
+			}
+			for userId, _ := range userIdToClientMap {
+				if userId != roomOwnerId {
+					userIds = append(userIds, userId)
+				}
+			}
+			log.Trace("30000: %s", fromRouterMessage.TimeText)
+		}()
 
-		more := ""
 		totalSize := len(userIds)
-		if totalSize > 20 {
-			more = "..."
-		}
-		log.Trace("40000: %s", fromRouterMessage.TimeText)
+		more := subscriber.ternaryIf(totalSize <= 20, "", "...")
 		var userIdsText string
 		if totalSize == 0 {
 			userIdsText = "[]"
@@ -183,6 +202,7 @@ func (subscriber *subscriber)deliverToRoom(s *service, fromRouterMessage FromRou
 			userIdsText = fmt.Sprintf("%s", userIds[:20])
 		}
 		log.Trace("50000: %s", fromRouterMessage.TimeText)
+
 		log.Info("found following users in room(%s), totalSize=%d, userIds=%s%s", fromRouterMessage.ToRoomId, totalSize, userIdsText, more)
 
 		toClientMessage := subscriber.convert(fromRouterMessage)
@@ -220,6 +240,17 @@ func (subscriber *subscriber) deliverToSingleClient(service *service, userId str
 	} else {
 		log.Warn("client not found: %s", userId)
 	}
+}
+
+func (subscriber *subscriber)roomOwnerIdResolver(roomId string) string {
+	return roomId
+}
+
+func (subscriber *subscriber) ternaryIf(flag bool, v1 string, v2 string) string {
+	if flag {
+		return v1
+	}
+	return v2
 }
 
 func (subscriber *subscriber) stat(service *service) int32 {
