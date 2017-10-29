@@ -20,25 +20,37 @@ type NamingInfo struct {
 
 var info = NamingInfo{}
 
-func RegisterNamingService(service *service, clientManager *ClientManager)  {
+func RegisterNamingService(service *service)  {
 	log.Info("register %s to %s periodically", getInternetAddress(), config.Config.Redis.Addresses)
 
 	var f = func() {
 		var client = newNamingRedisClient()
 		defer client.Close()
 
+		var totalIn, totalOut int64 = 0, 0
+		func() {
+			service.clientM.locker.RLock()
+			defer service.clientM.locker.RUnlock()
+
+			for _, client := range service.clientM.clients {
+				statis := client.msc.Pumper.Statis()
+				totalIn += statis.BytesReaded
+				totalOut += statis.BytesWritten
+			}
+		}()
+
 		tempInfo := NamingInfo{
 			RegisterTime : 		time.Now().UnixNano() / 1000000,
 			LoginUsers : 		info.LoginUsers,
 			ConnectedClients :	info.ConnectedClients,
-			InData	 :		 	info.InData,
-			OutData	 :		 	info.OutData,
+			InData	 :		 	totalIn - info.InData,
+			OutData	 :		 	totalOut - info.OutData,
 			InQueue	 :		 	info.InQueue,
 			OutQueue :	     	subscriberClient.stat(service),
 		}
 
-		atomic.StoreInt64(&info.OutData, 0)
-		atomic.StoreInt64(&info.InData, 0)
+		atomic.StoreInt64(&info.OutData, totalOut)
+		atomic.StoreInt64(&info.InData, totalIn)
 
 		jsonText, err := tempInfo.Marshal()
 		if err == nil {

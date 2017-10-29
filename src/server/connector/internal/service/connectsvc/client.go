@@ -184,7 +184,6 @@ func (c *Client)a()  {
 			bytes, err := m.Marshal()
 			if err == nil {
 				c.msc.Output(pconnector.MsgTypePush, bytes)
-				atomic.AddInt64(&info.OutData, int64(len(bytes)))
 				log.Trace("hehehehehe, payload=%s", m.TimeText)
 			} else {
 				log.Error("%s", debug.Stack())

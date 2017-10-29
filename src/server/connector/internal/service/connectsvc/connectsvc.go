@@ -57,7 +57,7 @@ func newService(l net.Listener, handshakeTO time.Duration, pumperInN, pumperOutN
 
 	s.Server = bdmsg.NewServerF(listener, bdmsg.DefaultIOC, handshakeTO, mux, pumperInN, pumperOutN)
 
-	RegisterNamingService(s, clientM)
+	RegisterNamingService(s)
 	defer UnregisterNamingService()
 
 	go initHeartBeat(s)
@@ -148,8 +148,6 @@ func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.
 func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
 	c.heartBeat()
-
-	atomic.AddInt64(&info.InData, int64(len(m)))
 
 	var roomId string = c.roomId
 	var level int
