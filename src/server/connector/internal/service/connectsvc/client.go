@@ -169,9 +169,6 @@ func (c *Client)a()  {
 					c.condition.Wait()
 				}()
 				log.Trace("500000 %d", time.Now().UnixNano() / 1000000 - start)
-				timer := time.NewTimer(time.Millisecond * 50)
-				<- timer.C
-				timer.Stop()
 				continue
 			}
 			log.Trace("600000 %d", time.Now().UnixNano() / 1000000 - start)
@@ -186,9 +183,14 @@ func (c *Client)a()  {
 				c.msc.Output(pconnector.MsgTypePush, bytes)
 				log.Trace("hehehehehe, payload=%s", m.TimeText)
 			} else {
-				log.Error("%s", debug.Stack())
+				log.Error("err: %s\r\n%s", err, debug.Stack())
 			}
 			log.Trace("800000 %d", time.Now().UnixNano() / 1000000 - start)
+			timer := time.NewTimer(time.Millisecond * 50)
+			<- timer.C
+			log.Trace("900000 %d", time.Now().UnixNano() / 1000000 - start)
+			timer.Stop()
+			log.Trace("1000000 %d", time.Now().UnixNano() / 1000000 - start)
 		}
 	}
 }

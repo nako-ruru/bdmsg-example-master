@@ -62,11 +62,10 @@ func (m *MessageQueue) Add(msg FromConnectorMessage) {
 
 	m.queue.PushBack(msg)
 	for ; m.queue.Len() > m.maxSize; {
-		for e := m.queue.Front(); e != nil; e = e.Next() {
+		if e := m.queue.Front(); e != nil {
 			m.queue.Remove(e)
 			var jsonText, _ = json.Marshal(e.Value.(FromConnectorMessage))
 			log.Warn("discard: %s", jsonText)
-			break
 		}
 	}
 }
@@ -86,9 +85,8 @@ func (m *MessageQueue) DrainTo(msgs []*FromConnectorMessage, maxLength int)([]*F
 		}
 	}
 	for i,n := oldLen, len(msgs); i < n; i++ {
-		for e := m.queue.Front(); e != nil; e = e.Next() {
+		if e := m.queue.Front(); e != nil {
 			m.queue.Remove(e)
-			break
 		}
 	}
 
