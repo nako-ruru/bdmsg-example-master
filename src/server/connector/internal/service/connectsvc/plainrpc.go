@@ -15,26 +15,31 @@ import (
 	"runtime/debug"
 )
 
-var connLocker sync.RWMutex
-var availableAddresses []string = []string{}
-var callCounter uint64 = 0
-var connectionMap map[string]net.Conn = map[string]net.Conn{}
-
 type computeServerInfo struct {
 	RegisterTime int64 			`json:"registerTime"`
 }
 type rpc struct {
+	connLocker 			sync.RWMutex
+	availableAddresses 	[]string
+	callCounter 		uint64
+	connectionMap 		map[string]net.Conn
+
 	in bytes.Buffer
 }
-var rpcClient rpc = rpc{}
+var rpcClient rpc = rpc{
+	connLocker: 		sync.RWMutex{},
+	availableAddresses:	[]string{},
+	callCounter:		0,
+	connectionMap: 		map[string]net.Conn{},
+}
 
 func initRpcServerDiscovery()  {
 	ticker := time.NewTicker(time.Second * 1)
 	go func() {
 		for range ticker.C {
 			func() {
-				connLocker.Lock()
-				defer connLocker.Unlock()
+				rpcClient.connLocker.Lock()
+				defer rpcClient.connLocker.Unlock()
 
 				var client = newComputeServiceRedisClient()
 				defer client.Close()
@@ -44,7 +49,7 @@ func initRpcServerDiscovery()  {
 				if err != nil {
 					log.Error("query compute-servers: %s\r\n%s", err, debug.Stack())
 				} else {
-					availableAddresses = []string{}
+					rpcClient.availableAddresses = []string{}
 
 					from := time.Now().UnixNano() / 1000000 - 1 * 2000;
 
@@ -55,19 +60,19 @@ func initRpcServerDiscovery()  {
 						if err != nil {
 							log.Error("json.Unmarshal(bytes, &serverInfo): %s\r\n%s", err, debug.Stack())
 						} else if serverInfo.RegisterTime >= from {
-							availableAddresses = append(availableAddresses, address)
+							rpcClient.availableAddresses = append(rpcClient.availableAddresses, address)
 						}
 					}
-					if len(availableAddresses) == 0 {
+					if len(rpcClient.availableAddresses) == 0 {
 						log.Error("no compute brokers found")
 					} else {
-						sort.Strings(availableAddresses)
-						timerLog.Info("compute brokers found: %s", availableAddresses)
+						sort.Strings(rpcClient.availableAddresses)
+						timerLog.Info("compute brokers found: %s", rpcClient.availableAddresses)
 					}
-					for address, c := range connectionMap {
+					for address, c := range rpcClient.connectionMap {
 						if _, ok := result[address]; !ok {
 							c.Close()
-							delete(connectionMap, address)
+							delete(rpcClient.connectionMap, address)
 						}
 					}
 				}
@@ -76,7 +81,7 @@ func initRpcServerDiscovery()  {
 	}()
 }
 
-func deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64, start int64) {
+func (rpc rpc) deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64, start int64) {
 	if len(list) > 0 {
 		msgs := FromConnectorMessages {
 			Messages:list,
@@ -85,8 +90,8 @@ func deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64
 
 		start = time.Now().UnixNano() / 1000000
 
-		compressedBytes := rpcClient.DoZlibCompress(bytes)
-		succeed := trySend(compressedBytes, 3, packedMessageId)
+		compressedBytes := rpc.DoZlibCompress(bytes)
+		succeed := rpc.trySend(compressedBytes, 3, packedMessageId)
 
 		end := time.Now().UnixNano() / 1000000
 
@@ -102,9 +107,9 @@ func deliver(list []*FromConnectorMessage, restCount int, packedMessageId uint64
 	}
 }
 
-func trySend(compressedBytes []byte, n int, packedMessageId uint64) bool {
+func (rpc rpc) trySend(compressedBytes []byte, n int, packedMessageId uint64) bool {
 	for k := 0; k < n; k++ {
-		err := send(compressedBytes)
+		err := rpc.send(compressedBytes)
 		if err == nil {
 			return true
 		} else {
@@ -114,23 +119,23 @@ func trySend(compressedBytes []byte, n int, packedMessageId uint64) bool {
 	return false
 }
 
-func send(bytes []byte) error {
-	connLocker.Lock()
-	defer connLocker.Unlock()
+func (rpc rpc)  send(bytes []byte) error {
+	rpc.connLocker.Lock()
+	defer rpc.connLocker.Unlock()
 
-	atomic.AddUint64(&callCounter, 1)
-	address := availableAddresses[callCounter % uint64(len(availableAddresses))]
+	atomic.AddUint64(&rpc.callCounter, 1)
+	address := rpc.availableAddresses[rpc.callCounter % uint64(len(rpc.availableAddresses))]
 
-	log.Debug("callCounter:%d, address: %s", callCounter, address)
+	log.Debug("callCounter:%d, address: %s", rpc.callCounter, address)
 
 	var err error
-	var conn, ok = connectionMap[address]
+	var conn, ok = rpc.connectionMap[address]
 
 	if !ok {
 		if conn != nil {
 			conn.Close()
 		}
-		delete(connectionMap, address)
+		delete(rpc.connectionMap, address)
 	}
 	if conn == nil {
 		conn, err = net.Dial("tcp", address)
@@ -138,10 +143,10 @@ func send(bytes []byte) error {
 			if conn != nil {
 				conn.Close()
 			}
-			delete(connectionMap, address)
+			delete(rpc.connectionMap, address)
 			return err
 		} else {
-			connectionMap[address] = conn
+			rpc.connectionMap[address] = conn
 		}
 	}
 
@@ -157,7 +162,7 @@ func send(bytes []byte) error {
 		if conn != nil {
 			conn.Close()
 		}
-		delete(connectionMap, address)
+		delete(rpc.connectionMap, address)
 		return err
 	}
 	_, err = conn.Write(bytes)
@@ -165,7 +170,7 @@ func send(bytes []byte) error {
 		if conn != nil {
 			conn.Close()
 		}
-		delete(connectionMap, address)
+		delete(rpc.connectionMap, address)
 		return err
 	}
 	return err

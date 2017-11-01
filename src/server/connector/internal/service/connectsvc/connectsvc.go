@@ -220,5 +220,5 @@ func consumeEvent(i uint64, id int) {
 	maxCount := 10000
 	var restCount int
 	readyToDeliver, restCount = messageQueueGroup.DrainTo(readyToDeliver, maxCount)
-	deliver(readyToDeliver, restCount, i, start)
+	rpcClient.deliver(readyToDeliver, restCount, i, start)
 }
