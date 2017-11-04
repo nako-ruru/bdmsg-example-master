@@ -127,12 +127,13 @@ func (s *service)handleRefreshToken(ctx context.Context, p *bdmsg.Pumper, t bdms
 
 func (s *service)handleHeartBeat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
-	c.heartBeat()
+	var heartBeat HeartBeat
+	heartBeat.Unmarshal(m)
+	c.heartBeat2(heartBeat.ClientTime)
 }
 
 func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
-	c.heartBeat()
 
 	var enterRoom EnterRoom
 	err := enterRoom.Unmarshal(m) // unmarshal enterRoom
@@ -146,17 +147,18 @@ func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.
 }
 
 func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
+	start := time.Now().UnixNano() / 1000000
+	log.Trace("100000 %d", time.Now().UnixNano() / 1000000 - start)
 	c := p.UserData().(*Client)
 	c.heartBeat()
 
 	var roomId string = c.roomId
 	var level int
 	var nickname string
+	var clientTime time.Time
 	var params map[string]string;
 
-
-	log.Info("handleMsg, id=%s, roomId=%s, t=%d, time=%d, m=%s", c.ID, roomId, t, time.Now().UnixNano() / 1000000, string(m[:]))
-
+	log.Trace("200000 %d", time.Now().UnixNano() / 1000000 - start)
 	switch t {
 	case 1:
 		var chat Chat
@@ -164,15 +166,21 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		if err != nil {
 			panic(ErrParameter)
 		}
+		log.Trace("300000 %d", time.Now().UnixNano() / 1000000 - start)
 		if chat.RoomId != "" && chat.RoomId != roomId {
 			roomId = chat.RoomId
 			s.roomM.clientIn(c, roomId)
 		}
 		level = chat.Level
 		nickname = chat.Nickname
+		clientTime = time.Unix(chat.ClientTime / 1e3, (chat.ClientTime % 1e3) * 1e6)
 		params = map[string]string{"content": chat.Content}
+		log.Trace("400000 %d", time.Now().UnixNano() / 1000000 - start)
 		break
 	}
+
+	log.Trace("500000 %d", time.Now().UnixNano() / 1000000 - start)
+	log.Info("handleMsg, id=%s, roomId=%s, clientTime=%s, t=%d, m=%s", c.ID, roomId, clientTime.Format("15:04:05.999"), t, string(m[:]))
 
 	var fromConnectorMessage = FromConnectorMessage{
 		strconv.FormatUint(atomic.AddUint64(&chatMessageCounter, 1), 10),
@@ -184,9 +192,9 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		int32(t),
 		params,
 	}
+	log.Trace("600000 %d", time.Now().UnixNano() / 1000000 - start)
 
-	totalSize := messageQueueGroup.Add(fromConnectorMessage)
-	info.InQueue = int32(totalSize)
+	messageQueueGroup.Add(fromConnectorMessage)
 }
 
 var messageQueueGroup MessageQueueGroup

@@ -4,6 +4,7 @@ import (
 	"sync"
 	"container/list"
 	"encoding/json"
+	"time"
 )
 
 type MessageQueueGroup struct {
@@ -17,23 +18,38 @@ type MessageQueue struct {
 	maxSize int
 }
 
-func (mqg *MessageQueueGroup)Add(msg FromConnectorMessage)  int {
-	mqg.locker.Lock()
-	defer mqg.locker.Unlock()
+func (mqg *MessageQueueGroup)Add(msg FromConnectorMessage) {
+	var mq *MessageQueue
 
-	if mqg.group ==  nil {
-		mqg.group = make(map[string]*MessageQueue)
-	}
-	if mqg.group[msg.RoomId] == nil {
-		mqg.group[msg.RoomId] = NewMessageQueue()
-	}
-	mqg.group[msg.RoomId].Add(msg)
+	start := time.Now().UnixNano() / 1000000
+	log.Trace("100000 %d", time.Now().UnixNano() / 1000000 - start)
+	func() {
+		mqg.locker.RLock()
+		defer mqg.locker.RUnlock()
+		if mqg.group != nil {
+			mq = mqg.group[msg.RoomId]
+		}
+	}()
 
-	totalRestSize := 0
-	for _, v := range mqg.group {
-		totalRestSize += v.queue.Len()
+	log.Trace("200000 %d", time.Now().UnixNano() / 1000000 - start)
+	if mq == nil {
+		func() {
+			mqg.locker.Lock()
+			defer mqg.locker.Unlock()
+			if mqg.group ==  nil {
+				mqg.group = make(map[string]*MessageQueue)
+			}
+			if mqg.group[msg.RoomId] == nil {
+				mqg.group[msg.RoomId] = NewMessageQueue()
+			}
+			mq = mqg.group[msg.RoomId]
+		}()
 	}
-	return totalRestSize
+
+	log.Trace("300000 %d", time.Now().UnixNano() / 1000000 - start)
+	mq.Add(msg)
+
+	log.Trace("400000 %d", time.Now().UnixNano() / 1000000 - start)
 }
 
 func (mqg *MessageQueueGroup) DrainTo(msgs []*FromConnectorMessage, maxLength int) ([]*FromConnectorMessage, int)  {

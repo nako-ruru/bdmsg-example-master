@@ -272,6 +272,12 @@ func (c *Client)heartBeat() {
 	c.heartBeatTime = time.Now().UnixNano() / 1e6
 }
 
+func (c *Client)heartBeat2(timeTag int64) {
+	clientTime := time.Unix(timeTag / 1e3, (timeTag % 1e3) * 1e6)
+	timerLog.Info("handleHeartBeat, id=%s, clientTime=%s", c.ID, clientTime.Format("15:04:05.999"))
+	c.heartBeatTime = time.Now().UnixNano() / 1e6
+}
+
 func refreshToken0(token string, userId string) (jwt.MapClaims, error) {
 	var claims jwt.MapClaims
 	if config.Config.AuthKey != "" {

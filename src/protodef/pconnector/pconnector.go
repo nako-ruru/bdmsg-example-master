@@ -42,11 +42,15 @@ type RefreshToken struct {
 	Token string
 }
 
-func (p *RefreshToken) Marshal() ([]byte, error) {
-	return json.Marshal(p)
+func (p *RefreshToken) Unmarshal(b []byte) error {
+	return json.Unmarshal(b, p)
 }
 
-func (p *RefreshToken) Unmarshal(b []byte) error {
+type HeartBeat struct {
+	ClientTime int64
+}
+
+func (p *HeartBeat) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
 
@@ -55,43 +59,10 @@ type Chat struct {
 	Content string
 	Nickname string
 	Level int
-	ClientTime uint64
-}
-
-func (p *Chat) Marshal() ([]byte, error) {
-	return json.Marshal(p)
+	ClientTime int64
 }
 
 func (p *Chat) Unmarshal(b []byte) error {
-	return json.Unmarshal(b, p)
-}
-
-type Support struct {
-	RoomId string
-	Nickname string
-	Level int
-}
-
-func (p *Support) Marshal() ([]byte, error) {
-	return json.Marshal(p)
-}
-
-func (p *Support) Unmarshal(b []byte) error {
-	return json.Unmarshal(b, p)
-}
-
-type SendGift struct {
-	RoomId string
-	GiftId string
-	Nickname string
-	Level int
-}
-
-func (p *SendGift) Marshal() ([]byte, error) {
-	return json.Marshal(p)
-}
-
-func (p *SendGift) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
 
@@ -101,43 +72,9 @@ type EnterRoom struct {
 	Level int
 }
 
-func (p *EnterRoom) Marshal() ([]byte, error) {
-	return json.Marshal(p)
-}
-
 func (p *EnterRoom) Unmarshal(b []byte) error {
 	return json.Unmarshal(b, p)
 }
-
-type Share struct {
-	RoomId string
-	Nickname string
-	Level int
-}
-
-func (p *Share) Marshal() ([]byte, error) {
-	return json.Marshal(p)
-}
-
-func (p *Share) Unmarshal(b []byte) error {
-	return json.Unmarshal(b, p)
-}
-
-
-type LevelUp struct {
-	RoomId string
-	Nickname string
-	Level int
-}
-
-func (p *LevelUp) Marshal() ([]byte, error) {
-	return json.Marshal(p)
-}
-
-func (p *LevelUp) Unmarshal(b []byte) error {
-	return json.Unmarshal(b, p)
-}
-
 
 type FromRouterMessage struct {
 	MessageId string				`json:"messageId"`
