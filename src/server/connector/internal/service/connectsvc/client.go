@@ -53,8 +53,8 @@ func createClient(id string, msc *bdmsg.SClient, clientM *ClientManager, room *R
 		queue:       	list.New(),
 		signalTimer: 	time.NewTimer(time.Millisecond * 50),
 		lock:        	&sync.Mutex{},
-		heartBeatTime:	time.Now().UnixNano() / 1e6,
 	}
+	atomic.AddInt64(&t.heartBeatTime, time.Now().UnixNano() / 1e6)
 	t.condition = sync.NewCond(t.lock)
 
 	atomic.AddInt32(&info.LoginUsers, 1)
@@ -144,24 +144,55 @@ func (c *Client)a()  {
 	} else {
 		for ;!c.q; {
 			start := time.Now().UnixNano() / 1000000
-			log.Trace("100000 %d", time.Now().UnixNano() / 1000000 - start)
+
+			for {
+				now := time.Now().UnixNano() / 1000000
+				quit := func() bool {
+					c.lock.Lock()
+					defer c.lock.Unlock()
+					if e := c.queue.Front(); e != nil {
+						message := e.Value.(*pconnector.ToClientMessage)
+						if now - message.Time > 2000 {
+							c.queue.Remove(e)
+							return false
+						}
+					}
+					return true
+				}()
+				if quit {
+					break
+				}
+			}
+
+			for {
+				statis := c.msc.Statis()
+				quit := func() bool {
+					c.lock.Lock()
+					defer c.lock.Unlock()
+					size := config.Config.ServiceS.Connect.OutqueueN - int(statis.OutTotal - statis.OutProcess)
+					if c.queue.Len() > size {
+						if e := c.queue.Front(); e != nil {
+							c.queue.Remove(e)
+							return false
+						}
+					}
+					return true
+				}()
+				if quit {
+					break
+				}
+			}
+
 			var m *pconnector.ToClientMessage
-			func() {
+			func () {
 				c.lock.Lock()
 				defer c.lock.Unlock()
-				log.Trace("200000 %d", time.Now().UnixNano() / 1000000 - start)
-				for ;c.queue.Len() > 100; {
-					if e := c.queue.Front(); e != nil {
-						c.queue.Remove(e)
-					}
-				}
-				log.Trace("300000 %d", time.Now().UnixNano() / 1000000 - start)
 				if e := c.queue.Front(); e != nil {
 					m = e.Value.(*pconnector.ToClientMessage)
 					c.queue.Remove(e)
 				}
-				log.Trace("400000 %d", time.Now().UnixNano() / 1000000 - start)
 			}()
+
 			if m == nil {
 				func() {
 					c.lock.Lock()
@@ -173,24 +204,16 @@ func (c *Client)a()  {
 			}
 			log.Trace("600000 %d", time.Now().UnixNano() / 1000000 - start)
 
-			if time.Now().UnixNano() / 1000000 - m.Time > 2000 {
-				log.Debug("discard2: %s, %s", m.MessageId, m.TimeText)
-				continue
-			}
-			log.Trace("700000 %d", time.Now().UnixNano() / 1000000 - start)
-			bytes, err := m.Marshal()
-			if err == nil {
-				c.msc.Output(pconnector.MsgTypePush, bytes)
-				log.Trace("hehehehehe, payload=%s", m.TimeText)
-			} else {
-				log.Error("err: %s\r\n%s", err, debug.Stack())
-			}
-			log.Trace("800000 %d", time.Now().UnixNano() / 1000000 - start)
-			timer := time.NewTimer(time.Millisecond * 50)
-			<- timer.C
-			log.Trace("900000 %d", time.Now().UnixNano() / 1000000 - start)
-			timer.Stop()
-			log.Trace("1000000 %d", time.Now().UnixNano() / 1000000 - start)
+			func() {
+				log.Trace("700000 %d", time.Now().UnixNano() / 1000000 - start)
+				bytes, err := m.Marshal()
+				if err == nil {
+					c.msc.Output(pconnector.MsgTypePush, bytes)
+					log.Trace("800000 %d", time.Now().UnixNano() / 1000000 - start)
+				} else {
+					log.Error("err: %s\r\n%s", err, debug.Stack())
+				}
+			}()
 		}
 	}
 }
@@ -269,13 +292,13 @@ func (c *Client)refreshToken(token string)  error {
 
 func (c *Client)heartBeat() {
 	timerLog.Info("handleHeartBeat, id=%s", c.ID)
-	c.heartBeatTime = time.Now().UnixNano() / 1e6
+	atomic.AddInt64(&c.heartBeatTime, time.Now().UnixNano() / 1e6)
 }
 
 func (c *Client)heartBeat2(timeTag int64) {
 	clientTime := time.Unix(timeTag / 1e3, (timeTag % 1e3) * 1e6)
 	timerLog.Info("handleHeartBeat, id=%s, clientTime=%s", c.ID, clientTime.Format("15:04:05.999"))
-	c.heartBeatTime = time.Now().UnixNano() / 1e6
+	atomic.AddInt64(&c.heartBeatTime, time.Now().UnixNano() / 1e6)
 }
 
 func refreshToken0(token string, userId string) (jwt.MapClaims, error) {

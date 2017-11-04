@@ -3,6 +3,7 @@ package connectsvc
 import (
 	"time"
 	"server/connector/internal/config"
+	"sync/atomic"
 )
 
 func initHeartBeat(service *service)  {
@@ -17,7 +18,7 @@ func initHeartBeat(service *service)  {
 				defer service.clientM.locker.RUnlock()
 
 				for _, client := range service.clientM.clients {
-					if client.version >= 100  && client.heartBeatTime < from {
+					if client.version >= 100  && atomic.LoadInt64(&client.heartBeatTime) < from {
 						log.Info("heart beat time out, id=%s", client.ID)
 						client.Close()
 					}
