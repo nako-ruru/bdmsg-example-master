@@ -54,7 +54,7 @@ func createClient(id string, msc *bdmsg.SClient, clientM *ClientManager, room *R
 		signalTimer: 	time.NewTimer(time.Millisecond * 50),
 		lock:        	&sync.Mutex{},
 	}
-	atomic.AddInt64(&t.heartBeatTime, time.Now().UnixNano() / 1e6)
+	atomic.StoreInt64(&t.heartBeatTime, time.Now().UnixNano() / 1e6)
 	t.condition = sync.NewCond(t.lock)
 
 	atomic.AddInt32(&info.LoginUsers, 1)
@@ -145,42 +145,38 @@ func (c *Client)a()  {
 		for ;!c.q; {
 			start := time.Now().UnixNano() / 1000000
 
-			for {
-				now := time.Now().UnixNano() / 1000000
-				quit := func() bool {
-					c.lock.Lock()
-					defer c.lock.Unlock()
-					if e := c.queue.Front(); e != nil {
-						message := e.Value.(*pconnector.ToClientMessage)
-						if now - message.Time > 2000 {
-							c.queue.Remove(e)
-							return false
+			func() {
+				for q := false; !q; {
+					now := time.Now().UnixNano() / 1000000
+					func() {
+						c.lock.Lock()
+						defer c.lock.Unlock()
+						if e := c.queue.Front(); e != nil {
+							message := e.Value.(*pconnector.ToClientMessage)
+							if now - message.Time > 2000 {
+								c.queue.Remove(e)
+								return
+							}
 						}
-					}
-					return true
-				}()
-				if quit {
-					break
+						q = true
+					}()
 				}
-			}
+			}()
 
-			for {
+			for q := false; !q; {
 				statis := c.msc.Statis()
-				quit := func() bool {
+				func() {
 					c.lock.Lock()
 					defer c.lock.Unlock()
 					size := config.Config.ServiceS.Connect.OutqueueN - int(statis.OutTotal - statis.OutProcess)
 					if c.queue.Len() > size {
 						if e := c.queue.Front(); e != nil {
 							c.queue.Remove(e)
-							return false
+							return
 						}
 					}
-					return true
+					q = true
 				}()
-				if quit {
-					break
-				}
 			}
 
 			var m *pconnector.ToClientMessage
@@ -292,13 +288,22 @@ func (c *Client)refreshToken(token string)  error {
 
 func (c *Client)heartBeat() {
 	timerLog.Info("handleHeartBeat, id=%s", c.ID)
-	atomic.AddInt64(&c.heartBeatTime, time.Now().UnixNano() / 1e6)
+	atomic.StoreInt64(&c.heartBeatTime, time.Now().UnixNano() / 1e6)
 }
 
 func (c *Client)heartBeat2(timeTag int64) {
-	clientTime := time.Unix(timeTag / 1e3, (timeTag % 1e3) * 1e6)
-	timerLog.Info("handleHeartBeat, id=%s, clientTime=%s", c.ID, clientTime.Format("15:04:05.999"))
-	atomic.AddInt64(&c.heartBeatTime, time.Now().UnixNano() / 1e6)
+	now := time.Now().UnixNano() / 1e6
+	atomic.StoreInt64(&c.heartBeatTime, now)
+	timerLog.Info("handleHeartBeat, id=%s, clientTime=%s", c.ID, timeFormat(timeTag, "15:04:05.999"))
+	if now - timeTag > 3000 {
+		statis := c.msc.Statis()
+		log.Error(
+				"handleHeartBeat, id=%s, clientTime=%s, inQueue=%d",
+				c.ID,
+				timeFormat(timeTag, "15:04:05.999"),
+				statis.InTotal - statis.InProcess,
+		)
+	}
 }
 
 func refreshToken0(token string, userId string) (jwt.MapClaims, error) {

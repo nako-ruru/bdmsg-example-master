@@ -226,16 +226,10 @@ func (subscriber *subscriber)deliverToWorld(s *service, fromRouterMessage FromRo
 }
 
 func (subscriber *subscriber) deliverToSingleClient(service *service, userId string, m *ToClientMessage)  {
-	var client *Client
-	var ok bool
-	func() {
-		service.clientM.locker.Lock()
-		defer service.clientM.locker.Unlock()
-		client, ok = service.clientM.clients[userId]
-	}()
+	var client *Client = service.clientM.Client(userId)
 	log.Trace("80000: %s", m.TimeText)
 
-	if ok {
+	if client != nil {
 		client.ServerHello(m)
 	} else {
 		log.Warn("client not found: %s", userId)

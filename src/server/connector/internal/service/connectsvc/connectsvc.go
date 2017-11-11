@@ -106,7 +106,6 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 
 func (s *service)handleRefreshToken(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
 	c := p.UserData().(*Client)
-	c.heartBeat()
 
 	defer func(){ // 必须要先声明defer，否则不能捕获到panic异常
 		if err:=recover();err!=nil{
@@ -114,6 +113,8 @@ func (s *service)handleRefreshToken(ctx context.Context, p *bdmsg.Pumper, t bdms
 			c.msc.Stop()
 		}
 	}()
+
+	c.heartBeat()
 
 	var refreshToken RefreshToken
 	err := refreshToken.Unmarshal(m) // unmarshal refreshToken
@@ -150,12 +151,13 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 	start := time.Now().UnixNano() / 1000000
 	log.Trace("100000 %d", time.Now().UnixNano() / 1000000 - start)
 	c := p.UserData().(*Client)
+
 	c.heartBeat()
 
 	var roomId string = c.roomId
 	var level int
 	var nickname string
-	var clientTime time.Time
+	var clientTime int64
 	var params map[string]string;
 
 	log.Trace("200000 %d", time.Now().UnixNano() / 1000000 - start)
@@ -173,14 +175,14 @@ func (s *service) handleMsg(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgTyp
 		}
 		level = chat.Level
 		nickname = chat.Nickname
-		clientTime = time.Unix(chat.ClientTime / 1e3, (chat.ClientTime % 1e3) * 1e6)
+		clientTime = chat.ClientTime
 		params = map[string]string{"content": chat.Content}
 		log.Trace("400000 %d", time.Now().UnixNano() / 1000000 - start)
 		break
 	}
 
 	log.Trace("500000 %d", time.Now().UnixNano() / 1000000 - start)
-	log.Info("handleMsg, id=%s, roomId=%s, clientTime=%s, t=%d, m=%s", c.ID, roomId, clientTime.Format("15:04:05.999"), t, string(m[:]))
+	log.Info("handleMsg, id=%s, roomId=%s, clientTime=%s, t=%d, m=%s", c.ID, roomId, timeFormat(clientTime, "15:04:05.999"), t, string(m[:]))
 
 	var fromConnectorMessage = FromConnectorMessage{
 		strconv.FormatUint(atomic.AddUint64(&chatMessageCounter, 1), 10),

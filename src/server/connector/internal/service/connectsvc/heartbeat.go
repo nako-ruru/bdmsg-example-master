@@ -18,8 +18,16 @@ func initHeartBeat(service *service)  {
 				defer service.clientM.locker.RUnlock()
 
 				for _, client := range service.clientM.clients {
-					if client.version >= 100  && atomic.LoadInt64(&client.heartBeatTime) < from {
-						log.Info("heart beat time out, id=%s", client.ID)
+					heartBeatTime := atomic.LoadInt64(&client.heartBeatTime)
+					if client.version >= 100  && heartBeatTime < from {
+						statis := client.msc.Statis()
+						log.Error(
+							"heart beat time out, id=%s, now=%s, client.heartBeatTime=%s, client.inQueue=%d",
+								client.ID,
+								timeFormat(now, "15:04:05.999"),
+								timeFormat(heartBeatTime,"15:04:05.999"),
+							    statis.InTotal - statis.InProcess,
+						)
 						client.Close()
 					}
 				}
