@@ -37,7 +37,7 @@ func subscribe(s *service) {
 	go func() {
 		for {
 			<- subscriberClient.timer.C
-			subscriberClient.purge(s)
+			//subscriberClient.purge(s)
 			subscriberClient.timer.Reset(time.Second * 2)
 		}
 	}()

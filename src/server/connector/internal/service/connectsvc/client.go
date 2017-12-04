@@ -145,23 +145,22 @@ func (c *Client)a()  {
 		for ;!c.q; {
 			start := time.Now().UnixNano() / 1000000
 
-			func() {
-				for q := false; !q; {
-					now := time.Now().UnixNano() / 1000000
-					func() {
-						c.lock.Lock()
-						defer c.lock.Unlock()
-						if e := c.queue.Front(); e != nil {
-							message := e.Value.(*pconnector.ToClientMessage)
-							if now - message.Time > 2000 {
-								c.queue.Remove(e)
-								return
-							}
+			/*
+			for q := false; !q; {
+				now := time.Now().UnixNano() / 1000000
+				func() {
+					c.lock.Lock()
+					defer c.lock.Unlock()
+					if e := c.queue.Front(); e != nil {
+						message := e.Value.(*pconnector.ToClientMessage)
+						if now - message.Time > 2000 {
+							c.queue.Remove(e)
+							return
 						}
-						q = true
-					}()
-				}
-			}()
+					}
+					q = true
+				}()
+			}
 
 			for q := false; !q; {
 				statis := c.msc.Statis()
@@ -178,6 +177,7 @@ func (c *Client)a()  {
 					q = true
 				}()
 			}
+			*/
 
 			var m *pconnector.ToClientMessage
 			func () {
