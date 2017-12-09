@@ -18,9 +18,7 @@ import (
 	"runtime/debug"
 	"sync/atomic"
 	"server/connector/internal/config"
-	"github.com/dgrijalva/jwt-go"
 	"fmt"
-	"encoding/base64"
 	"encoding/json"
 )
 
@@ -236,7 +234,7 @@ func (m *ClientManager) Client(id string) *Client {
 
 func (m *ClientManager) clientIn(register pconnector.Register, msc *bdmsg.SClient, room *RoomManager) (*Client, error) {
 	id := register.UserId
-	claims, err0 := refreshToken0(register.Token, id)
+	claims, err0 := refreshToken0(register.Token)
 
 	if err0 != nil {
 		return nil, err0
@@ -260,28 +258,20 @@ func (m *ClientManager) clientIn(register pconnector.Register, msc *bdmsg.SClien
 	c.version = register.ClientToConnectorVersion
 
 	m.clients[id] = c
+
 	go c.monitor()
-
-	duration, err2 := c.sessionAliveDurationInSeconds(claims)
-	if err2 != nil {
-		return nil, err2
-	}
-
-	go c.expire(duration)
+	go c.expire(claims.ExpireTime)
 
 	return c, nil
 }
 
-func (c *Client)refreshToken(token string)  error {
-	claims, err := refreshToken0(token, c.ID)
+func (c *Client)refreshToken(token string) error {
+	claims, err := refreshToken0(token)
 	if err != nil {
 		return err
 	}
-	duration, err2 := c.sessionAliveDurationInSeconds(claims)
-	if err2 != nil {
-		return  err2
-	}
-	go c.expire(duration)
+
+	go c.expire(claims.ExpireTime)
 
 	return nil
 }
@@ -306,62 +296,21 @@ func (c *Client)heartBeat2(timeTag int64) {
 	}
 }
 
-func refreshToken0(token string, userId string) (jwt.MapClaims, error) {
-	var claims jwt.MapClaims
-	if config.Config.AuthKey != "" {
-		decodeBytes, err := base64.StdEncoding.DecodeString(token)
-		if err != nil {
-			return claims, err
-		}
-		token, err2 := jwt.Parse(fmt.Sprintf("%s", decodeBytes), func(token *jwt.Token) (interface{}, error) {
-			// Don't forget to validate the alg is what you expect:
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			}
-
-			// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-			return []byte(config.Config.AuthKey), nil
-		})
-		if err2 != nil {
-			return claims, err2
-		}
-
-		var ok bool
-		claims, ok = token.Claims.(jwt.MapClaims);
-		if ok && token.Valid {
-			audi := claims["aud"].(string)
-			if audi != userId {
-				return claims, fmt.Errorf("id not match(audi:%s, id:%s)", audi, userId)
-			}
-		} else {
-			return claims, err2
-		}
+func refreshToken0(tokenText string) (Token, error) {
+	var token Token
+	token.ExpireTime = -1
+	if config.Config.PemFile != "" {
+		return decrypt(tokenText)
 	}
-
-	return claims, nil
+	return token, nil
 }
 
-func (c *Client) sessionAliveDurationInSeconds(claims jwt.MapClaims) (int64, error) {
-	exp, ok := claims["exp"]
-	if ok {
-		now := time.Now().Unix()
-		value, err := c.intValue(exp)
-		if err != nil {
-			return value, err
-		}
-		diff := value - now
-		return diff, nil
-	} else if config.Config.AuthKey == "" {
-		return -1, nil
+func (c *Client) sessionAliveDurationInSeconds(claims Token) (int64, error) {
+	if claims.ExpireTime > 0 {
+		now := time.Now().Unix() / 1e6
+		return claims.ExpireTime - now, nil
 	}
-	return 0, fmt.Errorf("cannot find exp in claims")
-	/*
-	iat, ok := claims["iat"]
-	if ok {
-		value, err := c.intValue(iat)
-		return value, err
-	}
-	return int64(60) * 60 * 1000, nil*/
+	return -1, nil
 }
 
 func (c *Client)intValue(o interface{}) (int64, error)  {
@@ -375,17 +324,21 @@ func (c *Client)intValue(o interface{}) (int64, error)  {
 	return 0, fmt.Errorf("cannot convert %v to int64", o)
 }
 
-func (c *Client) expire(sessionAliveDurationInSeconds int64) {
-	if sessionAliveDurationInSeconds > 0 {
-		duration := time.Duration(sessionAliveDurationInSeconds) * time.Second
-		if c.expireTimer == nil {
-			c.expireTimer = time.NewTimer(duration)
-			<- c.expireTimer.C
-			log.Error("session to %s expired", c.ID)
-			c.msc.Stop()
-		}
-		if c.expireTimer != nil {
-			c.expireTimer.Reset(duration)
+func (c *Client) expire(expireTime int64) {
+	if expireTime > 0 {
+		now := time.Now().Unix() / 1e6
+		durationInMills := expireTime - now
+		if durationInMills > 0 {
+			duration := time.Duration(durationInMills) * time.Millisecond
+			if c.expireTimer == nil {
+				c.expireTimer = time.NewTimer(duration)
+				<- c.expireTimer.C
+				log.Error("session to %s expired", c.ID)
+				c.msc.Stop()
+			}
+			if c.expireTimer != nil {
+				c.expireTimer.Reset(duration)
+			}
 		}
 	}
 }

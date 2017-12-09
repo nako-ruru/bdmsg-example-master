@@ -74,16 +74,16 @@ func (c *ManagerConfT) Check() bool {
 }
 
 type ConfigT struct {
-	PidFile     		string        	`json:"pidFile"`
-	Log         		Log           	`json:"log"`
-	ServiceS    		ServiceSConfT 	`json:"service"`
-	Manager     		ManagerConfT  	`json:"manager"`
-	Mq          		Mq            	`json:"mq"`
-	Redis       		Redis         	`json:"redis"`
-	RedisPubSub 		RedisPubSub   	`json:"redisPubSub"`
-	IpResolver  		[]string      	`json:"ipResolver"`
-	AuthKey     		string          `json:"authKey"`
-	DisableHeartBeat 	bool			`json:"disableHeartBeat,string"`
+	PidFile          string        `json:"pidFile"`
+	Log              Log           `json:"log"`
+	ServiceS         ServiceSConfT `json:"service"`
+	Manager          ManagerConfT  `json:"manager"`
+	Mq               Mq            `json:"mq"`
+	Redis            Redis         `json:"redis"`
+	RedisPubSub      RedisPubSub   `json:"redisPubSub"`
+	IpResolver       []string      `json:"ipResolver"`
+	PemFile          string        `json:"pemFile"`
+	DisableHeartBeat bool          `json:"disableHeartBeat,string"`
 }
 
 func (c *ConfigT) Check() bool {

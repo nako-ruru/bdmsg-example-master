@@ -44,7 +44,7 @@ func initRpcServerDiscovery()  {
 				var client = newComputeServiceRedisClient()
 				defer client.Close()
 
-				var command *redis.StringStringMapCmd = client.HGetAll("compute-servers")
+				command := client.HGetAll("compute-servers")
 				result, err := command.Result()
 				if err != nil {
 					log.Error("query compute-servers: %s\r\n%s", err, debug.Stack())
