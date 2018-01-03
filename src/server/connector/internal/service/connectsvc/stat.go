@@ -6,16 +6,21 @@ import (
 	"sync/atomic"
 	"net"
 	"fmt"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
+	"runtime/debug"
 )
 
 type NamingInfo struct {
-	RegisterTime     int64 		`json:"registerTime"`
-	LoginUsers       int32   	`json:"loginUsers"`
-	ConnectedClients int32   	`json:"connectedClients"`
-	InData			 int64 		`json:"inData"`
-	OutData			 int64 		`json:"outData"`
-	InQueue			 int32   	`json:"inQueue"`
-	OutQueue	     int32 		`json:"outQueue"`
+	RegisterTime     int64   `json:"registerTime"`
+	LoginUsers       int32   `json:"loginUsers"`
+	ConnectedClients int32   `json:"connectedClients"`
+	InData           int64   `json:"inData"`
+	OutData          int64   `json:"outData"`
+	InQueue          int32   `json:"inQueue"`
+	OutQueue         int32   `json:"outQueue"`
+	CPU              []float64   `json:"cpuUsage"`
+	MemoryUsage      float64 `json:"memoryUsage""`
 }
 
 var info = NamingInfo{}
@@ -39,14 +44,25 @@ func RegisterNamingService(service *service)  {
 			}
 		}()
 
+		cpuPercent, cpuPercentErr := cpu.Percent(0, true)
+		if cpuPercentErr != nil {
+			timerLog.Error("%s\r\n%s", cpuPercentErr, debug.Stack())
+		}
+		vmStat, vmError := mem.VirtualMemory()
+		if vmError != nil {
+			timerLog.Error("%s\r\n%s", vmError, debug.Stack())
+		}
+
 		tempInfo := NamingInfo{
-			RegisterTime : 		time.Now().UnixNano() / 1000000,
-			LoginUsers : 		info.LoginUsers,
-			ConnectedClients :	info.ConnectedClients,
-			InData	 :		 	totalIn - info.InData,
-			OutData	 :		 	totalOut - info.OutData,
-			InQueue	 :		 	info.InQueue,
-			OutQueue :	     	subscriberClient.stat(service),
+			RegisterTime 		: time.Now().UnixNano() / 1000000,
+			LoginUsers 			: info.LoginUsers,
+			ConnectedClients 	: info.ConnectedClients,
+			InData	 			: totalIn - info.InData,
+			OutData	 			: totalOut - info.OutData,
+			InQueue	 			: info.InQueue,
+			OutQueue 			: subscriberClient.stat(service),
+			CPU					: cpuPercent,
+			MemoryUsage			: vmStat.UsedPercent,
 		}
 
 		atomic.StoreInt64(&info.OutData, totalOut)
