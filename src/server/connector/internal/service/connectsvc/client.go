@@ -49,7 +49,6 @@ func createClient(id string, msc *bdmsg.SClient, clientM *ClientManager, room *R
 		clientM:     	clientM,
 		room:        	room,
 		queue:       	list.New(),
-		signalTimer: 	time.NewTimer(time.Millisecond * 50),
 		lock:        	&sync.Mutex{},
 	}
 	atomic.StoreInt64(&t.heartBeatTime, time.Now().UnixNano() / 1e6)
@@ -99,9 +98,6 @@ func (c *Client) ending() {
 	c.room.ending(c.roomId, c)
 	c.clientM.removeClient(c)
 	c.q = true
-	if c.signalTimer != nil {
-		c.signalTimer.Stop()
-	}
 	if c.expireTimer != nil {
 		c.expireTimer.Stop()
 	}
@@ -331,10 +327,10 @@ func (c *Client) expire(expireTime int64) {
 		if durationInMills > 0 {
 			duration := time.Duration(durationInMills) * time.Millisecond
 			if c.expireTimer == nil {
-				c.expireTimer = time.NewTimer(duration)
-				<- c.expireTimer.C
-				log.Error("session to %s expired", c.ID)
-				c.msc.Stop()
+				c.expireTimer = time.AfterFunc(duration, func() {
+					log.Error("session to %s expired", c.ID)
+					c.msc.Stop()
+				})
 			}
 			if c.expireTimer != nil {
 				c.expireTimer.Reset(duration)
