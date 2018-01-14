@@ -130,7 +130,7 @@ func (s *service)handleHeartBeat(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 	c := p.UserData().(*Client)
 	var heartBeat HeartBeat
 	heartBeat.Unmarshal(m)
-	c.heartBeat2(heartBeat.ClientTime)
+	c.heartBeat()
 }
 
 func (s *service) handleEnterRoom(ctx context.Context, p *bdmsg.Pumper, t bdmsg.MsgType, m bdmsg.Msg) {
@@ -206,6 +206,7 @@ func initMessageConsumer() {
 	go func() {
 		for range ticker.C {
 			consume(0)
+			log.Trace("90000000000")
 		}
 	}()
 }
@@ -230,5 +231,7 @@ func consumeEvent(i uint64, id int) {
 	maxCount := 10000
 	var restCount int
 	readyToDeliver, restCount = messageQueueGroup.DrainTo(readyToDeliver, maxCount)
+	log.Trace("70000000000")
 	rpcClient.deliver(readyToDeliver, restCount, i, start)
+	log.Trace("80000000000")
 }

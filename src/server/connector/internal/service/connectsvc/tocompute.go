@@ -63,6 +63,7 @@ func (mqg *MessageQueueGroup) DrainTo(msgs []*FromConnectorMessage, maxLength in
 		log.Debug("size: %d", len(msgs))
 	}
 
+	log.Trace("60000000000")
 	return msgs, totalRestSize
 }
 
@@ -87,11 +88,14 @@ func (m *MessageQueue) Add(msg FromConnectorMessage) {
 }
 
 func (m *MessageQueue) DrainTo(msgs []*FromConnectorMessage, maxLength int)([]*FromConnectorMessage, int)  {
+	log.Trace("10000000000")
 	m.locker.Lock()
 	defer m.locker.Unlock()
 
+	log.Trace("20000000000")
 	oldLen := len(msgs)
 
+	log.Trace("30000000000")
 	for e := m.queue.Front(); e != nil; e = e.Next() {
 		if len(msgs) < maxLength {
 			message := e.Value.(FromConnectorMessage)
@@ -100,11 +104,13 @@ func (m *MessageQueue) DrainTo(msgs []*FromConnectorMessage, maxLength int)([]*F
 			break
 		}
 	}
+	log.Trace("40000000000")
 	for i,n := oldLen, len(msgs); i < n; i++ {
 		if e := m.queue.Front(); e != nil {
 			m.queue.Remove(e)
 		}
 	}
+	log.Trace("50000000000")
 
 	return msgs, m.queue.Len()
 }
