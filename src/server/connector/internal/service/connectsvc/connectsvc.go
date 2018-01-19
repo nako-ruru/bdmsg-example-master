@@ -94,7 +94,7 @@ func (s *service) handleRegister(ctx context.Context, p *bdmsg.Pumper, t bdmsg.M
 
 	_, err = s.clientM.clientIn(register, msc, s.roomM)
 	if err != nil {
-		log.Error("handleRegister, err=%s\r\n%s", err, debug.Stack())
+		log.Error("handleRegister, id=%s, remoteaddr=%s, err=%s\r\n%s", register.UserId, msc.Conn().RemoteAddr(), err, debug.Stack())
 		panic(ErrUnexpected)
 	} else {
 		log.Info("handleRegister, id=%s, version=%d, remoteaddr=%s", register.UserId, register.ClientToConnectorVersion, msc.Conn().RemoteAddr())

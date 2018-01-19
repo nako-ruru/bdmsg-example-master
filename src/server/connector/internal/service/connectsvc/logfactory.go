@@ -11,6 +11,8 @@ import (
 	"runtime/debug"
 )
 
+const TIMEFORMAT = "2006-01-02 15:04:05.000"
+
 var log *lumber.MultiLogger
 var timerLog *lumber.MultiLogger
 
@@ -48,10 +50,12 @@ func initLogger()  {
 	log = lumber.NewMultiLogger()
 
 	consoleLog := lumber.NewConsoleLogger(lumber.INFO)
+	consoleLog.TimeFormat(TIMEFORMAT)
 	log.AddLoggers(consoleLog)
 
 	fileLog, err1 := lumber.NewFileLogger(Config.Log.InfoFile, lumber.INFO, lumber.ROTATE, 50000, 9, 100)
 	if err1 == nil {
+		fileLog.TimeFormat(TIMEFORMAT)
 		log.AddLoggers(fileLog)
 	} else {
 		log.Error("createLogger, err=%s,\r\n%s", err1, debug.Stack())
@@ -67,6 +71,7 @@ func initLogger()  {
 	}
 	fileError, err2 := lumber.NewFileLogger(Config.Log.ErrorFile, lumber.WARN, lumber.ROTATE, 50000, 9, 100)
 	if err2 == nil {
+		fileError.TimeFormat(TIMEFORMAT)
 		log.AddLoggers(fileError)
 	} else {
 		log.Error("createLogger, err=%s\r\n%s", err2, debug.Stack())
@@ -86,6 +91,7 @@ func initTimeLogger()  {
 	}
 	fileLog, err1 := lumber.NewFileLogger(Config.Log.TimerFile, lumber.INFO, lumber.ROTATE, 50000, 9, 100)
 	if err1 == nil {
+		timerLog.TimeFormat(TIMEFORMAT)
 		timerLog.AddLoggers(fileLog)
 	} else {
 		log.Error("createLogger, err=%s,\r\n%s", err1, debug.Stack())
