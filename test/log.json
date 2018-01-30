@@ -1,0 +1,47 @@
+{
+    "refresh":"10s",
+    "loggers":
+    [
+        {
+            "name": "root",
+            "appenders":
+            [
+                {
+                    "enable": true,
+                    "type": "console",
+                    "level": "INFO"
+                },
+                {
+                    "enable": true,
+                    "type": "file",
+                    "level": "INFO",
+                    "filename":"./logs/connector.info.txt",
+                    "rotate": true,
+                    "maxlines": "50K"
+                },
+                {
+                    "enable": true,
+                    "type": "file",
+                    "level": "ERROR",
+                    "filename":"./logs/connector.err.txt",
+                    "rotate": true,
+                    "maxlines": "50K"
+                }
+            ]
+        },
+        {
+            "name": "timer",
+            "appenders":
+            [
+                {
+                    "enable": true,
+                    "type": "file",
+                    "level": "INFO",
+                    "filename":"./logs/connector.timer.txt",
+                    "rotate": true,
+                    "maxlines": "50K"
+                }
+            ]
+        }
+    ]
+}

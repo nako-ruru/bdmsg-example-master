@@ -6,6 +6,9 @@ import (
 	"io/ioutil"
 	"strings"
 	"encoding/json"
+	"fmt"
+	"os"
+	"runtime/debug"
 )
 
 type Token struct {
@@ -18,6 +21,13 @@ type Token struct {
 
 // 初始化设置公钥
 func init() {
+	err := config.ParseConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ParseConfig, error=%s\n@%s\n", err, debug.Stack())
+		os.Exit(1)
+		return
+	}
+
 	if config.Config.PemFile != "" {
 		pubPEMData := read1(config.Config.PemFile)
 		if err := gorsa.RSA.SetPublicKey(string(pubPEMData)); err != nil {
